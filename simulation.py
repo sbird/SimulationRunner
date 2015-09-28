@@ -48,7 +48,7 @@ class Simulation(object):
     scalar_amp - Initial amplitude of scalar power spectrum to feed to CAMB
     ns - tilt of scalar power spectrum to feed to CAMB
     """
-    def __init__(self, outdir, box, npart, redshift=99, separate_gas=True, omegac=0.2408, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97):
+    def __init__(self, outdir, box, npart, seed = 9281110, redshift=99, separate_gas=True, omegac=0.2408, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97):
         #Check that input is reasonable and set parameters
         #In Mpc/h
         assert box < 20000
@@ -69,6 +69,9 @@ class Simulation(object):
         self.scalar_amp = scalar_amp
         assert ns > 0 and ns < 2
         self.ns = ns
+        #Structure seed.
+        self.seed = seed
+        self.omeganu = 0
         outdir = os.path.expanduser(outdir)
         #Make the output directory: will fail if parent does not exist
         if not os.path.exists(outdir):
@@ -81,6 +84,9 @@ class Simulation(object):
         self.cambdefault = "params.ini"
         #Filename for new CAMB file
         self.cambout = "_camb_params.ini"
+        #Default GenIC paths
+        self.genicdefault = "ngenic.param"
+        self.genicout = "_genic_params.ini"
 
     def cambfile(self):
         """Generate the CAMB parameter file from the (cosmological) simulation parameters and the default values"""
@@ -88,7 +94,7 @@ class Simulation(object):
         config = configobj.ConfigObj(self.cambdefault)
         config.filename = os.path.join(self.outdir, self.cambout)
         #Set values
-        config['output_root'] = self.outdir+"/camb_linear_"
+        config['output_root'] = os.path.join(self.outdir,"camb_linear")+"/ics_"
         #Can't change this easily because the parameters then have different names
         assert config['use_physical'] == 'T'
         config['hubble'] = self.hubble * 100
@@ -123,7 +129,33 @@ class Simulation(object):
         config['massive_neutrinos'] = 0
         return config
 
-    def genicfile(self, genicfile):
+    def genicfile(self):
         """Generate the GenIC parameter file"""
+        config = configobj.ConfigObj(self.genicdefault)
+        config.filename = os.path.join(self.outdir, self.genicout)
+        config['Box'] = self.box*1000
+        config['Nsample'] = self.npart
+        config['Nmesh'] = self.npart * 3/2
+        config['OutputDir'] = self.outdir+"/ICS/"
+        #Is this enough information, or should I add a short hash?
+        config['FileBase'] = self.box+"_"+self.npart+"_"+self.redshift
+        #TODO Make this the right value
+        config['GlassFile'] = os.path.expanduser("~/data/glass/reg-grid-128-dm")
+        config['GlassTileFac'] = self.npart/128
+        #Total matter density, not CDM matter density.
+        config['Omega'] = self.omegac + self.omegab + self.omeganu
+        config['OmegaLambda'] = 1- self.omegac - self.omegab - self.omeganu
+        config['OmegaBaryon'] = self.omegab
+        config['OmegaDM_2ndSpecies'] = self.omeganu
+        config['HubbleParam'] = self.hubble
+        config['Redshift'] = self.redshift
+        config['FileWithInputSpectrum'] = os.path.join(os.path.join(self.outdir, "camb_linear"), "ics_matterpow_"+self.redshift+".dat")
+        config['FileWithTransfer'] = os.path.join(os.path.join(self.outdir, "camb_linear"), "ics_transfer_"+self.redshift+".dat")
+        assert config['InputSpectrum_UnitLength_in_cm'] == 3.085678e24
+        config = self._genicfile_neutrinos(config)
+        config['Seed'] = self.seed
 
-
+    def _genicfile_neutrinos(self, config):
+        """Neutrino parameters easily overridden"""
+        config['NU_On'] = 0
+        return config
