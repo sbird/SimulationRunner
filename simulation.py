@@ -72,6 +72,8 @@ class Simulation(object):
         self.ns = ns
         #Structure seed.
         self.seed = seed
+        #Baryons?
+        self.separate_gas = separate_gas
         self.omeganu = 0
         outdir = os.path.expanduser(outdir)
         #Make the output directory: will fail if parent does not exist
@@ -139,9 +141,13 @@ class Simulation(object):
         config['Nmesh'] = self.npart * 3/2
         config['OutputDir'] = self.outdir+"/ICS/"
         #Is this enough information, or should I add a short hash?
-        config['FileBase'] = self.box+"_"+self.npart+"_"+self.redshift
-        #TODO Make this the right value
-        config['GlassFile'] = os.path.expanduser("~/data/glass/reg-grid-128-dm")
+        config['FileBase'] = str(self.box)+"_"+str(self.npart)+"_"+str(self.redshift)
+        #Whether we have baryons is entirely controlled by the glass file.
+        #Since the glass file is just a regular grid, this should probably be in GenIC at some point
+        if self.separate_gas:
+            config['GlassFile'] = os.path.expanduser("~/data/glass/reg-grid-128-2comp")
+        else:
+            config['GlassFile'] = os.path.expanduser("~/data/glass/reg-grid-128-dm")
         config['GlassTileFac'] = self.npart/128
         #Total matter density, not CDM matter density.
         config['Omega'] = self.omegac + self.omegab + self.omeganu
@@ -150,11 +156,12 @@ class Simulation(object):
         config['OmegaDM_2ndSpecies'] = self.omeganu
         config['HubbleParam'] = self.hubble
         config['Redshift'] = self.redshift
-        config['FileWithInputSpectrum'] = os.path.join(os.path.join(self.outdir, "camb_linear"), "ics_matterpow_"+self.redshift+".dat")
-        config['FileWithTransfer'] = os.path.join(os.path.join(self.outdir, "camb_linear"), "ics_transfer_"+self.redshift+".dat")
-        assert config['InputSpectrum_UnitLength_in_cm'] == 3.085678e24
+        config['FileWithInputSpectrum'] = os.path.join(os.path.join(self.outdir, "camb_linear"), "ics_matterpow_"+str(self.redshift)+".dat")
+        config['FileWithTransfer'] = os.path.join(os.path.join(self.outdir, "camb_linear"), "ics_transfer_"+str(self.redshift)+".dat")
+        assert config['InputSpectrum_UnitLength_in_cm'] == '3.085678e24'
         config = self._genicfile_neutrinos(config)
         config['Seed'] = self.seed
+        config.write()
 
     def _genicfile_neutrinos(self, config):
         """Neutrino parameters easily overridden"""
