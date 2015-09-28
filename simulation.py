@@ -8,9 +8,10 @@ Different machines can be implemented as decorators.
 import os.path
 import re
 import configobj
+import math
 
-def _scan_file_set(self, config_lines, paramname, paramval, separator):
-    """Scan a list of lines for a particular pattern and replace it with another.
+def _scan_file_set(config_lines, paramname, paramval, separator):
+    r"""Scan a list of lines for a particular pattern and replace it with another.
         Used to change an individual parameter value.
         The pattern scanned for is
         paramname+'\s*'+separator+'\s*[0-9.]
@@ -18,7 +19,7 @@ def _scan_file_set(self, config_lines, paramname, paramval, separator):
         or
         paramname+'\s*'+separator+'\s*\w*
         if it is a string.
-        '"""
+    """
 
 
 
@@ -63,7 +64,7 @@ class Simulation(object):
         self.omegab = omegab
         assert redshift > 1 and redshift < 1100
         self.redshift = redshift
-        assert hubble < 1 and
+        assert hubble < 1 and hubble > 0
         self.hubble = hubble
         assert scalar_amp < 1e-8 and scalar_amp > 0
         self.scalar_amp = scalar_amp
@@ -122,7 +123,7 @@ class Simulation(object):
         #Write the config file
         config.write()
 
-    def _camb_neutrinos(self, config)
+    def _camb_neutrinos(self, config):
         """Modify the CAMB config file to have massless neutrinos.
         Designed to be easily over-ridden"""
         config['massless_neutrinos'] = 3.046
