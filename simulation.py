@@ -9,19 +9,7 @@ import os.path
 import re
 import configobj
 import math
-
-def _scan_file_set(config_lines, paramname, paramval, separator):
-    r"""Scan a list of lines for a particular pattern and replace it with another.
-        Used to change an individual parameter value.
-        The pattern scanned for is
-        paramname+'\s*'+separator+'\s*[0-9.]
-        if paramval is numeric
-        or
-        paramname+'\s*'+separator+'\s*\w*
-        if it is a string.
-    """
-
-
+import numpy as np
 
 class Simulation(object):
     """
@@ -49,7 +37,7 @@ class Simulation(object):
     scalar_amp - Initial amplitude of scalar power spectrum to feed to CAMB
     ns - tilt of scalar power spectrum to feed to CAMB
     """
-    def __init__(self, outdir, box, npart, seed = 9281110, redshift=99, separate_gas=True, omegac=0.2408, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97):
+    def __init__(self, outdir, box, npart, nproc, memory, timelimit, seed = 9281110, redshift=99, redend = 0, separate_gas=True, omegac=0.2408, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97):
         #Check that input is reasonable and set parameters
         #In Mpc/h
         assert box < 20000
@@ -64,6 +52,8 @@ class Simulation(object):
         self.omegab = omegab
         assert redshift > 1 and redshift < 1100
         self.redshift = redshift
+        assert redend >= 0 and redend < 1100
+        self.redend = redend
         assert hubble < 1 and hubble > 0
         self.hubble = hubble
         assert scalar_amp < 1e-8 and scalar_amp > 0
@@ -75,6 +65,20 @@ class Simulation(object):
         #Baryons?
         self.separate_gas = separate_gas
         self.omeganu = 0
+        #CPU parameters
+        self.nproc = nproc
+        self.timelimit = timelimit
+        #Maximum memory available for an MPI task
+        self.memory = memory
+        #Number of files per snapshot
+        #This is chosen to give a reasonable number and
+        #a constant number of particles per file.
+        self.numfiles = np.max([1,self.npart**3/2**24])
+        #Maximum number of files to write in parallel.
+        #Cannot be larger than number of processors
+        self.maxpwrite = nproc
+        #Total matter density
+        self.omega0 = self.omegac + self.omegab + self.omeganu
         outdir = os.path.expanduser(outdir)
         #Make the output directory: will fail if parent does not exist
         if not os.path.exists(outdir):
@@ -90,6 +94,9 @@ class Simulation(object):
         #Default GenIC paths
         self.genicdefault = "ngenic.param"
         self.genicout = "_genic_params.ini"
+        #Default parameter file names
+        self.gadgetdefaultparam = "gadgetparams.param"
+        self.gadgetparam = "gadget3.param"
 
     def cambfile(self):
         """Generate the CAMB parameter file from the (cosmological) simulation parameters and the default values"""
@@ -97,7 +104,8 @@ class Simulation(object):
         config = configobj.ConfigObj(self.cambdefault)
         config.filename = os.path.join(self.outdir, self.cambout)
         #Set values
-        config['output_root'] = os.path.join(self.outdir,"camb_linear")+"/ics_"
+        camb_output = os.path.join(self.outdir,"camb_linear")+"/ics_"
+        config['output_root'] = camb_output
         #Can't change this easily because the parameters then have different names
         assert config['use_physical'] == 'T'
         config['hubble'] = self.hubble * 100
@@ -124,6 +132,7 @@ class Simulation(object):
         config = self._camb_neutrinos(config)
         #Write the config file
         config.write()
+        return camb_output
 
     def _camb_neutrinos(self, config):
         """Modify the CAMB config file to have massless neutrinos.
@@ -132,16 +141,18 @@ class Simulation(object):
         config['massive_neutrinos'] = 0
         return config
 
-    def genicfile(self):
+    def genicfile(self, camb_output):
         """Generate the GenIC parameter file"""
         config = configobj.ConfigObj(self.genicdefault)
         config.filename = os.path.join(self.outdir, self.genicout)
         config['Box'] = self.box*1000
         config['Nsample'] = self.npart
         config['Nmesh'] = self.npart * 3/2
-        config['OutputDir'] = self.outdir+"/ICS/"
+        genicout = "ICS"
+        config['OutputDir'] = os.path.join(self.outdir, genicout)
         #Is this enough information, or should I add a short hash?
-        config['FileBase'] = str(self.box)+"_"+str(self.npart)+"_"+str(self.redshift)
+        genicfile = str(self.box)+"_"+str(self.npart)+"_"+str(self.redshift)
+        config['FileBase'] = genicfile
         #Whether we have baryons is entirely controlled by the glass file.
         #Since the glass file is just a regular grid, this should probably be in GenIC at some point
         if self.separate_gas:
@@ -150,20 +161,151 @@ class Simulation(object):
             config['GlassFile'] = os.path.expanduser("~/data/glass/reg-grid-128-dm")
         config['GlassTileFac'] = self.npart/128
         #Total matter density, not CDM matter density.
-        config['Omega'] = self.omegac + self.omegab + self.omeganu
-        config['OmegaLambda'] = 1- self.omegac - self.omegab - self.omeganu
+        config['Omega'] = self.omega0
+        config['OmegaLambda'] = 1- self.omega0
         config['OmegaBaryon'] = self.omegab
         config['OmegaDM_2ndSpecies'] = self.omeganu
         config['HubbleParam'] = self.hubble
         config['Redshift'] = self.redshift
-        config['FileWithInputSpectrum'] = os.path.join(os.path.join(self.outdir, "camb_linear"), "ics_matterpow_"+str(self.redshift)+".dat")
-        config['FileWithTransfer'] = os.path.join(os.path.join(self.outdir, "camb_linear"), "ics_transfer_"+str(self.redshift)+".dat")
+        config['FileWithInputSpectrum'] = camb_output + "matterpow_"+str(self.redshift)+".dat"
+        config['FileWithTransfer'] = camb_output + "transfer_"+str(self.redshift)+".dat"
+        config['NumFiles'] = self.numfiles
         assert config['InputSpectrum_UnitLength_in_cm'] == '3.085678e24'
         config = self._genicfile_neutrinos(config)
         config['Seed'] = self.seed
         config.write()
+        return os.path.join(genicout, genicfile)
 
     def _genicfile_neutrinos(self, config):
         """Neutrino parameters easily overridden"""
         config['NU_On'] = 0
         return config
+
+    def gadget3Config(self):
+        """Generate a Gadget Config.sh file. This doesn't fit nicely into configobj.
+        Many of the simulation parameters are stored here, but none of the cosmology.
+        Some of these parameters are cluster dependent.
+        We are assuming Gadget-3. Arepo or Gadget-2 need a different set of options."""
+        with open(os.path.join(self.outdir, "Config.sh")) as config:
+            config.write("PERIODIC")
+            #Can be reduced for lower memory but lower speed.
+            config.write("PMGRID="+self.npart*2)
+            #These are memory options: if short on memory, change them.
+            config.write("MULTIPLEDOMAINS=4")
+            config.write("TOPNODEFACTOR=3.0")
+            #Again, can be turned off for lower memory usage
+            #but changes output format
+            config.write("LONGIDS")
+            config.write("PEANOHILBERT")
+            config.write("WALLCLOCK")
+            config.write("MYSORT")
+            config.write("MOREPARAMS")
+            config.write("POWERSPEC_ON_OUTPUT")
+            config.write("POWERSPEC_ON_OUTPUT_EACH_TYPE")
+            #isend/irecv is quite slow on some clusters because of the extra memory declarations..
+            #Maybe test this on your specific system and see if it helps.
+            config.write("NO_ISEND_IRECV_IN_DOMAIN")
+            config.write("NO_ISEND_IRECV_IN_PM")
+            #Changes H(z)
+            config.write("INCLUDE_RADIATION")
+            config.write("HAVE_HDF5")
+            #We may need this sometimes, depending on the machine
+            #config.write("NOTYPEPREFIX_FFTW")
+            #Options for gas simulations
+            if self.separate_gas:
+                config.write("COOLING")
+                #This needs implementing
+                #config.write("UVB_SELF_SHIELDING")
+                #Optional feedback model options
+                self._feedback_config_options(config)
+        return
+
+    def _feedback_config_options(self, config):
+        """Options in the Config.sh file for a potential star-formation/feedback model"""
+        config.write("USE_SFR")
+        return
+
+    def gadget3params(self, genicfileout):
+        """Gadget 3 parameter file. Almost a configobj, but needs a regex at the end to change # to % and remove '='.
+        Again, will be different for Arepo and Gadget2.
+        Arguments:
+            genicfileout - where the ICs are saved
+            timelimit - simulation time limit in hours"""
+        config = configobj.ConfigObj(self.gadgetdefaultparam)
+        config.filename = os.path.join(self.outdir, self.gadgetparam)
+        config['InitCondFile'] = genicfileout
+        config['OutputDir'] = "output"
+        config['SnapshotFileBase'] = "snap"
+        config['TimeLimitCPU'] = 60*60*self.timelimit*20/17.-3000
+        config['TimeBegin'] = 1./(1+self.redshift)
+        config['TimeMax'] = 1./(1+self.redend)
+        config['Omega0'] = self.omega0
+        config['OmegaLambda'] = 1- self.omega0
+        #OmegaBaryon should be zero for gadget if we don't have gas particles
+        config['OmegaBaryon'] = self.omegab*self.separate_gas
+        config['HubbleParam'] = self.hubble
+        config['BoxSize'] = self.box * 1000
+        config['OutputListOn'] = 1
+        config['OutputListFilenames'] = "times.txt"
+        times = self.generate_times()
+        self.print_times(times)
+        #This should just be larger than the simulation time limit
+        config['CpuTimeBetRestartFile'] = 60*60*self.timelimit*10
+        config['NumFilesPerSnapshot'] = self.numfiles
+        #There is a maximum here because some filesystems may not like parallel writes!
+        config['NumFilesWrittenInParallel'] = np.min([self.maxpwrite, self.numfiles])
+        #Softening is 1/30 of the mean linear interparticle spacing
+        soften = self.box/self.npart/30.
+        for ptype in ('Gas', 'Halo', 'Disk', 'Bulge', 'Stars', 'Bndry'):
+            config['Softening'+ptype] = soften
+            config['Softening'+ptype+'MaxPhys'] = soften
+        config['ICFormat'] = 3
+        config['SnapFormat'] = 3
+        config['RestartFile'] = "restartfiles/restart"
+        #This could be tuned in lower memory conditions
+        config['BufferSize'] = 100
+        if self.separate_gas:
+            config['CoolingOn'] = 1
+            config = self._feedback_params(config)
+            #Need more memory for a feedback model
+            config['PartAllocFactor'] = 4
+        else:
+            config['PartAllocFactor'] = 2
+        config['MaxMemSize'] = self.memory
+        #Add other config parameters
+        config = self._other_params(config)
+        config.write()
+        #Now we need to regex the generated file to fit the gadget format
+        #This is somewhat unsafe, but who cares?
+        cf = open(config.filename,'r')
+        configstr = cf.read()
+        configstr = re.sub("#","%",configstr)
+        configstr = re.sub("="," ",configstr)
+        cf.close()
+        cf = open(config.filename,'w')
+        cf.write(configstr)
+        cf.close()
+        return
+
+
+    def _feedback_params(self, config):
+        """Config parameters for the feedback models"""
+        config['StarFormationOn'] = 1
+
+    def _other_params(self, config):
+        """Function to override to set other config parameters"""
+        return config
+
+    def generate_times(self):
+        """List of output times for a simulation. Can be overridden,
+        but default is evenly spaced in a from start to end."""
+        astart = 1./(1+self.redshift)
+        aend = 1./(1+self.redend)
+        times = np.linspace(astart, aend,9)
+        return times
+
+    def print_times(self, times):
+        """Print times to the times.txt file"""
+        with open(os.path.join(self.outdir, "times.txt"),'w') as timetxt:
+            timetxt.write(times)
+
