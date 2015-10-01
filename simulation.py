@@ -67,6 +67,7 @@ class Simulation(object):
         self.omeganu = 0
         #CPU parameters
         self.nproc = nproc
+        self.email = "sbird4@jhu.edu"
         self.timelimit = timelimit
         #Maximum memory available for an MPI task
         self.memory = memory
@@ -97,6 +98,10 @@ class Simulation(object):
         #Default parameter file names
         self.gadgetdefaultparam = "gadgetparams.param"
         self.gadgetparam = "gadget3.param"
+        #Executable names
+        self.cambexe = "camb"
+        self.gadgetexe = "P-Gadget3"
+        self.genicexe = "N-GenIC"
 
     def cambfile(self):
         """Generate the CAMB parameter file from the (cosmological) simulation parameters and the default values"""
@@ -308,4 +313,36 @@ class Simulation(object):
         """Print times to the times.txt file"""
         with open(os.path.join(self.outdir, "times.txt"),'w') as timetxt:
             timetxt.write(times)
+
+    def generate_mpi_submit(self):
+        """Generate a sample mpi_submit file.
+        The prefix argument is a string at the start of each line.
+        It separates queueing system directives from normal comments"""
+        with open(os.path.join(self.outdir, "mpi_submit"),'w') as mpis:
+            mpis.write("#!/bin/bash")
+            mpis.write(self._queue_directive())
+            mpis.write("mpirun "+self.gadgetexe+" "+self.gadgetparam)
+
+    def _queue_directive(self, prefix="#PBS"):
+        """Write the part of the mpi_submit file that directs the queueing system.
+        This is usually specific to a given cluster.
+        The prefix argument is a string at the start of each line.
+        It separates queueing system directives from normal comments"""
+        qstring = prefix+" -j eo\n"
+        qstring += prefix+" -m bae\n"
+        qstring += prefix+" -M "+self.email+"\n"
+        qstring += prefix+" -l walltime="+self.timelimit+":00:00\n"
+        return qstring
+
+#This decorator (function which acts on a function) contains the information
+#specific to using the COMA cluster.
+def coma_mpi_decorate(que_str):
+    """Decorate an mpi_submit function for a given cluster"""
+    def new_que_str(self, prefix="#PBS"):
+        """Generate mpi_submit with coma specific parts"""
+        qstring = que_str(self, prefix)
+        qstring += prefix+" -q amd\n"
+        qstring += prefix+" -l nodes="+self.nproc/16+":ppn=16\n"
+        return qstring
+    return new_que_str
 
