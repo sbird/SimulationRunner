@@ -5,6 +5,7 @@ It is meant to be called from other classes as part of a suite,
 More specialised simulation types can inherit from it.
 Different machines can be implemented as decorators.
 """
+from __future__ import print_function
 import os.path
 import re
 import configobj
@@ -86,7 +87,7 @@ class Simulation(object):
             os.mkdir(outdir)
         else:
             if os.listdir(outdir) != []:
-                print "Warning: ",outdir," is non-empty"
+                print("Warning: ",outdir," is non-empty")
         self.outdir = outdir
         #Default values for the CAMB parameters
         self.cambdefault = "params.ini"
