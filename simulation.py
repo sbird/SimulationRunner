@@ -11,6 +11,8 @@ import re
 import configobj
 import math
 import numpy as np
+import shutil
+import read_uvb_tab
 
 class Simulation(object):
     """
@@ -38,7 +40,7 @@ class Simulation(object):
     scalar_amp - Initial amplitude of scalar power spectrum to feed to CAMB
     ns - tilt of scalar power spectrum to feed to CAMB
     """
-    def __init__(self, outdir, box, npart, nproc, memory, timelimit, seed = 9281110, redshift=99, redend = 0, separate_gas=True, omegac=0.2408, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97):
+    def __init__(self, outdir, box, npart, nproc, memory, timelimit, seed = 9281110, redshift=99, redend = 0, separate_gas=True, omegac=0.2408, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, uvb="hm"):
         #Check that input is reasonable and set parameters
         #In Mpc/h
         assert box < 20000
@@ -65,6 +67,9 @@ class Simulation(object):
         self.seed = seed
         #Baryons?
         self.separate_gas = separate_gas
+        #UVB? Only matters if gas
+        self.uvb = uvb
+        assert self.uvb == "hm" or self.uvb == "fg"
         self.omeganu = 0
         #CPU parameters
         self.nproc = nproc
@@ -273,6 +278,8 @@ class Simulation(object):
         if self.separate_gas:
             config['CoolingOn'] = 1
             config = self._feedback_params(config)
+            #Copy a TREECOOL file into the right place.
+            self.copy_uvb()
             #Need more memory for a feedback model
             config['PartAllocFactor'] = 4
         else:
@@ -293,7 +300,6 @@ class Simulation(object):
         cf.close()
         return
 
-
     def _feedback_params(self, config):
         """Config parameters for the feedback models"""
         config['StarFormationOn'] = 1
@@ -309,6 +315,11 @@ class Simulation(object):
         aend = 1./(1+self.redend)
         times = np.linspace(astart, aend,9)
         return times
+
+    def copy_uvb(self):
+        """The UVB amplitude for Gadget is specified in a file named TREECOOL in the same directory as the gadget binary."""
+        fuvb = read_uvb_tab.get_uvb_filename(self.uvb)
+        shutil.copy(fuvb, os.path.join(self.outdir,"TREECOOL"))
 
     def print_times(self, times):
         """Print times to the times.txt file"""
