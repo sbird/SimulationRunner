@@ -224,7 +224,7 @@ class Simulation(object):
             config.write("MOREPARAMS")
             config.write("POWERSPEC_ON_OUTPUT")
             config.write("POWERSPEC_ON_OUTPUT_EACH_TYPE")
-            #isend/irecv is quite slow on some clusters because of the extra memory declarations..
+            #isend/irecv is quite slow on some clusters because of the extra memory allocations.
             #Maybe test this on your specific system and see if it helps.
             config.write("NO_ISEND_IRECV_IN_DOMAIN")
             config.write("NO_ISEND_IRECV_IN_PM")
@@ -288,6 +288,7 @@ class Simulation(object):
         config['BufferSize'] = 100
         if self.separate_gas:
             config['CoolingOn'] = 1
+            config = self._sfr_params(config)
             config = self._feedback_params(config)
             #Copy a TREECOOL file into the right place.
             self.copy_uvb()
@@ -311,9 +312,21 @@ class Simulation(object):
         cf.close()
         return
 
+    def _sfr_params(self, config):
+        """Config parameters for the default Springel & Hernquist star formation model"""
+        config['StarFormationOn'] = 1
+        config['CritPhysDensity'] =  0
+        config['MaxSfrTimescale'] = 1.5
+        config['CritOverDensity'] = 1000.0
+        config['TempSupernova'] = 1e+08
+        config['TempClouds'] = 1000
+        config['FactorSN'] = 0.1
+        config['FactorEVP'] = 1000
+        return config
+
     def _feedback_params(self, config):
         """Config parameters for the feedback models"""
-        config['StarFormationOn'] = 1
+        return config
 
     def _other_params(self, config):
         """Function to override to set other config parameters"""
