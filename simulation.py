@@ -14,6 +14,7 @@ import numpy as np
 import shutil
 import glob
 import read_uvb_tab
+import subprocess
 
 def find_exec(executable):
     """Simple function to locate a binary in a nearby directory"""
@@ -118,6 +119,8 @@ class Simulation(object):
         #Executable names
         self.cambexe = "camb"
         self.gadgetexe = "P-Gadget3"
+        self.gadgetconfig = "Config.sh"
+        self.gadget_dir = os.path.expanduser("~/codes/P-Gadget3/")
         self.genicexe = "N-GenIC"
 
     def cambfile(self):
@@ -154,7 +157,7 @@ class Simulation(object):
         config = self._camb_neutrinos(config)
         #Write the config file
         config.write()
-        return camb_output
+        return (camb_output, config.filename)
 
     def _camb_neutrinos(self, config):
         """Modify the CAMB config file to have massless neutrinos.
@@ -196,19 +199,20 @@ class Simulation(object):
         config = self._genicfile_neutrinos(config)
         config['Seed'] = self.seed
         config.write()
-        return os.path.join(genicout, genicfile)
+        return (os.path.join(genicout, genicfile), config.filename)
 
     def _genicfile_neutrinos(self, config):
         """Neutrino parameters easily overridden"""
         config['NU_On'] = 0
         return config
 
-    def gadget3Config(self):
+    def gadget3config(self):
         """Generate a Gadget Config.sh file. This doesn't fit nicely into configobj.
         Many of the simulation parameters are stored here, but none of the cosmology.
         Some of these parameters are cluster dependent.
         We are assuming Gadget-3. Arepo or Gadget-2 need a different set of options."""
-        with open(os.path.join(self.outdir, "Config.sh")) as config:
+        g_config_filename = os.path.join(self.outdir, self.gadgetconfig)
+        with open(g_config_filename) as config:
             config.write("PERIODIC")
             #Can be reduced for lower memory but lower speed.
             config.write("PMGRID="+self.npart*2)
@@ -240,7 +244,7 @@ class Simulation(object):
                 #config.write("UVB_SELF_SHIELDING")
                 #Optional feedback model options
                 self._feedback_config_options(config)
-        return
+        return g_config_filename
 
     def _feedback_config_options(self, config):
         """Options in the Config.sh file for a potential star-formation/feedback model"""
@@ -268,9 +272,9 @@ class Simulation(object):
         config['HubbleParam'] = self.hubble
         config['BoxSize'] = self.box * 1000
         config['OutputListOn'] = 1
-        config['OutputListFilenames'] = "times.txt"
-        times = self.generate_times()
-        self.print_times(times)
+        timefile = "times.txt"
+        config['OutputListFilenames'] = timefile
+        self._print_times(timefile)
         #This should just be larger than the simulation time limit
         config['CpuTimeBetRestartFile'] = 60*60*self.timelimit*10
         config['NumFilesPerSnapshot'] = self.numfiles
@@ -291,7 +295,7 @@ class Simulation(object):
             config = self._sfr_params(config)
             config = self._feedback_params(config)
             #Copy a TREECOOL file into the right place.
-            self.copy_uvb()
+            self._copy_uvb()
             #Need more memory for a feedback model
             config['PartAllocFactor'] = 4
         else:
@@ -332,7 +336,7 @@ class Simulation(object):
         """Function to override to set other config parameters"""
         return config
 
-    def generate_times(self):
+    def _generate_times(self):
         """List of output times for a simulation. Can be overridden,
         but default is evenly spaced in a from start to end."""
         astart = 1./(1+self.redshift)
@@ -340,14 +344,15 @@ class Simulation(object):
         times = np.linspace(astart, aend,9)
         return times
 
-    def copy_uvb(self):
+    def _copy_uvb(self):
         """The UVB amplitude for Gadget is specified in a file named TREECOOL in the same directory as the gadget binary."""
         fuvb = read_uvb_tab.get_uvb_filename(self.uvb)
         shutil.copy(fuvb, os.path.join(self.outdir,"TREECOOL"))
 
-    def print_times(self, times):
+    def _print_times(self, timefile):
         """Print times to the times.txt file"""
-        with open(os.path.join(self.outdir, "times.txt"),'w') as timetxt:
+        times = self._generate_times()
+        with open(os.path.join(self.outdir, timefile),'w') as timetxt:
             timetxt.write(times)
 
     def generate_mpi_submit(self):
@@ -357,7 +362,7 @@ class Simulation(object):
         with open(os.path.join(self.outdir, "mpi_submit"),'w') as mpis:
             mpis.write("#!/bin/bash")
             mpis.write(self._queue_directive())
-            mpis.write("mpirun "+self.gadgetexe+" "+self.gadgetparam)
+            mpis.write("mpirun -np "+self.nproc+" "+self.gadgetexe+" "+self.gadgetparam)
 
     def _queue_directive(self, prefix="#PBS"):
         """Write the part of the mpi_submit file that directs the queueing system.
@@ -369,6 +374,38 @@ class Simulation(object):
         qstring += prefix+" -M "+self.email+"\n"
         qstring += prefix+" -l walltime="+self.timelimit+":00:00\n"
         return qstring
+
+    def make_simulation(self):
+        """Wrapper function to make all the simulation parameter files in turn and run the binaries"""
+        #First generate the input files for CAMB
+        (camb_output, camb_param) = self.cambfile()
+        #Then run CAMB
+        camb = find_exec("camb")
+        #In python 3.5, can use subprocess.run to do this.
+        #But for backwards compat, use check_output
+        self.camb_stdout = subprocess.check_output([camb, camb_param])
+        #Now generate the GenIC parameters
+        (genic_output, genic_param) = self.genicfile(camb_output)
+        #Run N-GenIC
+        genic = find_exec("N-GenIC")
+        self.genic_stdout = subprocess.check_output([genic, genic_param])
+        #Generate Gadget makefile
+        gadget_config = self.gadget3config()
+        #Symlink the new gadget config to the source directory
+        os.remove(os.path.join(self.gadget_dir, self.gadgetconfig))
+        os.symlink(gadget_config, os.path.join(self.gadget_dir, self.gadgetconfig))
+        #Build gadget
+        gadget_binary = os.path.join(self.gadget_dir, self.gadgetexe)
+        g_mtime = os.stat(gadget_binary).st_mtime
+        self.make_stdout = subprocess.check_output(["make", "-j4"], cwd=self.gadget_dir)
+        #Check that the last-changed time of the binary has actually changed..
+        assert g_mtime != os.stat(gadget_binary).st_mtime
+        #Copy the gadget binary to the new location
+        shutil.copy(os.path.join(self.gadget_dir, self.gadgetexe), os.path.join(self.outdir,self.gadgetexe))
+        #Generate Gadget parameter file
+        self.gadget3params(genic_output)
+        #Generate mpi_submit file
+        self.generate_mpi_submit()
 
 #This decorator (function which acts on a function) contains the information
 #specific to using the COMA cluster.
