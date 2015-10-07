@@ -17,10 +17,12 @@ Nsample=512
 Box= 512000.0
 
 # Base-filename of output files
-FileBase =test
-OutputDir= test   # Directory for output
+FileBase =test  
+# Directory for storing output files
+OutputDir= test 
 
-GlassFile= /home/spb/data/glass/reg-grid-128-dm  # Glass-File
+# Location of default glass-File (a regular grid)
+GlassFile= /home/spb/data/glass/reg-grid-128-dm 
 # Number of times the glass file is
 # tiled in each dimension (must be an integer)
 GlassTileFac= 4                
