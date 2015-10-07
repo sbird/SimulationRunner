@@ -43,5 +43,6 @@ class LymanAlphaSim(simulation.Simulation):
 
 #TODO: memory, timelimit and nproc should be moved to machine specific properties in a decorator.
 if __name__ == "__main__":
+    LymanAlphaSim._queue_directive = simulation.coma_mpi_decorate(LymanAlphaSim._queue_directive)
     ss = LymanAlphaSim(os.path.expanduser("~/data/Lya_Boss/test1"), box=60, npart=512, nproc=256,memory=2000,timelimit=24.)
     ss.make_simulation(verbose=True)

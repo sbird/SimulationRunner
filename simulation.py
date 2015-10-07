@@ -366,17 +366,16 @@ class Simulation(object):
     def _print_times(self, timefile):
         """Print times to the times.txt file"""
         times = self._generate_times()
-        with open(os.path.join(self.outdir, timefile),'w') as timetxt:
-            timetxt.write(times)
+        np.savetxt(os.path.join(self.outdir, timefile), times)
 
     def generate_mpi_submit(self):
         """Generate a sample mpi_submit file.
         The prefix argument is a string at the start of each line.
         It separates queueing system directives from normal comments"""
         with open(os.path.join(self.outdir, "mpi_submit"),'w') as mpis:
-            mpis.write("#!/bin/bash")
+            mpis.write("#!/bin/bash\n")
             mpis.write(self._queue_directive())
-            mpis.write("mpirun -np "+self.nproc+" "+self.gadgetexe+" "+self.gadgetparam)
+            mpis.write("mpirun -np "+str(self.nproc)+" "+self.gadgetexe+" "+self.gadgetparam)
 
     def _queue_directive(self, prefix="#PBS"):
         """Write the part of the mpi_submit file that directs the queueing system.
@@ -411,7 +410,7 @@ class Simulation(object):
         #Build gadget
         gadget_binary = os.path.join(self.gadget_dir, self.gadgetexe)
         g_mtime = os.stat(gadget_binary).st_mtime
-        self.make_stdout = subprocess.check_call(["make", "-j4"], cwd=self.gadget_dir)
+        self.make_output = subprocess.check_output(["make", "-j8"], cwd=self.gadget_dir, universal_newlines=True)
         #Check that the last-changed time of the binary has actually changed..
         assert g_mtime != os.stat(gadget_binary).st_mtime
         #Copy the gadget binary to the new location
@@ -429,7 +428,7 @@ def coma_mpi_decorate(que_str):
         """Generate mpi_submit with coma specific parts"""
         qstring = que_str(self, prefix)
         qstring += prefix+" -q amd\n"
-        qstring += prefix+" -l nodes="+self.nproc/16+":ppn=16\n"
+        qstring += prefix+" -l nodes="+str(self.nproc/16)+":ppn=16\n"
         return qstring
     return new_que_str
 
