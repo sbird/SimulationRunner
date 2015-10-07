@@ -295,7 +295,7 @@ class Simulation(object):
         #There is a maximum here because some filesystems may not like parallel writes!
         config['NumFilesWrittenInParallel'] = np.min([self.maxpwrite, self.numfiles])
         #Softening is 1/30 of the mean linear interparticle spacing
-        soften = self.box/self.npart/30.
+        soften = 1000 * self.box/self.npart/30.
         for ptype in ('Gas', 'Halo', 'Disk', 'Bulge', 'Stars', 'Bndry'):
             config['Softening'+ptype] = soften
             config['Softening'+ptype+'MaxPhys'] = soften
