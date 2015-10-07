@@ -15,6 +15,7 @@ import shutil
 import glob
 import read_uvb_tab
 import subprocess
+import json
 
 def find_exec(executable):
     """Simple function to locate a binary in a nearby directory"""
@@ -25,6 +26,14 @@ def find_exec(executable):
     if len(exists) > 0:
         return exists[0]
     raise ValueError(executable+" not found")
+
+def get_git_hash(path):
+    """Get the git hash of a file."""
+    rpath = os.path.realpath(path)
+    if not os.path.isdir(rpath):
+        rpath = os.path.dirname(rpath)
+    commit_hash = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd = rpath, universal_newlines=True)
+    return commit_hash
 
 class Simulation(object):
     """
@@ -125,6 +134,9 @@ class Simulation(object):
         #Output times
         #Extra redshifts at which to generate CAMB output, in addition to self.redshift and self.redshift/2
         self.camb_times = [9,4,2,1,0]
+        #For repeatability, we store git hashes of Gadget, GenIC, CAMB and ourselves
+        #at time of running.
+        self.simulation_git = get_git_hash(".")
 
     def cambfile(self):
         """Generate the CAMB parameter file from the (cosmological) simulation parameters and the default values"""
@@ -392,12 +404,18 @@ class Simulation(object):
         qstring += prefix+" -l walltime="+str(self.timelimit)+":00:00\n"
         return qstring
 
-    def make_simulation(self, verbose=False):
+    def txt_description(self):
+        """Generate a text file describing the parameters of the code that generated this simulation, for reproducibility."""
+        with open(os.path.join(self.outdir, "Simulation.json"), 'w') as jsout:
+            json.dump(self.__dict__, jsout)
+
+    def make_simulation(self):
         """Wrapper function to make all the simulation parameter files in turn and run the binaries"""
         #First generate the input files for CAMB
         (camb_output, camb_param) = self.cambfile()
         #Then run CAMB
         camb = find_exec("camb")
+        self.camb_git = get_git_hash(camb)
         #In python 3.5, can use subprocess.run to do this.
         #But for backwards compat, use check_output
         subprocess.check_call([camb, camb_param], cwd=os.path.dirname(camb))
@@ -405,6 +423,7 @@ class Simulation(object):
         (genic_output, genic_param) = self.genicfile(camb_output)
         #Run N-GenIC
         genic = find_exec("N-GenIC")
+        self.genic_git = get_git_hash(genic)
         subprocess.check_call([genic, genic_param])
         #Generate Gadget makefile
         gadget_config = self.gadget3config()
@@ -414,6 +433,7 @@ class Simulation(object):
         #Build gadget
         gadget_binary = os.path.join(self.gadget_dir, self.gadgetexe)
         g_mtime = os.stat(gadget_binary).st_mtime
+        self.gadget_git = get_git_hash(gadget_binary)
         self.make_output = subprocess.check_output(["make", "-j8"], cwd=self.gadget_dir, universal_newlines=True)
         #Check that the last-changed time of the binary has actually changed..
         assert g_mtime != os.stat(gadget_binary).st_mtime
@@ -423,6 +443,8 @@ class Simulation(object):
         self.gadget3params(genic_output)
         #Generate mpi_submit file
         self.generate_mpi_submit()
+        #Save a json of ourselves.
+        self.txt_description()
 
 #This decorator (function which acts on a function) contains the information
 #specific to using the COMA cluster.
