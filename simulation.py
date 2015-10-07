@@ -385,7 +385,7 @@ class Simulation(object):
         qstring = prefix+" -j eo\n"
         qstring += prefix+" -m bae\n"
         qstring += prefix+" -M "+self.email+"\n"
-        qstring += prefix+" -l walltime="+self.timelimit+":00:00\n"
+        qstring += prefix+" -l walltime="+str(self.timelimit)+":00:00\n"
         return qstring
 
     def make_simulation(self, verbose=False):
