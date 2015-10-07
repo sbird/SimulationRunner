@@ -458,7 +458,7 @@ def coma_mpi_decorate(class_name, nproc=256, timelimit=24):
         """Docstring should be specified in newdoc"""
         __doc__ = newdoc
         def __init__(self, *args, **kwargs):
-            super().__init__(self, *args, **kwargs)
+            super().__init__(*args, **kwargs)
             self.memory = 1200
             self.timelimit = timelimit
             self.nproc = nproc
