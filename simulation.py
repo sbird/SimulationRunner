@@ -226,34 +226,34 @@ class Simulation(object):
         Some of these parameters are cluster dependent.
         We are assuming Gadget-3. Arepo or Gadget-2 need a different set of options."""
         g_config_filename = os.path.join(self.outdir, self.gadgetconfig)
-        with open(g_config_filename) as config:
-            config.write("PERIODIC")
+        with open(g_config_filename,'w') as config:
+            config.write("PERIODIC\n")
             #Can be reduced for lower memory but lower speed.
-            config.write("PMGRID="+self.npart*2)
+            config.write("PMGRID="+str(self.npart*2)+"\n")
             #These are memory options: if short on memory, change them.
-            config.write("MULTIPLEDOMAINS=4")
-            config.write("TOPNODEFACTOR=3.0")
+            config.write("MULTIPLEDOMAINS=4\n")
+            config.write("TOPNODEFACTOR=3.0\n")
             #Again, can be turned off for lower memory usage
             #but changes output format
-            config.write("LONGIDS")
-            config.write("PEANOHILBERT")
-            config.write("WALLCLOCK")
-            config.write("MYSORT")
-            config.write("MOREPARAMS")
-            config.write("POWERSPEC_ON_OUTPUT")
-            config.write("POWERSPEC_ON_OUTPUT_EACH_TYPE")
+            config.write("LONGIDS\n")
+            config.write("PEANOHILBERT\n")
+            config.write("WALLCLOCK\n")
+            config.write("MYSORT\n")
+            config.write("MOREPARAMS\n")
+            config.write("POWERSPEC_ON_OUTPUT\n")
+            config.write("POWERSPEC_ON_OUTPUT_EACH_TYPE\n")
             #isend/irecv is quite slow on some clusters because of the extra memory allocations.
             #Maybe test this on your specific system and see if it helps.
-            config.write("NO_ISEND_IRECV_IN_DOMAIN")
-            config.write("NO_ISEND_IRECV_IN_PM")
+            config.write("NO_ISEND_IRECV_IN_DOMAIN\n")
+            config.write("NO_ISEND_IRECV_IN_PM\n")
             #Changes H(z)
-            config.write("INCLUDE_RADIATION")
-            config.write("HAVE_HDF5")
+            config.write("INCLUDE_RADIATION\n")
+            config.write("HAVE_HDF5\n")
             #We may need this sometimes, depending on the machine
-            #config.write("NOTYPEPREFIX_FFTW")
+            #config.write("NOTYPEPREFIX_FFTW\n")
             #Options for gas simulations
             if self.separate_gas:
-                config.write("COOLING")
+                config.write("COOLING\n")
                 #This needs implementing
                 #config.write("UVB_SELF_SHIELDING")
                 #Optional feedback model options
