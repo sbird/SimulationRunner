@@ -122,6 +122,9 @@ class Simulation(object):
         self.gadgetconfig = "Config.sh"
         self.gadget_dir = os.path.expanduser("~/codes/P-Gadget3/")
         self.genicexe = "N-GenIC"
+        #Output times
+        #Extra redshifts at which to generate CAMB output, in addition to self.redshift and self.redshift/2
+        self.camb_times = [9,4,2,1,0]
 
     def cambfile(self):
         """Generate the CAMB parameter file from the (cosmological) simulation parameters and the default values"""
@@ -129,7 +132,12 @@ class Simulation(object):
         config = configobj.ConfigObj(self.cambdefault)
         config.filename = os.path.join(self.outdir, self.cambout)
         #Set values
-        camb_output = os.path.join(self.outdir,"camb_linear")+"/ics_"
+        camb_outdir = os.path.join(self.outdir,"camb_linear")
+        try:
+            os.mkdir(camb_outdir)
+        except FileExistsError:
+            pass
+        camb_output = camb_outdir+"/ics"
         config['output_root'] = camb_output
         #Can't change this easily because the parameters then have different names
         assert config['use_physical'] == 'T'
@@ -140,18 +148,19 @@ class Simulation(object):
         #Initial power spectrum: MAKE SURE you set the pivot scale to the WMAP value!
         config['pivot_scalar'] = 2e-3
         config['pivot_tensor'] = 2e-3
-        config['scalar_specral_index(1)'] = self.ns
-        config['scalar_specral_amp(1)'] = self.scalar_amp
+        config['scalar_spectral_index(1)'] = self.ns
+        config['scalar_spectral_amp(1)'] = self.scalar_amp
         #Various numerical parameters
         #Maximum relevant scale is 2 pi * softening length. Use a kmax double that for safety.
         config['transfer_kmax'] = 2*math.pi*100*self.npart/self.box
         #At which redshifts should we produce CAMB output: we want the starting redshift of the simulation,
         #but we also want some other values for checking purposes
-        redshifts = [self.redshift, (self.redshift+1)/2-1] + [9,4,2,1,0]
-        for (n,zz) in zip(range(len(redshifts)), redshifts):
+        redshifts = [self.redshift, (self.redshift+1)/2-1] + self.camb_times
+        for (n,zz) in zip(range(1,len(redshifts)+1), redshifts):
             config['transfer_redshift('+str(n)+')'] = zz
             config['transfer_filename('+str(n)+')'] = 'transfer_'+str(zz)+'.dat'
             config['transfer_matterpower('+str(n)+')'] = 'matterpow_'+str(zz)+'.dat'
+        config['transfer_num_redshifts'] = len(redshifts)
         #Set up the neutrinos.
         #This has it's own function so it can be overriden by child classes
         config = self._camb_neutrinos(config)
@@ -164,6 +173,7 @@ class Simulation(object):
         Designed to be easily over-ridden"""
         config['massless_neutrinos'] = 3.046
         config['massive_neutrinos'] = 0
+        config['omnuh2'] = 0.
         return config
 
     def genicfile(self, camb_output):
@@ -174,6 +184,10 @@ class Simulation(object):
         config['Nsample'] = self.npart
         config['Nmesh'] = self.npart * 3/2
         genicout = "ICS"
+        try:
+            os.mkdir(os.path.join(self.outdir, genicout))
+        except FileExistsError:
+            pass
         config['OutputDir'] = os.path.join(self.outdir, genicout)
         #Is this enough information, or should I add a short hash?
         genicfile = str(self.box)+"_"+str(self.npart)+"_"+str(self.redshift)
@@ -192,8 +206,8 @@ class Simulation(object):
         config['OmegaDM_2ndSpecies'] = self.omeganu
         config['HubbleParam'] = self.hubble
         config['Redshift'] = self.redshift
-        config['FileWithInputSpectrum'] = camb_output + "matterpow_"+str(self.redshift)+".dat"
-        config['FileWithTransfer'] = camb_output + "transfer_"+str(self.redshift)+".dat"
+        config['FileWithInputSpectrum'] = camb_output + "_matterpow_"+str(self.redshift)+".dat"
+        config['FileWithTransfer'] = camb_output + "_transfer_"+str(self.redshift)+".dat"
         config['NumFiles'] = self.numfiles
         assert config['InputSpectrum_UnitLength_in_cm'] == '3.085678e24'
         config = self._genicfile_neutrinos(config)
@@ -375,7 +389,7 @@ class Simulation(object):
         qstring += prefix+" -l walltime="+self.timelimit+":00:00\n"
         return qstring
 
-    def make_simulation(self):
+    def make_simulation(self, verbose=False):
         """Wrapper function to make all the simulation parameter files in turn and run the binaries"""
         #First generate the input files for CAMB
         (camb_output, camb_param) = self.cambfile()
@@ -383,12 +397,12 @@ class Simulation(object):
         camb = find_exec("camb")
         #In python 3.5, can use subprocess.run to do this.
         #But for backwards compat, use check_output
-        self.camb_stdout = subprocess.check_output([camb, camb_param])
+        self.camb_stdout = subprocess.check_call([camb, camb_param], cwd=os.path.dirname(camb))
         #Now generate the GenIC parameters
         (genic_output, genic_param) = self.genicfile(camb_output)
         #Run N-GenIC
         genic = find_exec("N-GenIC")
-        self.genic_stdout = subprocess.check_output([genic, genic_param])
+        self.genic_stdout = subprocess.check_call([genic, genic_param])
         #Generate Gadget makefile
         gadget_config = self.gadget3config()
         #Symlink the new gadget config to the source directory
@@ -397,7 +411,7 @@ class Simulation(object):
         #Build gadget
         gadget_binary = os.path.join(self.gadget_dir, self.gadgetexe)
         g_mtime = os.stat(gadget_binary).st_mtime
-        self.make_stdout = subprocess.check_output(["make", "-j4"], cwd=self.gadget_dir)
+        self.make_stdout = subprocess.check_call(["make", "-j4"], cwd=self.gadget_dir)
         #Check that the last-changed time of the binary has actually changed..
         assert g_mtime != os.stat(gadget_binary).st_mtime
         #Copy the gadget binary to the new location
