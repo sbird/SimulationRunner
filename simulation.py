@@ -262,7 +262,7 @@ class Simulation(object):
 
     def _feedback_config_options(self, config):
         """Options in the Config.sh file for a potential star-formation/feedback model"""
-        config.write("USE_SFR")
+        config.write("SFR")
         return
 
     def gadget3params(self, genicfileout):
@@ -275,6 +275,10 @@ class Simulation(object):
         config.filename = os.path.join(self.outdir, self.gadgetparam)
         config['InitCondFile'] = genicfileout
         config['OutputDir'] = "output"
+        try:
+            os.mkdir(os.path.join(self.outdir, "output"))
+        except FileExistsError:
+            pass
         config['SnapshotFileBase'] = "snap"
         config['TimeLimitCPU'] = 60*60*self.timelimit*20/17.-3000
         config['TimeBegin'] = 1./(1+self.redshift)
@@ -287,7 +291,7 @@ class Simulation(object):
         config['BoxSize'] = self.box * 1000
         config['OutputListOn'] = 1
         timefile = "times.txt"
-        config['OutputListFilenames'] = timefile
+        config['OutputListFilename'] = timefile
         self._print_times(timefile)
         #This should just be larger than the simulation time limit
         config['CpuTimeBetRestartFile'] = 60*60*self.timelimit*10
@@ -332,7 +336,7 @@ class Simulation(object):
 
     def _sfr_params(self, config):
         """Config parameters for the default Springel & Hernquist star formation model"""
-        config['StarFormationOn'] = 1
+        config['StarformationOn'] = 1
         config['CritPhysDensity'] =  0
         config['MaxSfrTimescale'] = 1.5
         config['CritOverDensity'] = 1000.0
@@ -396,12 +400,12 @@ class Simulation(object):
         camb = find_exec("camb")
         #In python 3.5, can use subprocess.run to do this.
         #But for backwards compat, use check_output
-        self.camb_stdout = subprocess.check_call([camb, camb_param], cwd=os.path.dirname(camb))
+        subprocess.check_call([camb, camb_param], cwd=os.path.dirname(camb))
         #Now generate the GenIC parameters
         (genic_output, genic_param) = self.genicfile(camb_output)
         #Run N-GenIC
         genic = find_exec("N-GenIC")
-        self.genic_stdout = subprocess.check_call([genic, genic_param])
+        subprocess.check_call([genic, genic_param])
         #Generate Gadget makefile
         gadget_config = self.gadget3config()
         #Symlink the new gadget config to the source directory

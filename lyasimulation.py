@@ -21,7 +21,7 @@ class LymanAlphaSim(simulation.Simulation):
 
     def _feedback_config_options(self, config):
         """Config options specific to the Lyman alpha forest star formation criterion"""
-        config.write("USE_SFR\n")
+        config.write("SFR\n")
         config.write("QUICK_LYALPHA\n")
         if self.rescale_gamma:
             config.write("RESCALE_EEOS\n")
