@@ -61,7 +61,7 @@ class Simulation(object):
     scalar_amp - Initial amplitude of scalar power spectrum to feed to CAMB
     ns - tilt of scalar power spectrum to feed to CAMB
     """
-    def __init__(self, outdir, box, npart, nproc, memory, timelimit, seed = 9281110, redshift=99, redend = 0, separate_gas=True, omegac=0.2408, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, uvb="hm"):
+    def __init__(self, outdir, box, npart, seed = 9281110, redshift=99, redend = 0, separate_gas=True, omegac=0.2408, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, uvb="hm"):
         #Check that input is reasonable and set parameters
         #In Mpc/h
         assert box < 20000
@@ -92,19 +92,19 @@ class Simulation(object):
         self.uvb = uvb
         assert self.uvb == "hm" or self.uvb == "fg"
         self.omeganu = 0
-        #CPU parameters
-        self.nproc = nproc
+        #CPU parameters: these are specified to a default here, but should be over-ridden in a machine-specific decorator.
+        self.nproc = 8
         self.email = "sbird4@jhu.edu"
-        self.timelimit = timelimit
+        self.timelimit = 10
         #Maximum memory available for an MPI task
-        self.memory = memory
+        self.memory = 1800
         #Number of files per snapshot
         #This is chosen to give a reasonable number and
         #a constant number of particles per file.
         self.numfiles = np.max([1,self.npart**3/2**24])
         #Maximum number of files to write in parallel.
         #Cannot be larger than number of processors
-        self.maxpwrite = nproc
+        self.maxpwrite = self.nproc
         #Total matter density
         self.omega0 = self.omegac + self.omegab + self.omeganu
         outdir = os.path.expanduser(outdir)
@@ -446,15 +446,27 @@ class Simulation(object):
         #Save a json of ourselves.
         self.txt_description()
 
-#This decorator (function which acts on a function) contains the information
+#This decorator (function which acts on a class) contains the information
 #specific to using the COMA cluster.
-def coma_mpi_decorate(que_str):
+def coma_mpi_decorate(class_name, nproc=256, timelimit=24):
     """Decorate an mpi_submit function for a given cluster"""
+    def __init__(self, *args, **kwargs):
+        """New init function which also defines cluster parameters"""
+        self.__real_init__(*args, **kwargs)
+        self.memory = 1200
+        self.timelimit = timelimit
+        self.nproc = nproc
+
     def new_que_str(self, prefix="#PBS"):
         """Generate mpi_submit with coma specific parts"""
-        qstring = que_str(self, prefix)
+        qstring = self._old_queue_directive(prefix)
         qstring += prefix+" -q amd\n"
         qstring += prefix+" -l nodes="+str(self.nproc/16)+":ppn=16\n"
         return qstring
-    return new_que_str
+
+    class_name._old_queue_directive = class_name._queue_directive
+    class_name._queue_directive = new_que_str
+    class_name.__real_init__ = class_name.__init__
+    class_name.__init__ = __init__
+    return class_name
 
