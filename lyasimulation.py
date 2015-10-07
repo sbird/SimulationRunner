@@ -56,8 +56,13 @@ class LymanAlphaSim(simulation.Simulation):
         redshifts = np.concatenate([[49,9],np.arange(4.2,1.9,-0.2)])
         return 1./(1.+redshifts)
 
-def change_power_spectrum(object):
-    """Class to modify """
+    def change_power_spectrum_knots(self):
+        """Multiply the power spectrum file by a function specified by our four knots.
+        We assume that the power spectrum is linearly interpolated between the knots,
+        so that we preserve additivity:
+        ie, P(k | A =1.1, B=1.1) / P(k | A =1, B=1) == P(k | A =1.1) / P(k | A =1.)+ P(k | B =1.1) / P(k | A =B.)"""
+        #How to handle interpolation?
+        #TODO: THIS NEEDS A TEST
 
 if __name__ == "__main__":
     LymanAlphaSim = simulation.coma_mpi_decorate(LymanAlphaSim)
