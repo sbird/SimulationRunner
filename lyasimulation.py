@@ -1,6 +1,8 @@
 """Specialization of the Simulation class to Lyman-alpha forest simulations."""
 
 import simulation
+import os.path
+import numpy as np
 
 class LymanAlphaSim(simulation.Simulation):
     """Specialise the Simulation class for the Lyman alpha forest.
@@ -11,7 +13,11 @@ class LymanAlphaSim(simulation.Simulation):
         self.rescale_gamma = rescale_gamma
         self.rescale_amp = rescale_amp
         self.rescale_slope = rescale_slope
-        simulation.Simulation.__init__(self, outdir=outdir, box=box, npart=npart, nproc=nproc, memory = memory, timelimit=timelimit, seed=seed, redshift=redshift, redend=redend, separate_gas=True, omegac=omegac, omegab=omegab, hubble=hubble, scalar_amp=scalar_amp, ns=ns, uvb=uvb)
+        #TODO: Set up new output directory hierarchy for Lyman alpha simulations
+        new_outdir = outdir
+        simulation.Simulation.__init__(self, outdir=new_outdir, box=box, npart=npart, nproc=nproc, memory = memory, timelimit=timelimit, seed=seed, redshift=redshift, redend=redend, separate_gas=True, omegac=omegac, omegab=omegab, hubble=hubble, scalar_amp=scalar_amp, ns=ns, uvb=uvb)
+        self.camb_times = [9,]+[x for x in np.arange(4.2,1.9,-0.2)]
+
 
     def _feedback_config_options(self, config):
         """Config options specific to the Lyman alpha forest star formation criterion"""
@@ -29,3 +35,13 @@ class LymanAlphaSim(simulation.Simulation):
             config["ExtraHeatingAmp"]  = self.rescale_amp
             config["ExtraHeatingExponent"] = self.rescale_slope
         return config
+
+    def _generate_times(self):
+        """Snapshot outputs for lyman alpha"""
+        redshifts = np.concatenate([[49,9],np.arange(4.2,1.9,-0.2)])
+        return 1./(1.+redshifts)
+
+#TODO: memory, timelimit and nproc should be moved to machine specific properties in a decorator.
+if __name__ == "__main__":
+    ss = LymanAlphaSim(os.path.expanduser("~/data/Lya_Boss/test1"), box=60, npart=512, nproc=256,memory=2000,timelimit=24.)
+    ss.make_simulation(verbose=True)
