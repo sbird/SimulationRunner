@@ -1,6 +1,7 @@
 """Specialization of the Simulation class to Lyman-alpha forest simulations."""
 
 import simulation
+import clusters
 import os
 import numpy as np
 import string
@@ -24,12 +25,12 @@ class LymanAlphaSim(simulation.Simulation):
         #Set up new output directory hierarchy for Lyman alpha simulations
         #First give number of knots and their positions
         knot_spec = [kn+str(kp) for (kn, kp) in zip(knot_names, self.knot_pos)]
-        new_outdir = os.path.join(outdir, "".join(self.knot_spec))
+        new_outdir = os.path.join(outdir, "".join(knot_spec))
         #Then box and npart, as we will want to correct by these
         new_outdir = os.path.join(os.path.join(new_outdir, str(box)), str(npart))
         #Then the knot values that have changed - we may want to add thermal parameters or cosmology here at some point
         knot_changed = [kn+str(kv) for (kn,kv) in zip(knot_names, self.knot_val) if kv != 1.]
-        new_outdir = os.path.join(new_outdir,"knot_"+"".join(self.knot_changed))
+        new_outdir = os.path.join(new_outdir,"knot_"+"".join(knot_changed))
         #Make this directory tree
         os.makedirs(new_outdir)
         simulation.Simulation.__init__(self, outdir=new_outdir, box=box, npart=npart, seed=seed, redshift=redshift, redend=redend, separate_gas=True, omegac=omegac, omegab=omegab, hubble=hubble, scalar_amp=scalar_amp, ns=ns, uvb=uvb)
@@ -108,6 +109,6 @@ def change_power_spectrum_knots(knotpos, knotval, matpow):
     return np.vstack([kval, pval]).T
 
 if __name__ == "__main__":
-    LymanAlphaSim = simulation.coma_mpi_decorate(LymanAlphaSim)
+    LymanAlphaSim = clusters.coma_mpi_decorate(LymanAlphaSim)
     ss = LymanAlphaSim(outdir=os.path.expanduser("~/data/Lya_Boss/test1"), box=60, npart=512)
     ss.make_simulation()
