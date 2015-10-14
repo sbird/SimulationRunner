@@ -207,7 +207,7 @@ class Simulation(object):
         #Whether we have baryons is entirely controlled by the glass file.
         #Since the glass file is just a regular grid, this should probably be in GenIC at some point
         if self.separate_gas:
-            config['GlassFile'] = os.path.expanduser("~/data/glass/reg-grid-128-2comp")
+            config['GlassFile'] = os.path.expanduser("~/data/glass/reg-grid-128-dm-bar")
         else:
             config['GlassFile'] = os.path.expanduser("~/data/glass/reg-grid-128-dm")
         config['GlassTileFac'] = self.npart/128
