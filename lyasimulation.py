@@ -32,7 +32,10 @@ class LymanAlphaSim(simulation.Simulation):
         knot_changed = [kn+str(kv) for (kn,kv) in zip(knot_names, self.knot_val) if kv != 1.]
         new_outdir = os.path.join(new_outdir,"knot_"+"".join(knot_changed))
         #Make this directory tree
-        os.makedirs(new_outdir)
+        try:
+            os.makedirs(new_outdir)
+        except FileExistsError:
+            pass
         simulation.Simulation.__init__(self, outdir=new_outdir, box=box, npart=npart, seed=seed, redshift=redshift, redend=redend, separate_gas=True, omegac=omegac, omegab=omegab, hubble=hubble, scalar_amp=scalar_amp, ns=ns, uvb=uvb)
         self.camb_times = [9,]+[x for x in np.arange(4.2,1.9,-0.2)]
 
