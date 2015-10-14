@@ -16,6 +16,7 @@ import glob
 import read_uvb_tab
 import subprocess
 import json
+import cambpower
 
 def find_exec(executable):
     """Simple function to locate a binary in a nearby directory"""
@@ -445,3 +446,41 @@ class Simulation(object):
         self.generate_mpi_submit()
         #Save a json of ourselves.
         self.txt_description()
+        #Check that the ICs have the right power spectrum
+        self.check_ic_power_spectra(camb_output, genic_output)
+
+    def check_ic_power_spectra(self, camb_output, genicfileout):
+        """Generate the power spectrum for each particle type from the generated simulation files, using GenPK,
+        and check that it matches the input. This is a consistency test on each simulation output."""
+        #Generate power spectra
+        genpk = find_exec("gen-pk")
+        genicfileout = os.path.join(self.outdir, genicfileout)
+        #subprocess.check_call([genpk, "-i", genicfileout, "-o", os.path.dirname(genicfileout)])
+        #Now check that they match what we put into the simulation, from CAMB
+        #Reload the CAMB files from disc, just in case something went wrong writing them.
+        matterpow = camb_output + "_matterpow_"+str(self.redshift)+".dat"
+        transfer = camb_output + "_transfer_"+str(self.redshift)+".dat"
+        camb = cambpower.CAMBPowerSpectrum(matterpow, transfer, kmin=2*math.pi/self.box/5, kmax = self.npart*2*math.pi/self.box*10)
+        species = ["DM",]
+        if self.separate_gas:
+            species.append("by")
+        for sp in species:
+            #GenPK output is at PK-[by,DM]-basename(genicfileout)
+            gpkout = "PK-"+sp+"-"+os.path.basename(genicfileout)
+            go = os.path.join(os.path.dirname(genicfileout), gpkout)
+            assert os.path.exists(go)
+            #Load the power spectra
+            (kk_ic, Pk_ic) = load_genpk(go, self.box)
+            Pk_camb = camb.get_camb_power(kk_ic, species=sp)
+            #Check that they agree between 1/4 the box and half the nyquist frequency
+            imax = np.searchsorted(kk_ic, self.npart*2*math.pi/self.box/2.)
+            imin = np.searchsorted(kk_ic, 2*math.pi/self.box*4)
+            assert np.all(abs(Pk_camb[imin:imax]/Pk_ic[imin:imax] -1) < 0.01)
+
+def load_genpk(infile, box):
+    """Load a power spectrum from a Gen-PK output, modifying units to agree with CAMB"""
+    matpow = np.loadtxt(infile)
+    scale = 2*math.pi/box
+    kk = matpow[1:,0]*scale
+    Pk = matpow[1:,1]/scale**3*(2*math.pi)**3/4/math.pi
+    return (kk, Pk)
