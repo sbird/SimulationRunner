@@ -161,7 +161,7 @@ class Simulation(object):
         config['pivot_scalar'] = 2e-3
         config['pivot_tensor'] = 2e-3
         config['scalar_spectral_index(1)'] = self.ns
-        config['scalar_spectral_amp(1)'] = self.scalar_amp
+        config['scalar_amp(1)'] = self.scalar_amp
         #Various numerical parameters
         #Maximum relevant scale is 2 pi * softening length. Use a kmax double that for safety.
         config['transfer_kmax'] = 2*math.pi*100*self.npart/self.box
