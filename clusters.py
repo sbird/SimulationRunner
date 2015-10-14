@@ -18,7 +18,7 @@ def coma_mpi_decorate(class_name, nproc=256, timelimit=24):
 
         def _queue_directive(self, prefix="#PBS"):
             """Generate mpi_submit with coma specific parts"""
-            qstring = super()._queue_directive(self, prefix)
+            qstring = super()._queue_directive(prefix)
             qstring += prefix+" -q amd\n"
             qstring += prefix+" -l nodes="+str(self.nproc/16)+":ppn=16\n"
             return qstring
