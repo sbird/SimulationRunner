@@ -482,5 +482,5 @@ def load_genpk(infile, box):
     matpow = np.loadtxt(infile)
     scale = 2*math.pi/box
     kk = matpow[1:,0]*scale
-    Pk = matpow[1:,1]/scale**3*(2*math.pi)**3/4/math.pi
+    Pk = matpow[1:,1]/scale**3*(2*math.pi)**3
     return (kk, Pk)
