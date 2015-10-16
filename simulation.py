@@ -111,7 +111,7 @@ class Simulation(object):
         self.maxpwrite = self.nproc
         #Total matter density
         self.omega0 = self.omegac + self.omegab + self.omeganu
-        outdir = os.path.expanduser(outdir)
+        outdir = os.path.realpath(os.path.expanduser(outdir))
         #Make the output directory: will fail if parent does not exist
         if not os.path.exists(outdir):
             os.mkdir(outdir)
