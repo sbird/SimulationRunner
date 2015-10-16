@@ -17,6 +17,9 @@ import read_uvb_tab
 import subprocess
 import json
 import cambpower
+import matplotlib
+matplotlib.use("PDF")
+import matplotlib.pyplot as plt
 
 def find_exec(executable):
     """Simple function to locate a binary in a nearby directory"""
@@ -455,7 +458,7 @@ class Simulation(object):
         #Generate power spectra
         genpk = find_exec("gen-pk")
         genicfileout = os.path.join(self.outdir, genicfileout)
-        #subprocess.check_call([genpk, "-i", genicfileout, "-o", os.path.dirname(genicfileout)])
+        subprocess.check_call([genpk, "-i", genicfileout, "-o", os.path.dirname(genicfileout)])
         #Now check that they match what we put into the simulation, from CAMB
         #Reload the CAMB files from disc, just in case something went wrong writing them.
         matterpow = camb_output + "_matterpow_"+str(self.redshift)+".dat"
@@ -472,10 +475,21 @@ class Simulation(object):
             #Load the power spectra
             (kk_ic, Pk_ic) = load_genpk(go, self.box)
             Pk_camb = camb.get_camb_power(kk_ic, species=sp)
-            #Check that they agree between 1/4 the box and half the nyquist frequency
-            imax = np.searchsorted(kk_ic, self.npart*2*math.pi/self.box/2.)
-            imin = np.searchsorted(kk_ic, 2*math.pi/self.box*4)
-            assert np.all(abs(Pk_camb[imin:imax]/Pk_ic[imin:imax] -1) < 0.01)
+            #Check that they agree between 1/2 the box and 1/quarter the nyquist frequency
+            imax = np.searchsorted(kk_ic, self.npart*2*math.pi/self.box/6)
+            imin = np.searchsorted(kk_ic, 2*math.pi/self.box*2)
+            #Make some useful figures
+            plt.semilogx(kk_ic, Pk_ic/Pk_camb,linewidth=2)
+            plt.semilogx([kk_ic[0]*0.9,kk_ic[-1]*1.1], [0.95,0.95], ls="--",linewidth=2)
+            plt.semilogx([kk_ic[0]*0.9,kk_ic[-1]*1.1], [1.05,1.05], ls="--",linewidth=2)
+            plt.ylim(0., 1.5)
+            plt.savefig(go+"-diff.pdf")
+            plt.clf()
+            plt.loglog(kk_ic, Pk_ic,linewidth=2)
+            plt.loglog(kk_ic, Pk_camb,ls="--", linewidth=2)
+            plt.savefig(go+"-abs.pdf")
+            plt.clf()
+            assert np.all(abs(Pk_camb[imin:imax]/Pk_ic[imin:imax] -1) < 0.05)
 
 def load_genpk(infile, box):
     """Load a power spectrum from a Gen-PK output, modifying units to agree with CAMB"""
