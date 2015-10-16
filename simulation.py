@@ -475,13 +475,15 @@ class Simulation(object):
             #Load the power spectra
             (kk_ic, Pk_ic) = load_genpk(go, self.box)
             Pk_camb = camb.get_camb_power(kk_ic, species=sp)
-            #Check that they agree between 1/2 the box and 1/quarter the nyquist frequency
-            imax = np.searchsorted(kk_ic, self.npart*2*math.pi/self.box/6)
+            #Check that they agree between 1/2 the box and 1/2 the nyquist frequency
+            imax = np.searchsorted(kk_ic, self.npart*2*math.pi/self.box/2)
             imin = np.searchsorted(kk_ic, 2*math.pi/self.box*2)
             #Make some useful figures
             plt.semilogx(kk_ic, Pk_ic/Pk_camb,linewidth=2)
             plt.semilogx([kk_ic[0]*0.9,kk_ic[-1]*1.1], [0.95,0.95], ls="--",linewidth=2)
             plt.semilogx([kk_ic[0]*0.9,kk_ic[-1]*1.1], [1.05,1.05], ls="--",linewidth=2)
+            plt.semilogx([kk_ic[imin],kk_ic[imin]], [0,1.5], ls=":",linewidth=2)
+            plt.semilogx([kk_ic[imax],kk_ic[imax]], [0,1.5], ls=":",linewidth=2)
             plt.ylim(0., 1.5)
             plt.savefig(go+"-diff.pdf")
             plt.clf()
