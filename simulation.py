@@ -473,7 +473,10 @@ class Simulation(object):
             assert os.path.exists(go)
             #Load the power spectra
             (kk_ic, Pk_ic) = load_genpk(go, self.box)
-            Pk_camb = camb.get_camb_power(kk_ic, species=sp)
+            if not self.separate_gas:
+                Pk_camb = camb.get_camb_power(kk_ic, species="tot")
+            else:
+                Pk_camb = camb.get_camb_power(kk_ic, species=sp)
             #Check that they agree between 1/4 the box and 1/4 the nyquist frequency
             imax = np.searchsorted(kk_ic, self.npart*2*math.pi/self.box/4)
             imin = np.searchsorted(kk_ic, 2*math.pi/self.box*4)
