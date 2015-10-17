@@ -495,7 +495,7 @@ class Simulation(object):
             plt.clf()
             assert np.all(abs(Pk_camb[imin:imax]/Pk_ic[imin:imax] -1) < 0.05)
 
-def load_genpk(infile, box, minmode=40):
+def load_genpk(infile, box, minmode=1):
     """Load a power spectrum from a Gen-PK output, modifying units to agree with CAMB"""
     matpow = np.loadtxt(infile)
     scale = 2*math.pi/box
