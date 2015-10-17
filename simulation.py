@@ -492,10 +492,29 @@ class Simulation(object):
             plt.clf()
             assert np.all(abs(Pk_camb[imin:imax]/Pk_ic[imin:imax] -1) < 0.05)
 
-def load_genpk(infile, box):
+def load_genpk(infile, box, minmode=40):
     """Load a power spectrum from a Gen-PK output, modifying units to agree with CAMB"""
     matpow = np.loadtxt(infile)
     scale = 2*math.pi/box
-    kk = matpow[1:,0]*scale
-    Pk = matpow[1:,1]/scale**3*(2*math.pi)**3
-    return (kk, Pk)
+    kk = matpow[:,0]*scale
+    Pk = matpow[:,1]/scale**3*(2*math.pi)**3
+    count = matpow[:,2]
+    #Rebin so that there are at least n modes per bin
+    Pk_rebin = []
+    kk_rebin = []
+    lcount = 0
+    istart = 0
+    iend = 0
+    while iend < np.size(kk):
+        lcount+=count[iend]
+        iend+=1
+        if lcount >= minmode:
+            p = np.sum(count[istart:iend]*Pk[istart:iend])/lcount
+            assert p > 0
+            k = np.sum(count[istart:iend]*kk[istart:iend])/lcount
+            assert k > 0
+            kk_rebin.append(k)
+            Pk_rebin.append(p)
+            istart=iend
+            lcount=0
+    return (np.array(kk_rebin), np.array(Pk_rebin))
