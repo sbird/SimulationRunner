@@ -197,7 +197,7 @@ class Simulation(object):
         config = configobj.ConfigObj(self.genicdefault)
         config.filename = os.path.join(self.outdir, self.genicout)
         config['Box'] = self.box*1000
-        config['Nmesh'] = self.npart * 3/2
+        config['Nmesh'] = self.npart * 2
         genicout = "ICS"
         try:
             os.mkdir(os.path.join(self.outdir, genicout))
