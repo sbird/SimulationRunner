@@ -30,7 +30,7 @@ Redshift= 99        # Starting redshift
 # used (i.e. a sphere in k-space), otherwise modes with
 # |k_x|,|k_y|,|k_z| < k_Nyquist are used
 # (i.e. a cube in k-space)
-SphereMode  =    1
+SphereMode  =    0
 
 # "1" selects Eisenstein & Hu spectrum,
 # "2" selects a tabulated power spectrum in
