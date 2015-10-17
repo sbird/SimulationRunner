@@ -493,7 +493,7 @@ class Simulation(object):
             plt.loglog(kk_ic, Pk_camb,ls="--", linewidth=2)
             plt.savefig(go+"-abs.pdf")
             plt.clf()
-            assert np.all(abs(Pk_camb[imin:imax]/Pk_ic[imin:imax] -1) < 0.05)
+            assert np.all(abs(Pk_ic[imin:imax]/Pk_camb[imin:imax] -1) < 0.05)
 
 def load_genpk(infile, box, minmode=1):
     """Load a power spectrum from a Gen-PK output, modifying units to agree with CAMB"""
