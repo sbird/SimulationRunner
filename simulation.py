@@ -417,7 +417,7 @@ class Simulation(object):
         #First generate the input files for CAMB
         (camb_output, camb_param) = self.cambfile()
         #Then run CAMB
-        camb = find_exec("camb")
+        camb = find_exec(self.cambexe)
         self.camb_git = get_git_hash(camb)
         #In python 3.5, can use subprocess.run to do this.
         #But for backwards compat, use check_output
@@ -425,7 +425,7 @@ class Simulation(object):
         #Now generate the GenIC parameters
         (genic_output, genic_param) = self.genicfile(camb_output)
         #Run N-GenIC
-        genic = find_exec("N-GenIC")
+        genic = find_exec(self.genicexe)
         self.genic_git = get_git_hash(genic)
         subprocess.check_call([genic, genic_param])
         #Generate Gadget makefile
