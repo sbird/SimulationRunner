@@ -207,13 +207,9 @@ class Simulation(object):
         #Is this enough information, or should I add a short hash?
         genicfile = str(self.box)+"_"+str(self.npart)+"_"+str(self.redshift)
         config['FileBase'] = genicfile
-        #Whether we have baryons is entirely controlled by the glass file.
-        #Since the glass file is just a regular grid, this should probably be in GenIC at some point
+        config['NCDM'] = self.npart
         if self.separate_gas:
-            config['GlassFile'] = os.path.expanduser("~/data/glass/reg-grid-128-dm-bar")
-        else:
-            config['GlassFile'] = os.path.expanduser("~/data/glass/reg-grid-128-dm")
-        config['GlassTileFac'] = self.npart/128
+            config['NBaryon'] = self.npart
         #Total matter density, not CDM matter density.
         config['Omega'] = self.omega0
         config['OmegaLambda'] = 1- self.omega0
@@ -233,6 +229,7 @@ class Simulation(object):
     def _genicfile_neutrinos(self, config):
         """Neutrino parameters easily overridden"""
         config['NU_On'] = 0
+        config['NNeutrino'] = 0
         return config
 
     def gadget3config(self):
