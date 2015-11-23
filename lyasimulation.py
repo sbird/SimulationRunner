@@ -61,6 +61,16 @@ class LymanAlphaSim(simulation.Simulation):
         redshifts = np.concatenate([[49,9],np.arange(4.2,1.9,-0.2)])
         return 1./(1.+redshifts)
 
+    def _alter_power(self, camb_output):
+        """Generate a new CAMB power spectrum multiplied by the knot values."""
+        camb_file = camb_output+"_matterpow_"+str(self.redshift)+".dat"
+        matpow = np.loadtxt(camb_file)
+        matpow2 = change_power_spectrum_knots(self.knot_pos, self.knot_val, matpow)
+        #Save a copy of the old file
+        os.rename(camb_file, camb_file+".orig")
+        np.savetxt(camb_file, matpow2)
+        return
+
 def change_power_spectrum_knots(knotpos, knotval, matpow):
     """Multiply the power spectrum file by a function specified by our knots.
     We assume that the power spectrum is linearly interpolated between the knots,

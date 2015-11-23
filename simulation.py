@@ -366,6 +366,12 @@ class Simulation(object):
         """Function to override to set other config parameters"""
         return config
 
+    def _alter_power(self, camb_output):
+        """Function to hook if you want to change the CAMB output power spectrum.
+        Should save the new power spectrum to camb_output + _matterpow_str(redshift).dat"""
+        os.stat(camb_output)
+        return
+
     def _generate_times(self):
         """List of output times for a simulation. Can be overridden,
         but default is evenly spaced in a from start to end."""
@@ -419,6 +425,8 @@ class Simulation(object):
         #In python 3.5, can use subprocess.run to do this.
         #But for backwards compat, use check_output
         subprocess.check_call([camb, camb_param], cwd=os.path.dirname(camb))
+        #Change the power spectrum file on disc if we want to do that
+        self._alter_power(camb_output)
         #Now generate the GenIC parameters
         (genic_output, genic_param) = self.genicfile(camb_output)
         #Run N-GenIC
