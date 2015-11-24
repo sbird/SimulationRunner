@@ -12,7 +12,7 @@ class LymanAlphaSim(simulation.Simulation):
         This uses the QuickLya star formation module and allows for altering the power spectrum with knots
         """
     __doc__ = __doc__+simulation.Simulation.__doc__
-    def __init__(self, outdir, box, npart, knot_pos = (1,1,1,1), knot_val = (1.,1.,1.,1.), rescale_gamma = False, rescale_amp = 1., rescale_slope = -0.7, seed = 9281110, redshift=99, redend = 2, omegac=0.2408, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, uvb="hm"):
+    def __init__(self, outdir, box, npart, knot_pos = (0.15,0.475,0.75,1.19), knot_val = (1.,1.,1.,1.), rescale_gamma = False, rescale_amp = 1., rescale_slope = -0.7, seed = 9281110, redshift=99, redend = 2, omegac=0.2408, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, uvb="hm"):
         #Parameters of the heating rate rescaling to account for helium reionisation
         #Default parameters do nothing
         self.rescale_gamma = rescale_gamma
