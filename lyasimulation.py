@@ -1,18 +1,18 @@
 """Specialization of the Simulation class to Lyman-alpha forest simulations."""
 
+import os
+import string
+import numpy as np
+import scipy.interpolate as interp
 import simulation
 import clusters
-import os
-import numpy as np
-import string
-import scipy.interpolate as interp
 
 class LymanAlphaSim(simulation.Simulation):
     """Specialise the Simulation class for the Lyman alpha forest.
         This uses the QuickLya star formation module and allows for altering the power spectrum with knots
         """
     __doc__ = __doc__+simulation.Simulation.__doc__
-    def __init__(self, outdir, box, npart, knot_pos = (0.15,0.475,0.75,1.19), knot_val = (1.,1.,1.,1.), rescale_gamma = False, rescale_amp = 1., rescale_slope = -0.7, seed = 9281110, redshift=99, redend = 2, omegac=0.2408, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, uvb="hm"):
+    def __init__(self, outdir, box, npart, *, knot_pos = (0.15,0.475,0.75,1.19), knot_val = (1.,1.,1.,1.), rescale_gamma = False, rescale_amp = 1., rescale_slope = -0.7, seed = 9281110, redshift=99, redend = 2, omegac=0.2408, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, uvb="hm"):
         #Parameters of the heating rate rescaling to account for helium reionisation
         #Default parameters do nothing
         self.rescale_gamma = rescale_gamma
@@ -123,5 +123,5 @@ def change_power_spectrum_knots(knotpos, knotval, matpow):
 
 if __name__ == "__main__":
     LymanAlphaSim = clusters.coma_mpi_decorate(LymanAlphaSim)
-    ss = LymanAlphaSim(outdir=os.path.expanduser("~/data/Lya_Boss/test1"), box=60, npart=512)
+    ss = LymanAlphaSim(knot_val = (1.,1.2,1.,1.),outdir=os.path.expanduser("~/data/Lya_Boss/test1"), box=60, npart=512)
     ss.make_simulation()

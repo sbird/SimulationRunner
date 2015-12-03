@@ -8,18 +8,18 @@ Different machines can be implemented as decorators.
 from __future__ import print_function
 import os.path
 import re
-import configobj
 import math
-import numpy as np
 import shutil
 import glob
-import read_uvb_tab
 import subprocess
 import json
-import cambpower
+import configobj
+import numpy as np
 import matplotlib
 matplotlib.use("PDF")
 import matplotlib.pyplot as plt
+import cambpower
+import read_uvb_tab
 
 def find_exec(executable):
     """Simple function to locate a binary in a nearby directory"""
@@ -65,7 +65,7 @@ class Simulation(object):
     scalar_amp - Initial amplitude of scalar power spectrum to feed to CAMB
     ns - tilt of scalar power spectrum to feed to CAMB
     """
-    def __init__(self, outdir, box, npart, seed = 9281110, redshift=99, redend = 0, separate_gas=True, omegac=0.2408, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, uvb="hm"):
+    def __init__(self, outdir, box, npart, *, seed = 9281110, redshift=99, redend = 0, separate_gas=True, omegac=0.2408, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, uvb="hm"):
         #Check that input is reasonable and set parameters
         #In Mpc/h
         assert box < 20000
