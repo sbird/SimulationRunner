@@ -369,7 +369,8 @@ class Simulation(object):
     def _alter_power(self, camb_output):
         """Function to hook if you want to change the CAMB output power spectrum.
         Should save the new power spectrum to camb_output + _matterpow_str(redshift).dat"""
-        os.stat(camb_output)
+        camb_file = camb_output+"_matterpow_"+str(self.redshift)+".dat"
+        os.stat(camb_file)
         return
 
     def _generate_times(self):
