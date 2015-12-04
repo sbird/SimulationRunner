@@ -210,6 +210,13 @@ class Simulation(object):
         config['NCDM'] = self.npart
         if self.separate_gas:
             config['NBaryon'] = self.npart
+            #The 2LPT correction is computed for one fluid. It is not clear
+            #what to do with a second particle species, so turn it off.
+            #Even for CDM alone there are corrections from radiation:
+            #order: Omega_r / omega_m ~ 3 z/100 and it is likely
+            #that the baryon 2LPT term is dominated by the CDM potential
+            #(YAH, private communication)
+            config['TWOLPT'] = 0
         #Total matter density, not CDM matter density.
         config['Omega'] = self.omega0
         config['OmegaLambda'] = 1- self.omega0
