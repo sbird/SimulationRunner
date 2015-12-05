@@ -405,7 +405,12 @@ class Simulation(object):
         with open(os.path.join(self.outdir, "mpi_submit"),'w') as mpis:
             mpis.write("#!/bin/bash\n")
             mpis.write(self._queue_directive())
-            mpis.write("mpirun -np "+str(self.nproc)+" "+self.gadgetexe+" "+self.gadgetparam)
+            mpis.write(self._mpi_program())
+
+    def _mpi_program(self):
+        """String for MPI program to execute"""
+        qstring = "mpirun -np "+str(self.nproc)+" "+self.gadgetexe+" "+self.gadgetparam+"\n"
+        return qstring
 
     def _queue_directive(self, prefix="#PBS"):
         """Write the part of the mpi_submit file that directs the queueing system.
