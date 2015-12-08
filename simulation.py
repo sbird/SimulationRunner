@@ -228,15 +228,15 @@ class Simulation(object):
         config['FileWithTransfer'] = camb_output + "_transfer_"+str(self.redshift)+".dat"
         config['NumFiles'] = self.numfiles
         assert config['InputSpectrum_UnitLength_in_cm'] == '3.085678e24'
-        config = self._genicfile_neutrinos(config)
         config['Seed'] = self.seed
+        config['NU_On'] = 0
+        config['NNeutrino'] = 0
+        config = self._genicfile_child_options(config)
         config.write()
         return (os.path.join(genicout, genicfile), config.filename)
 
-    def _genicfile_neutrinos(self, config):
-        """Neutrino parameters easily overridden"""
-        config['NU_On'] = 0
-        config['NNeutrino'] = 0
+    def _genicfile_child_options(self, config):
+        """Set extra parameters in child classes"""
         return config
 
     def gadget3config(self):
@@ -277,11 +277,16 @@ class Simulation(object):
                 #config.write("UVB_SELF_SHIELDING")
                 #Optional feedback model options
                 self._feedback_config_options(config)
+            self._gadget3_child_options(config)
         return g_config_filename
 
     def _feedback_config_options(self, config):
         """Options in the Config.sh file for a potential star-formation/feedback model"""
         config.write("SFR")
+        return
+
+    def _gadget3_child_options(self, _):
+        """Gadget-3 compilation options for Config.sh which should be written by the child class."""
         return
 
     def gadget3params(self, genicfileout):
