@@ -6,8 +6,9 @@ class NeutrinoSim(simulation.Simulation):
     """Specialise the Simulation class for massive neutrinos.
     """
     __doc__ = __doc__+simulation.Simulation.__doc__
-    def __init__(self, outdir, box, npart, *, m_nu = 0., hubble=0.7, omegac=0.2408, **kwargs):
+    def __init__(self, outdir, box, npart, *, m_nu = 0.1, hubble=0.7, omegac=0.2408, **kwargs):
         #Set neutrino mass
+        assert m_nu > 0
         omeganu = 3*m_nu/93.14/hubble/hubble
         self.m_nu = m_nu
         #Subtract omeganu from omegac, so that with changing
@@ -93,7 +94,7 @@ class NeutrinoHybridSim(NeutrinoSim):
         config['NU_On'] = 1
         config['NU_Vtherm_On'] = 1
         config['NNeutrino'] = int(self.npart*self.npartnufac)
-        config['Nu_PartMass_in_ev'] = self.m_nu
+        config['NU_PartMass_in_ev'] = self.m_nu
         config['NU_KSPACE'] = 0
         config['Max_nuvel'] = self.vcrit
         return config
