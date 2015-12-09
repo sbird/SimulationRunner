@@ -6,21 +6,26 @@ class NeutrinoSim(simulation.Simulation):
     """Specialise the Simulation class for massive neutrinos.
     """
     __doc__ = __doc__+simulation.Simulation.__doc__
-    def __init__(self, outdir, box, npart, *, m_nu = 0., **kwargs):
-        simulation.Simulation.__init__(self, outdir=outdir, box=box, npart=npart, **kwargs)
+    def __init__(self, outdir, box, npart, *, m_nu = 0., hubble=0.7, omegac=0.2408, **kwargs):
         #Set neutrino mass
+        omeganu = 3*m_nu/93.14/hubble/hubble
         self.m_nu = m_nu
-        self.omeganu = 3*m_nu / 93.14/self.hubble/self.hubble
+        #Subtract omeganu from omegac, so that with changing
+        #neutrino mass the total matter fraction remains constant.
+        #Note this does mean that omegab/omegac will increase, but not by much.
+        omegac = omegac-omeganu
+        simulation.Simulation.__init__(self, outdir=outdir, box=box, npart=npart, omegac=omegac, omeganu=omeganu, separate_nu=True, hubble=hubble, **kwargs)
 
     def _camb_neutrinos(self, config):
         """Config options so CAMB can use massive neutrinos.
         For particle neutrinos we want to neglect hierarchy."""
         config['massless_neutrinos'] = 0.046
         config['massive_neutrinos'] = 3
-        config['omnuh2'] = self.omeganu*self.hubble*self.hubble
         config['nu_mass_fractions'] = 1
-        config['nu_mass_degeneracies'] = 0
         config['nu_mass_eigenstates'] = 1
+        #Actually does nothing, but we set it to avoid the library setting it to ""
+        config['nu_mass_degeneracies'] = 0
+        config['share_delta_neff'] = 'T'
         return config
 
     def _gadget3_child_options(self, config):
@@ -37,9 +42,7 @@ class NeutrinoPartSim(NeutrinoSim):
         config['NU_On'] = 1
         config['NU_Vtherm_On'] = 1
         config['NNeutrino'] = self.npart
-        config['Nu_PartMass_in_ev'] = self.m_nu
-        config['NU_KSPACE'] = 0
-        config['OmegaDM_2ndSpecies'] = self.omeganu
+        config['NU_PartMass_in_ev'] = self.m_nu
         return config
 
     def _gadget3_child_options(self, config):
@@ -54,10 +57,8 @@ class NeutrinoSemiLinearSim(NeutrinoSim):
     def _genicfile_child_options(self, config):
         """Set up neutrino parameters for GenIC.
         This just includes a change in OmegaNu, but no actual particles."""
-        config['NU_On'] = 0
         config['NNeutrino'] = 0
         config['NU_KSPACE'] = 0
-        config['OmegaDM_2ndSpecies'] = self.omeganu
         return config
 
     def _gadget3_child_options(self, config):
@@ -94,7 +95,6 @@ class NeutrinoHybridSim(NeutrinoSim):
         config['NNeutrino'] = int(self.npart*self.npartnufac)
         config['Nu_PartMass_in_ev'] = self.m_nu
         config['NU_KSPACE'] = 0
-        config['OmegaDM_2ndSpecies'] = self.omeganu
         config['Max_nuvel'] = self.vcrit
         return config
 

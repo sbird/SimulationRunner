@@ -65,7 +65,7 @@ class Simulation(object):
     scalar_amp - Initial amplitude of scalar power spectrum to feed to CAMB
     ns - tilt of scalar power spectrum to feed to CAMB
     """
-    def __init__(self, outdir, box, npart, *, seed = 9281110, redshift=99, redend = 0, separate_gas=True, omegac=0.2408, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, uvb="hm"):
+    def __init__(self, outdir, box, npart, *, seed = 9281110, redshift=99, redend = 0, separate_gas=True, separate_nu=False, omegac=0.2408, omegab=0.0472, omeganu=0.,hubble=0.7, scalar_amp=2.427e-9, ns=0.97, uvb="hm"):
         #Check that input is reasonable and set parameters
         #In Mpc/h
         assert box < 20000
@@ -78,6 +78,8 @@ class Simulation(object):
         self.omegac = omegac
         assert omegab > 0 and omegab < 1
         self.omegab = omegab
+        assert omeganu >=0 and omeganu < omegac
+        self.omeganu = omeganu
         assert redshift > 1 and redshift < 1100
         self.redshift = redshift
         assert redend >= 0 and redend < 1100
@@ -92,10 +94,11 @@ class Simulation(object):
         self.seed = seed
         #Baryons?
         self.separate_gas = separate_gas
+        #Neutrinos?
+        self.separate_nu = separate_nu
         #UVB? Only matters if gas
         self.uvb = uvb
         assert self.uvb == "hm" or self.uvb == "fg"
-        self.omeganu = 0
         #CPU parameters: these are specified to a default here, but should be over-ridden in a machine-specific decorator.
         self.nproc = 8
         self.email = "sbird4@jhu.edu"
@@ -160,6 +163,7 @@ class Simulation(object):
         config['hubble'] = self.hubble * 100
         config['ombh2'] = self.omegab*self.hubble**2
         config['omch2'] = self.omegac*self.hubble**2
+        config['omnuh2'] = self.omeganu*self.hubble**2
         config['omk'] = 0.
         #Initial power spectrum: MAKE SURE you set the pivot scale to the WMAP value!
         config['pivot_scalar'] = 2e-3
@@ -189,7 +193,6 @@ class Simulation(object):
         Designed to be easily over-ridden"""
         config['massless_neutrinos'] = 3.046
         config['massive_neutrinos'] = 0
-        config['omnuh2'] = 0.
         return config
 
     def genicfile(self, camb_output):
