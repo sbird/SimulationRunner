@@ -6,7 +6,7 @@ class NeutrinoSim(simulation.Simulation):
     """Specialise the Simulation class for massive neutrinos.
     """
     __doc__ = __doc__+simulation.Simulation.__doc__
-    def __init__(self, outdir, box, npart, *, m_nu = 0.1, hubble=0.7, omegac=0.2408, **kwargs):
+    def __init__(self, outdir, box, npart, *, m_nu = 0.1, hubble=0.7, omegac=0.2408,separate_gas=False, **kwargs):
         #Set neutrino mass
         assert m_nu > 0
         omeganu = 3*m_nu/93.14/hubble/hubble
@@ -15,7 +15,7 @@ class NeutrinoSim(simulation.Simulation):
         #neutrino mass the total matter fraction remains constant.
         #Note this does mean that omegab/omegac will increase, but not by much.
         omegac = omegac-omeganu
-        simulation.Simulation.__init__(self, outdir=outdir, box=box, npart=npart, omegac=omegac, omeganu=omeganu, separate_nu=True, hubble=hubble, **kwargs)
+        simulation.Simulation.__init__(self, outdir=outdir, box=box, npart=npart, omegac=omegac, omeganu=omeganu, separate_nu=True, separate_gas=separate_gas, hubble=hubble, **kwargs)
 
     def _camb_neutrinos(self, config):
         """Config options so CAMB can use massive neutrinos.
