@@ -73,13 +73,13 @@ class NeutrinoSemiLinearSim(NeutrinoSim):
         config['MNue'] = self.m_nu/3.
         config['MNum'] = self.m_nu/3.
         config['MNut'] = self.m_nu/3.
-        config['KspaceTransferFunction'] = "ics_transfer_"+str(self.redshift)+".dat"
+        config['KspaceTransferFunction'] = "camb_linear/ics_transfer_"+str(self.redshift)+".dat"
         config['InputSpectrum_UnitLength_in_cm'] = 3.085678e24
         config['TimeTransfer'] = 1./(1+self.redshift)
         config['OmegaBaryonCAMB'] = self.omegab
         return config
 
-class NeutrinoHybridSim(NeutrinoSim):
+class NeutrinoHybridSim(NeutrinoSemiLinearSim):
     """Further specialise to hybrid neutrino simulations, which have both analytic and particle neutrinos."""
     __doc__ = __doc__+simulation.Simulation.__doc__
     def __init__(self, outdir, box, npart, *, m_nu = 0., vcrit=500, npartnufac = 0.5, zz_transition=1., **kwargs):
@@ -108,13 +108,7 @@ class NeutrinoHybridSim(NeutrinoSim):
 
     def _other_params(self, config):
         """Config options specific to kspace neutrinos. Hierarchy is off for now."""
-        config['MNue'] = self.m_nu/3.
-        config['MNum'] = self.m_nu/3.
-        config['MNut'] = self.m_nu/3.
-        config['KspaceTransferFunction'] = "ics_transfer_"+str(self.redshift)+".dat"
-        config['InputSpectrum_UnitLength_in_cm'] = 3.085678e24
-        config['TimeTransfer'] = 1./(1+self.redshift)
-        config['OmegaBaryonCAMB'] = self.omegab
+        config = NeutrinoSemiLinearSim._other_params(self,config)
         config['VCRIT'] = self.vcrit
         config['NuPartTime'] = 1./(1+self.zz_transition)
         return config
