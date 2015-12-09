@@ -9,7 +9,7 @@ class NeutrinoSim(simulation.Simulation):
     def __init__(self, outdir, box, npart, *, m_nu = 0.1, hubble=0.7, omegac=0.2408,separate_gas=False, **kwargs):
         #Set neutrino mass
         assert m_nu > 0
-        omeganu = 3*m_nu/93.14/hubble/hubble
+        omeganu = m_nu/93.14/hubble/hubble
         self.m_nu = m_nu
         #Subtract omeganu from omegac, so that with changing
         #neutrino mass the total matter fraction remains constant.
