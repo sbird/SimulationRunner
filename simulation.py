@@ -489,6 +489,8 @@ class Simulation(object):
         matterpow = camb_output + "_matterpow_"+str(self.redshift)+".dat"
         transfer = camb_output + "_transfer_"+str(self.redshift)+".dat"
         camb = cambpower.CAMBPowerSpectrum(matterpow, transfer, kmin=2*math.pi/self.box/5, kmax = self.npart*2*math.pi/self.box*10)
+        #Error to tolerate on simulated power spectrum
+        accuracy = 0.05
         for sp in ["DM","by", "nu"]:
             #GenPK output is at PK-[nu,by,DM]-basename(genicfileout)
             gpkout = "PK-"+sp+"-"+os.path.basename(genicfileout)
@@ -512,8 +514,9 @@ class Simulation(object):
             imin = np.searchsorted(kk_ic, 2*math.pi/self.box*4)
             if sp == "nu":
                 #Neutrinos get special treatment here.
-                #Because they don't really cluster, getting the initial power right
-                #on small scales is both hard and rather futile.
+                #Because they don't really cluster, getting the initial power really right
+                #(especially on small scales) is both hard and rather futile.
+                accuracy = 0.1
                 ii = np.where(Pk_ic < Pk_ic[0]*1e-5)
                 if np.size(ii) > 0:
                     imax = ii[0][0]
@@ -531,7 +534,7 @@ class Simulation(object):
             plt.ylim(ymax=Pk_camb[0]*10)
             plt.savefig(go+"-abs.pdf")
             plt.clf()
-            assert np.all(abs(Pk_ic[imin:imax]/Pk_camb[imin:imax] -1) < 0.05)
+            assert np.all(abs(Pk_ic[imin:imax]/Pk_camb[imin:imax] -1) < accuracy)
 
 def load_genpk(infile, box, minmode=1):
     """Load a power spectrum from a Gen-PK output, modifying units to agree with CAMB"""
