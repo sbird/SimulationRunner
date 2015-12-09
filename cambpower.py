@@ -21,8 +21,10 @@ class CAMBPowerSpectrum(object):
         self.dtk['DM'] = interp.interp1d(logktrans, (tk_camb[lti:hti, 1]/tk_camb[lti:hti, 6])**2, kind='cubic')
         #Baryons
         self.dtk['by'] = interp.interp1d(logktrans, (tk_camb[lti:hti, 2]/tk_camb[lti:hti, 6])**2, kind='cubic')
-        #Massive neutrinos: don't want this yet.
-        #self.dtk['nu'] = interp.interp1d(logktrans, (tk_camb[lti:hti, 5]/tk_camb[lti:hti, 6])**2, kind='cubic')
+        #Massive neutrinos
+        self.dtk['nu'] = interp.interp1d(logktrans, (tk_camb[lti:hti, 5]/tk_camb[lti:hti, 6])**2, kind='cubic')
+        #DM + baryons
+        self.dtk['DMby'] = interp.interp1d(logktrans, (tk_camb[lti:hti, 7]/tk_camb[lti:hti, 6])**2, kind='cubic')
 
     def get_camb_power(self, kvals, species='tot'):
         """Get a matter power spectrum for DM, baryons, nu from CAMB.

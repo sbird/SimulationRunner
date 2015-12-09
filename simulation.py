@@ -486,23 +486,34 @@ class Simulation(object):
         matterpow = camb_output + "_matterpow_"+str(self.redshift)+".dat"
         transfer = camb_output + "_transfer_"+str(self.redshift)+".dat"
         camb = cambpower.CAMBPowerSpectrum(matterpow, transfer, kmin=2*math.pi/self.box/5, kmax = self.npart*2*math.pi/self.box*10)
-        species = ["DM",]
-        if self.separate_gas:
-            species.append("by")
-        for sp in species:
-            #GenPK output is at PK-[by,DM]-basename(genicfileout)
+        for sp in ["DM","by", "nu"]:
+            #GenPK output is at PK-[nu,by,DM]-basename(genicfileout)
             gpkout = "PK-"+sp+"-"+os.path.basename(genicfileout)
             go = os.path.join(os.path.dirname(genicfileout), gpkout)
-            assert os.path.exists(go)
+            if sp == "DM" or (self.separate_gas and sp == "by"):
+                assert os.path.exists(go)
+            elif not os.path.exists(go):
+                continue
             #Load the power spectra
             (kk_ic, Pk_ic) = load_genpk(go, self.box)
-            if not self.separate_gas:
+            #Load the power spectrum. Note that DM may incorporate other particle types.
+            if not self.separate_gas and not self.separate_nu and sp =="DM":
                 Pk_camb = camb.get_camb_power(kk_ic, species="tot")
+            elif not self.separate_gas and self.separate_nu and sp == "DM":
+                Pk_camb = camb.get_camb_power(kk_ic, species="DMby")
+            #Case with self.separate_gas true and separate_nu false is assumed to have omega_nu = 0.
             else:
                 Pk_camb = camb.get_camb_power(kk_ic, species=sp)
             #Check that they agree between 1/4 the box and 1/4 the nyquist frequency
             imax = np.searchsorted(kk_ic, self.npart*2*math.pi/self.box/4)
             imin = np.searchsorted(kk_ic, 2*math.pi/self.box*4)
+            if sp == "nu":
+                #Neutrinos get special treatment here.
+                #Because they don't really cluster, getting the initial power right
+                #on small scales is both hard and rather futile.
+                ii = np.where(Pk_ic < Pk_ic[0]*1e-5)
+                if np.size(ii) > 0:
+                    imax = ii[0][0]
             #Make some useful figures
             plt.semilogx(kk_ic, Pk_ic/Pk_camb,linewidth=2)
             plt.semilogx([kk_ic[0]*0.9,kk_ic[-1]*1.1], [0.95,0.95], ls="--",linewidth=2)
@@ -514,6 +525,7 @@ class Simulation(object):
             plt.clf()
             plt.loglog(kk_ic, Pk_ic,linewidth=2)
             plt.loglog(kk_ic, Pk_camb,ls="--", linewidth=2)
+            plt.ylim(ymax=Pk_camb[0]*10)
             plt.savefig(go+"-abs.pdf")
             plt.clf()
             assert np.all(abs(Pk_ic[imin:imax]/Pk_camb[imin:imax] -1) < 0.05)
