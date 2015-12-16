@@ -51,12 +51,12 @@ def hipatia_mpi_decorate(class_name, nproc=256, timelimit=24):
             return qstring
 
         def _mpi_program(self):
-            """String for MPI program to execute. Hipatia is weird because the default (torque) program launch module is broken.
-            Instead we need to launch programs via ssh (which means we need a passwordless ssh key)"""
+            """String for MPI program to execute. Hipatia is weird because PBS_JOBID needs to be unset for the job to launch."""
             #Change to current directory
             qstring = "cd $PBS_O_WORKDIR\n"
-            #mca plm rsh launches programs via ssh
-            qstring += "mpirun -mca plm rsh -np "+str(self.nproc)+" "+self.gadgetexe+" "+self.gadgetparam+"\n"
+            #Don't ask me why this works, but it is necessary.
+            qstring += "unset PBS_JOBID\n"
+            qstring += "mpirun -np "+str(self.nproc)+" "+self.gadgetexe+" "+self.gadgetparam+"\n"
             return qstring
 
     return HipatiaClass
