@@ -229,7 +229,7 @@ class Simulation(object):
         config['Redshift'] = self.redshift
         config['FileWithInputSpectrum'] = camb_output + "_matterpow_"+str(self.redshift)+".dat"
         config['FileWithTransfer'] = camb_output + "_transfer_"+str(self.redshift)+".dat"
-        config['NumFiles'] = self.numfiles
+        config['NumFiles'] = int(self.numfiles)
         assert config['InputSpectrum_UnitLength_in_cm'] == '3.085678e24'
         config['Seed'] = self.seed
         config['NU_On'] = 0
