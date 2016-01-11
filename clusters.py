@@ -61,3 +61,41 @@ def hipatia_mpi_decorate(class_name, nproc=256, timelimit=24):
 
     return HipatiaClass
 
+def hhpc_mpi_decorate(class_name, nproc=256, timelimit=24):
+    """This is a class decorator: it creates a new class which subclasses a given class to contain the information
+        specific to using the HHPCv2 cluster at JHU.
+        __init__ and _queue_directive are subclassed"""
+    newdoc = class_name.__doc__ + """
+    Subclassed for specific properties of the HHPCv2 cluster at JHU.
+    This has 12 cores per node, and 4GB per core.
+    You must use full nodes, preferrably more than 1 hour per job,
+    and pass PBS_NODEFILE to mpirun.
+    __init__ and _queue_directive are changed."""
+    class HipatiaClass(class_name):
+        """Docstring should be specified in newdoc"""
+        __doc__ = newdoc
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.memory = 3900
+            self.timelimit = timelimit
+            self.nproc = nproc
+
+        def _queue_directive(self, prefix="#PBS"):
+            """Generate mpi_submit with coma specific parts"""
+            qstring = super()._queue_directive(prefix)
+            qstring += prefix+" -l nodes="+str(int(self.nproc/12))+":ppn=12\n"
+            qstring += prefix+" -l mem="+str(int(self.memory*self.nproc/1000))+"g\n"
+            #Pass environment to child processes
+            return qstring
+
+        def _mpi_program(self):
+            """String for MPI program to execute. PBS_NODEFILE needs to be passed to mpirun for HHPC."""
+            #Change to current directory
+            qstring = "cd $PBS_O_WORKDIR\n"
+            #Required.
+            qstring += "export MPI_NPROCS=`wc-l $PBS_NODEFILE`\n"
+            qstring += "mpirun -machinefile $PBS_NODEFILE "+self.gadgetexe+" "+self.gadgetparam+"\n"
+            return qstring
+
+    return HipatiaClass
+
