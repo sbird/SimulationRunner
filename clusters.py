@@ -93,7 +93,7 @@ def hhpc_mpi_decorate(class_name, nproc=256, timelimit=24):
             #Change to current directory
             qstring = "cd $PBS_O_WORKDIR\n"
             #Required.
-            qstring += "export MPI_NPROCS=`wc-l $PBS_NODEFILE`\n"
+            qstring += "export MPI_NPROCS=`wc -l $PBS_NODEFILE`\n"
             qstring += "mpirun -machinefile $PBS_NODEFILE "+self.gadgetexe+" "+self.gadgetparam+"\n"
             return qstring
 
