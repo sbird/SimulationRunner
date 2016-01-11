@@ -332,7 +332,7 @@ class Simulation(object):
             config['Softening'+ptype+'MaxPhys'] = soften
         config['ICFormat'] = 3
         config['SnapFormat'] = 3
-        config['RestartFile'] = "restartfiles/restart"
+        config['RestartFile'] = "restart"
         #This could be tuned in lower memory conditions
         config['BufferSize'] = 100
         if self.separate_gas:
