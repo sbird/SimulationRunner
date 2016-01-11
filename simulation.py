@@ -307,7 +307,7 @@ class Simulation(object):
         except FileExistsError:
             pass
         config['SnapshotFileBase'] = "snap"
-        config['TimeLimitCPU'] = 60*60*self.timelimit*20/17.-3000
+        config['TimeLimitCPU'] = int(60*60*self.timelimit*20/17.-3000)
         config['TimeBegin'] = 1./(1+self.redshift)
         config['TimeMax'] = 1./(1+self.redend)
         config['Omega0'] = self.omega0
