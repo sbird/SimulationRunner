@@ -76,7 +76,7 @@ def hhpc_mpi_decorate(class_name, nproc=256, timelimit=24):
         __doc__ = newdoc
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
-            self.memory = 3900
+            self.memory = 3500
             self.timelimit = timelimit
             self.nproc = nproc
 
@@ -84,7 +84,6 @@ def hhpc_mpi_decorate(class_name, nproc=256, timelimit=24):
             """Generate mpi_submit with coma specific parts"""
             qstring = super()._queue_directive(prefix)
             qstring += prefix+" -l nodes="+str(int(self.nproc/12))+":ppn=12\n"
-            qstring += prefix+" -l mem="+str(int(self.memory*self.nproc/1000))+"g\n"
             #Pass environment to child processes
             return qstring
 
