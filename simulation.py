@@ -439,8 +439,15 @@ class Simulation(object):
 
     def txt_description(self):
         """Generate a text file describing the parameters of the code that generated this simulation, for reproducibility."""
+        #But ditch the output of make
+        self.make_output = ""
         with open(os.path.join(self.outdir, "Simulation.json"), 'w') as jsout:
             json.dump(self.__dict__, jsout)
+
+    def load_txt_description(self):
+        """Load the text file describing the parameters of the code that generated a simulation."""
+        with open(os.path.join(self.outdir, "Simulation.json"), 'r') as jsin:
+            self.__dict__ = json.load(jsin)
 
     def make_simulation(self):
         """Wrapper function to make all the simulation parameter files in turn and run the binaries"""
