@@ -253,6 +253,7 @@ class Simulation(object):
             #Can be reduced for lower memory but lower speed.
             config.write("PMGRID="+str(self.npart*2)+"\n")
             #These are memory options: if short on memory, change them.
+            #MULTIPLEDOMAINS speeds up somewhat
             config.write("MULTIPLEDOMAINS=4\n")
             config.write("TOPNODEFACTOR=3.0\n")
             #Again, can be turned off for lower memory usage
@@ -264,16 +265,12 @@ class Simulation(object):
             config.write("MOREPARAMS\n")
             config.write("POWERSPEC_ON_OUTPUT\n")
             config.write("POWERSPEC_ON_OUTPUT_EACH_TYPE\n")
-            #isend/irecv is quite slow on some clusters because of the extra memory allocations.
-            #Maybe test this on your specific system and see if it helps.
-            config.write("NO_ISEND_IRECV_IN_DOMAIN\n")
-            config.write("NO_ISEND_IRECV_IN_PM\n")
             #Changes H(z)
             config.write("INCLUDE_RADIATION\n")
             config.write("HAVE_HDF5\n")
             #We may need this sometimes, depending on the machine
-            #config.write("NOTYPEPREFIX_FFTW\n")
             #Options for gas simulations
+            self._cluster_config_options(config)
             if self.separate_gas:
                 config.write("COOLING\n")
                 #This needs implementing
@@ -282,6 +279,15 @@ class Simulation(object):
                 self._feedback_config_options(config)
             self._gadget3_child_options(config)
         return g_config_filename
+
+    def _cluster_config_options(self,config):
+        """Config options that might be specific to a particular cluster"""
+        #isend/irecv is quite slow on some clusters because of the extra memory allocations.
+        #Maybe test this on your specific system and see if it helps.
+        #config.write("NO_ISEND_IRECV_IN_DOMAIN\n")
+        #config.write("NO_ISEND_IRECV_IN_PM\n")
+        #config.write("NOTYPEPREFIX_FFTW\n")
+        return
 
     def _feedback_config_options(self, config):
         """Options in the Config.sh file for a potential star-formation/feedback model"""

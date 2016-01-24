@@ -23,6 +23,16 @@ def coma_mpi_decorate(class_name, nproc=256, timelimit=24):
             qstring += prefix+" -l nodes="+str(int(self.nproc/16))+":ppn=16\n"
             return qstring
 
+        def _cluster_config_options(self,config):
+            """Config options that might be specific to a particular cluster"""
+            #isend/irecv is quite slow on some clusters because of the extra memory allocations.
+            #Maybe test this on your specific system and see if it helps.
+            config.write("NO_ISEND_IRECV_IN_DOMAIN\n")
+            config.write("NO_ISEND_IRECV_IN_PM\n")
+            #config.write("NOTYPEPREFIX_FFTW\n")
+            return
+
+
     return ComaClass
 
 def hipatia_mpi_decorate(class_name, nproc=256, timelimit=24):
@@ -61,7 +71,7 @@ def hipatia_mpi_decorate(class_name, nproc=256, timelimit=24):
 
     return HipatiaClass
 
-def hhpc_mpi_decorate(class_name, nproc=256, timelimit=24):
+def hhpc_mpi_decorate(class_name, nproc=252, timelimit=8):
     """This is a class decorator: it creates a new class which subclasses a given class to contain the information
         specific to using the HHPCv2 cluster at JHU.
         __init__ and _queue_directive are subclassed"""
@@ -71,12 +81,12 @@ def hhpc_mpi_decorate(class_name, nproc=256, timelimit=24):
     You must use full nodes, preferrably more than 1 hour per job,
     and pass PBS_NODEFILE to mpirun.
     __init__ and _queue_directive are changed."""
-    class HipatiaClass(class_name):
+    class HHPCClass(class_name):
         """Docstring should be specified in newdoc"""
         __doc__ = newdoc
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
-            self.memory = 3500
+            self.memory = 3000
             self.timelimit = timelimit
             self.nproc = nproc
 
@@ -96,5 +106,5 @@ def hhpc_mpi_decorate(class_name, nproc=256, timelimit=24):
             qstring += "mpirun -machinefile $PBS_NODEFILE "+self.gadgetexe+" "+self.gadgetparam+"\n"
             return qstring
 
-    return HipatiaClass
+    return HHPCClass
 
