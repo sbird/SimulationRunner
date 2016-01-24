@@ -104,6 +104,8 @@ class NeutrinoHybridSim(NeutrinoSemiLinearSim):
         #Note for some Gadget versions we may need KSPACE_NEUTRINOS
         config.write("KSPACE_NEUTRINOS_2\n")
         config.write("HYBRID_NEUTRINOS\n")
+        #Turn off the tree
+        config.write("NEUTRINOS\n")
         return
 
     def _other_params(self, config):
