@@ -3,7 +3,7 @@ InitCondFile   ICS/256_256_99
 OutputDir   output
 SnapshotFileBase   snap
 % CPU time-limit
-TimeLimitCPU   39352.94117647059
+TimeLimitCPU   39352
 ResubmitOn   0
 ResubmitCommand   my-scriptfile
 %  Characteristics of run
@@ -52,7 +52,7 @@ InfoFile   info.txt
 TimingsFile   timings.txt
 TimebinFile   timebins.txt
 CpuFile   cpu.txt
-RestartFile   restartfiles/restart
+RestartFile   restart
 ErrTolIntAccuracy   0.025
 MaxRMSDisplacementFac   0.2
 CourantFac   0.15
@@ -81,7 +81,7 @@ MaxMemSize   1800
 MNue   0.15
 MNum   0.15
 MNut   0.15
-KspaceTransferFunction   ics_transfer_99.dat
+KspaceTransferFunction   camb_linear/ics_transfer_99.dat
 InputSpectrum_UnitLength_in_cm   3.085678e+24
 TimeTransfer   0.01
 OmegaBaryonCAMB   0.0472
