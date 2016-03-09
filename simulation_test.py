@@ -1,9 +1,9 @@
 """Integration tests for the Simulation module"""
 
-from simulation import Simulation
 import filecmp
 import shutil
 import os
+from simulation import Simulation
 
 def test_full_integration():
     """Create a full simulation snapshot and check it corresponds to the saved results"""

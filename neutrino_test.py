@@ -5,7 +5,7 @@ import shutil
 import os
 import h5py
 import numpy as np
-from neutrinosimulation import *
+from neutrinosimulation import NeutrinoSemiLinearSim, NeutrinoPartSim
 
 def test_neutrino_part():
     """Create a full simulation with particle neutrinos."""

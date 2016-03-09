@@ -294,7 +294,7 @@ class Simulation(object):
         config.write(prefix+"SFR")
         return
 
-    def _gadget3_child_options(self, _, _):
+    def _gadget3_child_options(self, _, __):
         """Gadget-3 compilation options for Config.sh which should be written by the child class."""
         return
 
