@@ -29,9 +29,9 @@ class NeutrinoSim(simulation.Simulation):
         config['share_delta_neff'] = 'T'
         return config
 
-    def _gadget3_child_options(self, config):
+    def _gadget3_child_options(self, config, prefix=""):
         """Config options to turn on the right neutrino method"""
-        config.write("NEUTRINOS\n")
+        config.write(prefix+"NEUTRINOS\n")
         return
 
 class NeutrinoPartSim(NeutrinoSim):
@@ -46,9 +46,9 @@ class NeutrinoPartSim(NeutrinoSim):
         config['NU_PartMass_in_ev'] = self.m_nu
         return config
 
-    def _gadget3_child_options(self, config):
+    def _gadget3_child_options(self, config, prefix=""):
         """Config options to turn on the right neutrino method"""
-        config.write("NEUTRINOS\n")
+        config.write(prefix+"NEUTRINOS\n")
         return
 
 class NeutrinoSemiLinearSim(NeutrinoSim):
@@ -62,10 +62,10 @@ class NeutrinoSemiLinearSim(NeutrinoSim):
         config['NU_KSPACE'] = 0
         return config
 
-    def _gadget3_child_options(self, config):
+    def _gadget3_child_options(self, config, prefix=""):
         """Config options to turn on the right neutrino method"""
         #Note for some Gadget versions we may need KSPACE_NEUTRINOS
-        config.write("KSPACE_NEUTRINOS_2\n")
+        config.write(prefix+"KSPACE_NEUTRINOS_2\n")
         return
 
     def _other_params(self, config):
@@ -99,13 +99,13 @@ class NeutrinoHybridSim(NeutrinoSemiLinearSim):
         config['Max_nuvel'] = self.vcrit
         return config
 
-    def _gadget3_child_options(self, config):
+    def _gadget3_child_options(self, config, prefix=""):
         """Config options to turn on the right neutrino method"""
         #Note for some Gadget versions we may need KSPACE_NEUTRINOS
-        config.write("KSPACE_NEUTRINOS_2\n")
-        config.write("HYBRID_NEUTRINOS\n")
+        config.write(prefix+"KSPACE_NEUTRINOS_2\n")
+        config.write(prefix+"HYBRID_NEUTRINOS\n")
         #Turn off the tree
-        config.write("NEUTRINOS\n")
+        config.write(prefix+"NEUTRINOS\n")
         return
 
     def _other_params(self, config):

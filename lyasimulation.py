@@ -39,12 +39,12 @@ class LymanAlphaSim(simulation.Simulation):
         simulation.Simulation.__init__(self, outdir=new_outdir, box=box, npart=npart, seed=seed, redshift=redshift, redend=redend, separate_gas=True, omegac=omegac, omegab=omegab, hubble=hubble, scalar_amp=scalar_amp, ns=ns, uvb=uvb)
         self.camb_times = [9,]+[x for x in np.arange(4.2,1.9,-0.2)]
 
-    def _feedback_config_options(self, config):
+    def _feedback_config_options(self, config, prefix=""):
         """Config options specific to the Lyman alpha forest star formation criterion"""
-        config.write("SFR\n")
-        config.write("QUICK_LYALPHA\n")
+        config.write(prefix+"SFR\n")
+        config.write(prefix+"QUICK_LYALPHA\n")
         if self.rescale_gamma:
-            config.write("RESCALE_EEOS\n")
+            config.write(prefix+"RESCALE_EEOS\n")
         return
 
     def _feedback_params(self, config):

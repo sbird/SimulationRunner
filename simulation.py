@@ -242,59 +242,59 @@ class Simulation(object):
         """Set extra parameters in child classes"""
         return config
 
-    def gadget3config(self):
+    def gadget3config(self, prefix=""):
         """Generate a Gadget Config.sh file. This doesn't fit nicely into configobj.
         Many of the simulation parameters are stored here, but none of the cosmology.
         Some of these parameters are cluster dependent.
         We are assuming Gadget-3. Arepo or Gadget-2 need a different set of options."""
         g_config_filename = os.path.join(self.outdir, self.gadgetconfig)
         with open(g_config_filename,'w') as config:
-            config.write("PERIODIC\n")
+            config.write(prefix+"PERIODIC\n")
             #Can be reduced for lower memory but lower speed.
-            config.write("PMGRID="+str(self.npart*2)+"\n")
+            config.write(prefix+"PMGRID="+str(self.npart*2)+"\n")
             #These are memory options: if short on memory, change them.
             #MULTIPLEDOMAINS speeds up somewhat
-            config.write("MULTIPLEDOMAINS=4\n")
-            config.write("TOPNODEFACTOR=3.0\n")
+            config.write(prefix+"MULTIPLEDOMAINS=4\n")
+            config.write(prefix+"TOPNODEFACTOR=3.0\n")
             #Again, can be turned off for lower memory usage
             #but changes output format
-            config.write("LONGIDS\n")
-            config.write("PEANOHILBERT\n")
-            config.write("WALLCLOCK\n")
-            config.write("MYSORT\n")
-            config.write("MOREPARAMS\n")
-            config.write("POWERSPEC_ON_OUTPUT\n")
-            config.write("POWERSPEC_ON_OUTPUT_EACH_TYPE\n")
+            config.write(prefix+"LONGIDS\n")
+            config.write(prefix+"PEANOHILBERT\n")
+            config.write(prefix+"WALLCLOCK\n")
+            config.write(prefix+"MYSORT\n")
+            config.write(prefix+"MOREPARAMS\n")
+            config.write(prefix+"POWERSPEC_ON_OUTPUT\n")
+            config.write(prefix+"POWERSPEC_ON_OUTPUT_EACH_TYPE\n")
             #Changes H(z)
-            config.write("INCLUDE_RADIATION\n")
-            config.write("HAVE_HDF5\n")
+            config.write(prefix+"INCLUDE_RADIATION\n")
+            config.write(prefix+"HAVE_HDF5\n")
             #We may need this sometimes, depending on the machine
             #Options for gas simulations
-            self._cluster_config_options(config)
+            self._cluster_config_options(config, prefix)
             if self.separate_gas:
-                config.write("COOLING\n")
+                config.write(prefix+"COOLING\n")
                 #This needs implementing
-                #config.write("UVB_SELF_SHIELDING")
+                #config.write(prefix+"UVB_SELF_SHIELDING")
                 #Optional feedback model options
-                self._feedback_config_options(config)
-            self._gadget3_child_options(config)
+                self._feedback_config_options(config, prefix)
+            self._gadget3_child_options(config, prefix)
         return g_config_filename
 
-    def _cluster_config_options(self,config):
+    def _cluster_config_options(self,config, prefix=""):
         """Config options that might be specific to a particular cluster"""
         #isend/irecv is quite slow on some clusters because of the extra memory allocations.
         #Maybe test this on your specific system and see if it helps.
-        #config.write("NO_ISEND_IRECV_IN_DOMAIN\n")
-        #config.write("NO_ISEND_IRECV_IN_PM\n")
-        #config.write("NOTYPEPREFIX_FFTW\n")
+        #config.write(prefix+"NO_ISEND_IRECV_IN_DOMAIN\n")
+        #config.write(prefix+"NO_ISEND_IRECV_IN_PM\n")
+        #config.write(prefix+"NOTYPEPREFIX_FFTW\n")
         return
 
-    def _feedback_config_options(self, config):
+    def _feedback_config_options(self, config, prefix=""):
         """Options in the Config.sh file for a potential star-formation/feedback model"""
-        config.write("SFR")
+        config.write(prefix+"SFR")
         return
 
-    def _gadget3_child_options(self, _):
+    def _gadget3_child_options(self, _, _):
         """Gadget-3 compilation options for Config.sh which should be written by the child class."""
         return
 
