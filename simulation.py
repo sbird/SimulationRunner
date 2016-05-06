@@ -171,8 +171,8 @@ class Simulation(object):
         config['scalar_spectral_index(1)'] = self.ns
         config['scalar_amp(1)'] = self.scalar_amp
         #Various numerical parameters
-        #Maximum relevant scale is 2 pi * softening length. Use a kmax double that for safety.
-        config['transfer_kmax'] = 2*math.pi*100*self.npart/self.box
+        #Maximum relevant scale is 2 pi * avg. interparticle spacing * 2. Set kmax to double this.
+        config['transfer_kmax'] = 2*math.pi*4*self.npart/self.box
         #At which redshifts should we produce CAMB output: we want the starting redshift of the simulation,
         #but we also want some other values for checking purposes
         redshifts = [self.redshift, (self.redshift+1)/2-1] + self.camb_times
