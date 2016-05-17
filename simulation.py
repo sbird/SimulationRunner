@@ -474,7 +474,10 @@ class Simulation(object):
         os.symlink(gadget_config, os.path.join(self.gadget_dir, self.gadgetconfig))
         #Build gadget
         gadget_binary = os.path.join(self.gadget_dir, self.gadgetexe)
-        g_mtime = os.stat(gadget_binary).st_mtime
+        try:
+            g_mtime = os.stat(gadget_binary).st_mtime
+        except FileNotFoundError:
+            g_mtime = -1
         self.gadget_git = get_git_hash(gadget_binary)
         self.make_output = subprocess.check_output(["make", "-j8"], cwd=self.gadget_dir, universal_newlines=True)
         #Check that the last-changed time of the binary has actually changed..
