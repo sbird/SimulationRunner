@@ -30,7 +30,7 @@ Format is:
   z      HI_i     HI_h    HeI_i    HeI_h    HeII_i   HeII_h   Compton
 
 """
-
+import os.path
 import numpy as np
 
 def format_HM12_UVB(HM_in_file, HM_out_file):
@@ -58,11 +58,11 @@ def format_HM12_UVB(HM_in_file, HM_out_file):
 
 def get_fg11_filename():
     """File where the FG2009 table is stored"""
-    return "TREECOOL_fg_dec11"
+    return os.path.join(os.path.dirname(__file__),"TREECOOL_fg_dec11")
 
 def get_hm12_filename():
     """File where the HM2012 table is stored (in gadget format)"""
-    return "TREECOOL_hm_2012"
+    return os.path.join(os.path.dirname(__file__),"TREECOOL_hm_2012")
 
 def get_uvb_filename(uvb):
     """Get the filename for a UVB table (in gadget format)"""
