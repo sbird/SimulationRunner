@@ -108,3 +108,49 @@ def hhpc_mpi_decorate(class_name, nproc=252, timelimit=8):
 
     return HHPCClass
 
+def hypatia_mpi_decorate(class_name, nproc=60):
+    """This is a class decorator: it creates a new class which subclasses a given class to contain the information
+        specific to using the Hypatia cluster at UCL.
+        __init__ and _queue_directive are subclassed"""
+    newdoc = class_name.__doc__ + """
+    Subclassed for specific properties of the Hypatia cluster in UCL.
+    __init__ and _queue_directive are changed."""
+    class HypatiaClass(class_name):
+        """Docstring should be specified in newdoc"""
+        __doc__ = newdoc
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            #hypatia has no timelimit
+            self.nproc = nproc
+
+        def generate_mpi_submit(self):
+            """Generate a sample mpi_submit file.
+            The prefix argument is a string at the start of each line.
+            It separates queueing system directives from normal comments"""
+            with open(os.path.join(self.outdir, "mpi_submit"),'w') as mpis:
+                mpis.write("#!/bin/csh -f\n")
+                mpis.write(self._queue_directive())
+                mpis.write(self._mpi_program())
+
+        def _queue_directive(self, prefix="#PBS"):
+            """Generate Hypatia-specific mpi_submit"""
+            qstring += prefix+" -m bae\n"
+            qstring += prefix+" -r n\n"
+            qstring += prefix+" -q smp\n"
+            qstring += prefix+" -N "+os.path.basename(self.gadgetexe)+"\n"
+            qstring += prefix+" -M "+self.email+"\n"
+            qstring += prefix+" -l nodes=1:ppn="+str(self.nproc)+"\n"
+            #Pass environment to child processes
+            qstring += prefix+" -V\n"
+            return qstring
+
+        def _mpi_program(self):
+            """String for MPI program to execute. Hipatia is weird because PBS_JOBID needs to be unset for the job to launch."""
+            #Change to current directory
+            qstring = "cd $PBS_O_WORKDIR\n"
+            #Don't ask me why this works, but it is necessary.
+            qstring += ". /opt/torque/etc/openmpi-setup.sh\n"
+            qstring += "mpirun -v -hostfile $PBS_NODEFILE -npernode "+str(self.nproc)+" "+self.gadgetexe+" "+self.gadgetparam+"\n"
+            return qstring
+
+    return HypatiaClass
