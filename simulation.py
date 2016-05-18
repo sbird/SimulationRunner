@@ -122,15 +122,16 @@ class Simulation(object):
             if os.listdir(outdir) != []:
                 print("Warning: ",outdir," is non-empty")
         self.outdir = outdir
+        defaultpath = os.path.dirname(__file__)
         #Default values for the CAMB parameters
-        self.cambdefault = "params.ini"
+        self.cambdefault = os.path.join(defaultpath,"params.ini")
         #Filename for new CAMB file
         self.cambout = "_camb_params.ini"
         #Default GenIC paths
-        self.genicdefault = "ngenic.param"
+        self.genicdefault = os.path.join(defaultpath,"ngenic.param")
         self.genicout = "_genic_params.ini"
         #Default parameter file names
-        self.gadgetdefaultparam = "gadgetparams.param"
+        self.gadgetdefaultparam = os.path.join(defaultpath,"gadgetparams.param")
         self.gadgetparam = "gadget3.param"
         #Executable names
         self.cambexe = "camb"
