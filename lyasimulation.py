@@ -4,8 +4,8 @@ import os
 import string
 import numpy as np
 import scipy.interpolate as interp
-import simulation
-import clusters
+from . import simulation
+from . import clusters
 
 class LymanAlphaSim(simulation.Simulation):
     """Specialise the Simulation class for the Lyman alpha forest.

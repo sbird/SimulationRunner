@@ -1,6 +1,6 @@
 """Specialization of the Simulation class to Lyman-alpha forest simulations."""
 
-import simulation
+from . import simulation
 
 class NeutrinoSim(simulation.Simulation):
     """Specialise the Simulation class for massive neutrinos.

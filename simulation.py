@@ -18,8 +18,8 @@ import numpy as np
 import matplotlib
 matplotlib.use("PDF")
 import matplotlib.pyplot as plt
-import cambpower
-import read_uvb_tab
+from . import cambpower
+from . import read_uvb_tab
 
 def find_exec(executable):
     """Simple function to locate a binary in a nearby directory"""
