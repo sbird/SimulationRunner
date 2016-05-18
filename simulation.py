@@ -551,10 +551,8 @@ class Simulation(object):
             plt.savefig(go+"-abs.pdf")
             plt.clf()
             error = abs(Pk_ic[imin:imax]/Pk_camb[imin:imax] -1)
-            try:
-                assert np.all(error < accuracy)
-            except AssertionError:
-                raise AssertionError("Pk accuracy check failed for "+sp+". Max error: "+str(np.max(error)))
+            if np.any(error > accuracy):
+                raise RuntimeError("Pk accuracy check failed for "+sp+". Max error: "+str(np.max(error)))
 
 def load_genpk(infile, box, minmode=1):
     """Load a power spectrum from a Gen-PK output, modifying units to agree with CAMB"""
