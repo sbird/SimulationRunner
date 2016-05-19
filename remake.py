@@ -44,3 +44,11 @@ def rebuild(rundir, codedir, config_file="Config.sh", binary="P-Gadget3"):
         #of the symlink instead of breaking it.
         shutil.copy2(path.join(codedir, binary), path.join(directory, binary))
     return configs
+
+def resub(rundir, script_file="mpi_submit", submit_command="qsub"):
+    """Submit all jobs in the emulator to the queueing system"""
+    #Find all subdirs with config files.
+    configs = glob.glob(path.join(path.join(rundir, "*"),script_file))
+    for cc in configs:
+        cdir = path.dirname(cc)
+        subprocess.call([submit_command, script_file], cwd=cdir)
