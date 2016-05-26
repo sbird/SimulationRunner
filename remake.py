@@ -65,13 +65,14 @@ def _check_single_status(fname, endz):
         last = fh.readline()
     #Parse it to find the redshift
     match = re.search("Redshift: ([0-9].[0-9]*)",last)
-    redshift = float(match[0])
+    redshift = float(match.group(1))
     return redshift <= endz
 
 def check_status(rundir, output_file="output/info.txt", endz=2):
     """Get completeness status for every directory in the suite.
     Ultimately this should work out whether there
     was an error or just a timeout."""
+    rundir = path.expanduser(rundir)
     outputs = glob.glob(path.join(path.join(rundir, "*"),output_file))
     completes = [_check_single_status(cc, endz) for cc in outputs]
     return outputs, completes
