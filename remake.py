@@ -1,11 +1,13 @@
 """This module rebuilds the Gadget binary for all runs in a directory.
 It must be very compatible, as it will run on the cluster.
-Requires python 2.5."""
+Requires python 2.6."""
 
+from __future__ import print_function
 import glob
 import filecmp
 import subprocess
 import shutil
+import re
 import os
 import os.path as path
 
@@ -52,3 +54,62 @@ def resub(rundir, script_file="mpi_submit", submit_command="qsub"):
     for cc in configs:
         cdir = path.dirname(cc)
         subprocess.call([submit_command, script_file], cwd=cdir)
+
+def _check_single_status(fname, endz):
+    """Given a file, check whether it shows the
+        simulation reached the desired redshift."""
+    #Get the last line of the file.
+    with open(fname, 'r') as fh:
+        #This should be before the final redshift.
+        fh.seek(-1024, os.SEEK_END)
+        last = fh.readline()
+    #Parse it to find the redshift
+    match = re.search("Redshift: ([0-9].[0-9]*)",last)
+    redshift = float(match[0])
+    return redshift <= endz
+
+def check_status(rundir, output_file="output/info.txt", endz=2):
+    """Get completeness status for every directory in the suite.
+    Ultimately this should work out whether there
+    was an error or just a timeout."""
+    outputs = glob.glob(path.join(path.join(rundir, "*"),output_file))
+    completes = [_check_single_status(cc, endz) for cc in outputs]
+    return outputs, completes
+
+def print_status(rundir, output_file="output/info.txt", endz=2):
+    """Get completeness status for every directory in the suite.
+    Ultimately this should work out whether there
+    was an error or just a timeout."""
+    outputs, completes = check_status(rundir, output_file, endz)
+    for oo, cc in zip(outputs, completes):
+        print(oo[-len(output_file)]," : ")
+        if not cc:
+            print("NOT ")
+        print("COMPLETE\n")
+
+def resub_not_complete(rundir, output_file="output/info.txt", endz=2, script_file="mpi_submit", resub_command="qsub", paramfile="gadget3.param"):
+    """Resubmit incomplete simulations to the queue.
+    We also edit the script file to add a RestartFlag"""
+    outputs, completes = check_status(rundir, output_file, endz)
+    #Pathnames for incomplete simulations
+    for oo,cc in zip(outputs,completes):
+        if cc:
+            continue
+        #Remove the output_file from the output, getting the directory.
+        odir = oo[-len(output_file)]
+        script_file_resub = script_file+"_resub"
+        with open(path.join(odir, script_file),'r') as ifile:
+            with open(path.join(odir, script_file_resub),'w') as ofile:
+                #Read each line straight through to the output by default.
+                line = ifile.readline()
+                #Find the actual submission line and add a '1' after the paramfile.
+                if re.search("mpirun|mpiexec", line):
+                    line = re.sub(paramfile, paramfile+" 1",line)
+                ofile.write(line)
+        print("Re-submitting: ",path.join(odir, script_file_resub))
+        subprocess.call([resub_command, script_file_resub], cwd=odir)
+
+
+
+
+
