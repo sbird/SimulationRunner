@@ -58,13 +58,17 @@ def resub(rundir, script_file="mpi_submit", submit_command="qsub"):
 def _check_single_status(fname, endz):
     """Given a file, check whether it shows the
         simulation reached the desired redshift."""
-    #Get the last line of the file.
-    with open(fname, 'r') as fh:
+    #Get the last line of the file:
+    #need to open in binary to get negative seeks fom the end.
+    with open(fname, 'rb') as fh:
+        #Start at the end and seek backwards until we find a newline.
+        fh.seek(-2,os.SEEK_END)
+        while fh.read(1) != b'\n':
+            fh.seek(-2,os.SEEK_CUR)
         #This should be before the final redshift.
-        fh.seek(-1024, os.SEEK_END)
-        last = fh.readline()
+        last = fh.readline().decode()
     #Parse it to find the redshift
-    match = re.search("Redshift: ([0-9].[0-9]*)",last)
+    match = re.search(r"Redshift: ([0-9]{1,3}\.?[0-9]*)",last)
     redshift = float(match.group(1))
     return redshift <= endz
 
@@ -83,10 +87,10 @@ def print_status(rundir, output_file="output/info.txt", endz=2):
     was an error or just a timeout."""
     outputs, completes = check_status(rundir, output_file, endz)
     for oo, cc in zip(outputs, completes):
-        print(oo[-len(output_file)]," : ")
+        print(oo[len(rundir):-len(output_file)-1]," : ",end="")
         if not cc:
-            print("NOT ")
-        print("COMPLETE\n")
+            print("NOT ",end="")
+        print("COMPLETE")
 
 def resub_not_complete(rundir, output_file="output/info.txt", endz=2, script_file="mpi_submit", resub_command="qsub", paramfile="gadget3.param"):
     """Resubmit incomplete simulations to the queue.
