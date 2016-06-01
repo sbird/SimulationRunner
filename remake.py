@@ -101,16 +101,18 @@ def resub_not_complete(rundir, output_file="output/info.txt", endz=2, script_fil
         if cc:
             continue
         #Remove the output_file from the output, getting the directory.
-        odir = oo[-len(output_file)]
+        odir = oo[:-len(output_file)]
         script_file_resub = script_file+"_resub"
         with open(path.join(odir, script_file),'r') as ifile:
             with open(path.join(odir, script_file_resub),'w') as ofile:
-                #Read each line straight through to the output by default.
                 line = ifile.readline()
-                #Find the actual submission line and add a '1' after the paramfile.
-                if re.search("mpirun|mpiexec", line):
-                    line = re.sub(paramfile, paramfile+" 1",line)
-                ofile.write(line)
+		while line != '':
+                    #Find the actual submission line and add a '1' after the paramfile.
+                    if re.search("mpirun|mpiexec", line):
+                        line = re.sub(paramfile, paramfile+" 1",line)
+                    #Write each line straight through to the output by default.
+                    ofile.write(line)
+                    line = ifile.readline()
         print("Re-submitting: ",path.join(odir, script_file_resub))
         subprocess.call([resub_command, script_file_resub], cwd=odir)
 
