@@ -13,11 +13,9 @@ addons:
             - libopenmpi-dev
             - libfftw3-dev
             - libgsl0-dev
-            - python3-nose
             - python3-numpy
             - python3-matplotlib
-            - python-configobj
-
+            - python3-scipy
 before-install: ./prepare_travis.sh
-install: true
+install: pip install -r requirements.txt
 script: nosetests
