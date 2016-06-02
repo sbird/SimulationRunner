@@ -1,9 +1,8 @@
 sudo: required
 dist: trusty
 language: python
-python: 3.5
+python: 3.4
 os: linux
-#Don't use gcc as the default gcc on travis is 4.6, too old for C++11.
 compiler: gcc
 addons:
     apt:
@@ -13,9 +12,15 @@ addons:
             - libopenmpi-dev
             - libfftw3-dev
             - libgsl0-dev
+            - gfortran
             - python3-numpy
             - python3-matplotlib
             - python3-scipy
-before-install: ./prepare_travis.sh
-install: pip install -r requirements.txt
+            - python3-h5py
+virtualenv:
+    system_site_packages: true
+
+install:
+    - pip install -r requirements.txt
+    - ./prepare_travis.sh
 script: nosetests
