@@ -21,8 +21,8 @@ TimeBetSnapshot   1.07
 TimeOfFirstSnapshot   0.1
 CpuTimeBetRestartFile   360000% here in seconds
 TimeBetStatistics   0.05
-NumFilesPerSnapshot   1.0
-NumFilesWrittenInParallel   1.0
+NumFilesPerSnapshot   2
+NumFilesWrittenInParallel   2
 InitGasTemp   273
 MinGasTemp   1.0
 SofteningGas   33.333333333333336
