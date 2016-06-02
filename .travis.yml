@@ -1,0 +1,23 @@
+sudo: required
+dist: trusty
+language: python
+python: 3.5
+os: linux
+#Don't use gcc as the default gcc on travis is 4.6, too old for C++11.
+compiler: gcc
+addons:
+    apt:
+        packages:
+            - libboost-test-dev
+            - libhdf5-serial-dev
+            - libopenmpi-dev
+            - libfftw3-dev
+            - libgsl0-dev
+            - python3-nose
+            - python3-numpy
+            - python3-matplotlib
+            - python-configobj
+
+before-install: ./prepare_travis.sh
+install: true
+script: nosetests
