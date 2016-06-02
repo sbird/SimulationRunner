@@ -108,7 +108,7 @@ class Simulation(object):
         #Number of files per snapshot
         #This is chosen to give a reasonable number and
         #a constant number of particles per file.
-        self.numfiles = np.max([1,self.npart**3/2**24])
+        self.numfiles = int(np.max([2,self.npart**3//2**24]))
         #Maximum number of files to write in parallel.
         #Cannot be larger than number of processors
         self.maxpwrite = self.nproc
