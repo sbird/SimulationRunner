@@ -6,6 +6,7 @@ More specialised simulation types can inherit from it.
 Different machines can be implemented as decorators.
 """
 from __future__ import print_function
+import os
 import os.path
 import re
 import math
@@ -459,7 +460,7 @@ class Simulation(object):
         self.camb_git = get_git_hash(camb)
         #In python 3.5, can use subprocess.run to do this.
         #But for backwards compat, use check_output
-        subprocess.check_call([camb, camb_param], cwd=os.path.dirname(camb))
+        subprocess.check_call([os.path.join(os.getcwd(),camb), camb_param], cwd=os.path.dirname(camb))
         #Change the power spectrum file on disc if we want to do that
         self._alter_power(camb_output)
         #Now generate the GenIC parameters
