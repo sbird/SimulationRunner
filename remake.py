@@ -19,6 +19,8 @@ def rebuild(rundir, codedir, config_file="Config.sh", binary="P-Gadget3"):
     binary: name of file to rebuild.
     config_file: Name of configuration file which specifies compile flags. Should be within the rundir."""
     #Find all subdirs with config files.
+    rundir = path.expanduser(rundir)
+    codedir = path.expanduser(codedir)
     configs = glob.glob(path.join(path.join(rundir, "*"),config_file))
     #First run.
     first = True
