@@ -25,7 +25,7 @@ def test_neutrino_part():
     mnu = f["Header"].attrs["MassTable"][2]
     #The mass ratio should be given by the ratio of omega_nu by omega_cdm
     assert np.abs(mnu/mcdm / ( Sim.omeganu/(Sim.omegac+Sim.omegab)) - 1) < 1e-5
-    assert np.abs(f["Header"].attrs["MassTable"][1] / 7.17244023 - 1) < 1e-5
+    assert np.abs(f["Header"].attrs["MassTable"][1] / 7.71977292 - 1) < 1e-5
     f.close()
     #shutil.rmtree("./test_nu/")
 
@@ -43,6 +43,6 @@ def test_neutrino_semilinear():
     f = h5py.File(os.path.join(test_dir, "ICS/256_256_99.0.hdf5"),'r')
     assert f["Header"].attrs["NumPart_Total"][2] == 0
     #Check the mass is correct: the CDM particles should have the same mass as in the particle simulation
-    assert np.abs(f["Header"].attrs["MassTable"][1] / 7.17244023 - 1) < 1e-5
+    assert np.abs(f["Header"].attrs["MassTable"][1] / 7.71977292 - 1) < 1e-5
     f.close()
     #shutil.rmtree("./test_nu/")
