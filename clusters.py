@@ -1,4 +1,5 @@
 """Specialised module to contain functions to specialise the simulation run to different clusters"""
+import os.path
 
 def coma_mpi_decorate(class_name, nproc=256, timelimit=24):
     """This is a class decorator: it creates a new class which subclasses a given class to contain the information
