@@ -135,7 +135,7 @@ def hypatia_mpi_decorate(class_name, nproc=60):
 
         def _queue_directive(self, prefix="#PBS"):
             """Generate Hypatia-specific mpi_submit"""
-            qstring += prefix+" -m bae\n"
+            qstring = prefix+" -m bae\n"
             qstring += prefix+" -r n\n"
             qstring += prefix+" -q smp\n"
             qstring += prefix+" -N "+os.path.basename(self.gadgetexe)+"\n"
