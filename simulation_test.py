@@ -7,7 +7,7 @@ from . import simulation
 
 def test_full_integration():
     """Create a full simulation snapshot and check it corresponds to the saved results"""
-    Sim = simulation.Simulation("./test1",box = 256,npart = 256, redshift = 99, redend=0)
+    Sim = simulation.Simulation("./test1",box = 256,npart = 256, redshift = 99, redend=0,do_build=False)
     Sim.make_simulation()
     #Check the following files were created
     assert os.path.exists("./test1")
@@ -21,6 +21,6 @@ def test_full_integration():
 
 def test_only_DM():
     """Create a full simulation with no gas"""
-    Sim = simulation.Simulation("./test2",box = 256,npart = 256, redshift = 99, redend=0, separate_gas=False)
+    Sim = simulation.Simulation("./test2",box = 256,npart = 256, redshift = 99, redend=0, separate_gas=False, do_build=False)
     Sim.make_simulation()
     assert os.path.exists("./test2")

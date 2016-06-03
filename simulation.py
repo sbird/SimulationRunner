@@ -66,7 +66,7 @@ class Simulation(object):
     scalar_amp - Initial amplitude of scalar power spectrum to feed to CAMB
     ns - tilt of scalar power spectrum to feed to CAMB
     """
-    def __init__(self, outdir, box, npart, *, seed = 9281110, redshift=99, redend = 0, separate_gas=True, separate_nu=False, omegac=0.2408, omegab=0.0472, omeganu=0.,hubble=0.7, scalar_amp=2.427e-9, ns=0.97, uvb="hm"):
+    def __init__(self, outdir, box, npart, *, seed = 9281110, redshift=99, redend = 0, separate_gas=True, separate_nu=False, omegac=0.2408, omegab=0.0472, omeganu=0.,hubble=0.7, scalar_amp=2.427e-9, ns=0.97, uvb="hm", do_build=True):
         #Check that input is reasonable and set parameters
         #In Mpc/h
         assert box < 20000
@@ -106,6 +106,8 @@ class Simulation(object):
         self.timelimit = 10
         #Maximum memory available for an MPI task
         self.memory = 1800
+        #Will we try to build gadget?
+        self.do_build = do_build
         #Number of files per snapshot
         #This is chosen to give a reasonable number and
         #a constant number of particles per file.
@@ -284,6 +286,7 @@ class Simulation(object):
 
     def _cluster_config_options(self,config, prefix=""):
         """Config options that might be specific to a particular cluster"""
+        _ = (config, prefix)
         #isend/irecv is quite slow on some clusters because of the extra memory allocations.
         #Maybe test this on your specific system and see if it helps.
         #config.write(prefix+"NO_ISEND_IRECV_IN_DOMAIN\n")
@@ -472,6 +475,19 @@ class Simulation(object):
         #Generate Gadget makefile
         gadget_config = self.gadget3config()
         #Symlink the new gadget config to the source directory
+        if self.do_build:
+            self.do_gadget_build(gadget_config)
+        #Generate Gadget parameter file
+        self.gadget3params(genic_output)
+        #Generate mpi_submit file
+        self.generate_mpi_submit()
+        #Save a json of ourselves.
+        self.txt_description()
+        #Check that the ICs have the right power spectrum
+        self.check_ic_power_spectra(camb_output, genic_output)
+
+    def do_gadget_build(self, gadget_config):
+        """Make a gadget build and check it succeeded."""
         os.remove(os.path.join(self.gadget_dir, self.gadgetconfig))
         os.symlink(gadget_config, os.path.join(self.gadget_dir, self.gadgetconfig))
         #Build gadget
@@ -486,14 +502,6 @@ class Simulation(object):
         assert g_mtime != os.stat(gadget_binary).st_mtime
         #Copy the gadget binary to the new location
         shutil.copy(os.path.join(self.gadget_dir, self.gadgetexe), os.path.join(self.outdir,self.gadgetexe))
-        #Generate Gadget parameter file
-        self.gadget3params(genic_output)
-        #Generate mpi_submit file
-        self.generate_mpi_submit()
-        #Save a json of ourselves.
-        self.txt_description()
-        #Check that the ICs have the right power spectrum
-        self.check_ic_power_spectra(camb_output, genic_output)
 
     def check_ic_power_spectra(self, camb_output, genicfileout):
         """Generate the power spectrum for each particle type from the generated simulation files, using GenPK,
