@@ -5,6 +5,7 @@ import shutil
 import os
 import h5py
 import numpy as np
+import configobj
 from . import neutrinosimulation as nus
 
 def test_neutrino_part():
@@ -13,9 +14,16 @@ def test_neutrino_part():
     Sim = nus.NeutrinoPartSim(test_dir,box = 256,npart = 256, m_nu = 0.45, redshift = 99, redend=0, separate_gas=False, do_build=False)
     Sim.make_simulation()
     assert os.path.exists(test_dir)
-    #Check these files have not changed
-    for f in ("_genic_params.ini",):
-        assert filecmp.cmp(os.path.join(test_dir,f), os.path.join("./testdata/test_nu/",f))
+    #Check these we are writing reasonable values.
+    config = configobj.ConfigObj(os.path.join(test_dir,"_genic_params.ini"))
+    assert abs(float(config['OmegaDM_2ndSpecies']) - 0.009860074585986426) < 1e-7
+    assert config['Omega'] == "0.288"
+    assert config['OmegaLambda'] == "0.712"
+    assert config['NNeutrino'] == "256"
+    assert config['NU_KSPACE'] == "0"
+    assert config['NU_On'] == "1"
+    assert config['NU_Vtherm_On'] == "1"
+    assert config['NU_PartMass_in_ev'] == "0.45"
     #Check that the output has neutrino particles
     f = h5py.File(os.path.join(test_dir,"ICS/256_256_99.0.hdf5"),'r')
     assert f["Header"].attrs["NumPart_Total"][2] == 256**3
@@ -37,8 +45,27 @@ def test_neutrino_semilinear():
     Sim.make_simulation()
     assert os.path.exists(test_dir)
     #Check these files have not changed
-    for f in ("_camb_params.ini", "_genic_params.ini", "gadget3.param"):
-        assert filecmp.cmp(os.path.join(test_dir,f), os.path.join("./testdata/test_nu_semilin/",f))
+    config = configobj.ConfigObj(os.path.join(test_dir,"_genic_params.ini"))
+    assert abs(float(config['OmegaDM_2ndSpecies']) - 0.009860074585986426) < 1e-7
+    assert config['Omega'] == "0.288"
+    assert config['OmegaLambda'] == "0.712"
+    assert config['NNeutrino'] == "0"
+    assert config['NU_KSPACE'] == "0"
+    assert config['NU_On'] == "0"
+    assert config['NU_Vtherm_On'] == "1"
+    assert config['NU_PartMass_in_ev'] == "0"
+
+    config = configobj.ConfigObj(os.path.join(test_dir,"_camb_params.ini"))
+    assert abs(float(config['ombh2']) - 0.023127999999999996) < 1e-7
+    assert abs(float(config['omch2']) - 0.11316056345286662) < 1e-7
+    assert abs(float(config['omnuh2']) - 0.004831436547133348) < 1e-7
+    assert config['massless_neutrinos'] == "0.046"
+    assert config['massive_neutrinos'] == "3"
+
+    test_files = ("gadget3.param",)
+    match, mismatch, errors = filecmp.cmpfiles(test_dir, "./testdata/test_nu_semilin/",test_files)
+    assert len(errors) == 0
+    assert len(mismatch) == 0
     #Check that the output has no neutrino particles
     f = h5py.File(os.path.join(test_dir, "ICS/256_256_99.0.hdf5"),'r')
     assert f["Header"].attrs["NumPart_Total"][2] == 0

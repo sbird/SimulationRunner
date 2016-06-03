@@ -3,6 +3,8 @@
 import filecmp
 import shutil
 import os
+import re
+import configobj
 from . import simulation
 
 def test_full_integration():
@@ -14,7 +16,14 @@ def test_full_integration():
     for ff in ("times.txt", "TREECOOL", "mpi_submit", "camb_linear", "ICS", "output", "camb_linear/ics_matterpow_99.dat", "ICS/PK-DM-256_256_99", "Simulation.json"):
         assert os.path.exists(os.path.join("./test1/", ff))
     #Check these files have not changed
-    for f in ("_camb_params.ini", "_genic_params.ini", "Config.sh", "gadget3.param"):
+    for f in ("_camb_params.ini", "_genic_params.ini"):
+        config_new = configobj.ConfigObj(os.path.join("./test1",f))
+        config_old = configobj.ConfigObj(os.path.join("./testdata/test1/",f))
+        for key in config_old.keys():
+            if re.match("/home/spb",config_old[key]):
+                continue
+            assert config_old[key] == config_new[key]
+    for f in ("Config.sh", "gadget3.param"):
         assert filecmp.cmp(os.path.join("./test1/",f), os.path.join("./testdata/test1/",f))
     #Clean the test directory if test was successful
     #shutil.rmtree("./test1/")
