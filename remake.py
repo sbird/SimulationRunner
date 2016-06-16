@@ -82,7 +82,7 @@ def check_status(rundir, output_file="output/info.txt", endz=2):
     rundir = path.expanduser(rundir)
     outputs = glob.glob(path.join(path.join(rundir, "*"),output_file))
     redshifts = [_check_single_status(cc) for cc in outputs]
-    return outputs, redshifts <= endz, redshifts
+    return outputs, [zz <= endz for zz in redshifts], redshifts
 
 def print_status(rundir, output_file="output/info.txt", endz=2):
     """Get completeness status for every directory in the suite.
