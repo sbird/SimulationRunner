@@ -58,7 +58,7 @@ def resub(rundir, script_file="mpi_submit", submit_command="qsub"):
         cdir = path.dirname(cc)
         subprocess.call([submit_command, script_file], cwd=cdir)
 
-def _check_single_status(fname, endz):
+def _check_single_status(fname):
     """Given a file, check whether it shows the
         simulation reached the desired redshift."""
     #Get the last line of the file:
@@ -73,7 +73,7 @@ def _check_single_status(fname, endz):
     #Parse it to find the redshift
     match = re.search(r"Redshift: ([0-9]{1,3}\.?[0-9]*)",last)
     redshift = float(match.group(1))
-    return redshift <= endz
+    return redshift
 
 def check_status(rundir, output_file="output/info.txt", endz=2):
     """Get completeness status for every directory in the suite.
@@ -81,24 +81,25 @@ def check_status(rundir, output_file="output/info.txt", endz=2):
     was an error or just a timeout."""
     rundir = path.expanduser(rundir)
     outputs = glob.glob(path.join(path.join(rundir, "*"),output_file))
-    completes = [_check_single_status(cc, endz) for cc in outputs]
-    return outputs, completes
+    redshifts = [_check_single_status(cc) for cc in outputs]
+    return outputs, redshifts <= endz, redshifts
 
 def print_status(rundir, output_file="output/info.txt", endz=2):
     """Get completeness status for every directory in the suite.
     Ultimately this should work out whether there
     was an error or just a timeout."""
-    outputs, completes = check_status(rundir, output_file, endz)
-    for oo, cc in zip(outputs, completes):
+    outputs, completes, redshifts = check_status(rundir, output_file, endz)
+    for oo, cc,zz in zip(outputs, completes, redshifts):
         print(oo[len(rundir):-len(output_file)-1]," : ",end="")
         if not cc:
-            print("NOT ",end="")
-        print("COMPLETE")
+            print("NOT COMPLETE: z=",zz)
+        else:
+            print("COMPLETE")
 
 def resub_not_complete(rundir, output_file="output/info.txt", endz=2, script_file="mpi_submit", resub_command="qsub", paramfile="gadget3.param"):
     """Resubmit incomplete simulations to the queue.
     We also edit the script file to add a RestartFlag"""
-    outputs, completes = check_status(rundir, output_file, endz)
+    outputs, completes, _ = check_status(rundir, output_file, endz)
     #Pathnames for incomplete simulations
     for oo,cc in zip(outputs,completes):
         if cc:
@@ -109,7 +110,7 @@ def resub_not_complete(rundir, output_file="output/info.txt", endz=2, script_fil
         with open(path.join(odir, script_file),'r') as ifile:
             with open(path.join(odir, script_file_resub),'w') as ofile:
                 line = ifile.readline()
-		while line != '':
+                while line != '':
                     #Find the actual submission line and add a '1' after the paramfile.
                     if re.search("mpirun|mpiexec", line):
                         line = re.sub(paramfile, paramfile+" 1",line)
