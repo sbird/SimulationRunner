@@ -296,7 +296,7 @@ class Simulation(object):
 
     def _feedback_config_options(self, config, prefix=""):
         """Options in the Config.sh file for a potential star-formation/feedback model"""
-        config.write(prefix+"SFR")
+        config.write(prefix+"SFR\n")
         return
 
     def _gadget3_child_options(self, _, __):
