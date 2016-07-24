@@ -13,7 +13,7 @@ import math
 import shutil
 import glob
 import subprocess
-import json
+import jsonpickle
 import configobj
 import numpy as np
 import matplotlib
@@ -447,12 +447,14 @@ class Simulation(object):
         #But ditch the output of make
         self.make_output = ""
         with open(os.path.join(self.outdir, "Simulation.json"), 'w') as jsout:
-            json.dump(self.__dict__, jsout)
+            jsonstr = jsonpickle.encode(self.__dict__)
+            jsout.write(jsonstr)
 
     def load_txt_description(self):
         """Load the text file describing the parameters of the code that generated a simulation."""
         with open(os.path.join(self.outdir, "Simulation.json"), 'r') as jsin:
-            self.__dict__ = json.load(jsin)
+            jsonstr = jsin.read()
+            self.__dict__ = jsonpickle.decode(jsonstr)
 
     def make_simulation(self):
         """Wrapper function to make all the simulation parameter files in turn and run the binaries"""
