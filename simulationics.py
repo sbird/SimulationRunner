@@ -66,7 +66,7 @@ class SimulationICs(object):
         #Number of files per snapshot
         #This is chosen to give a reasonable number and
         #a constant number of particles per file.
-        self.numfiles = np.max([1,self.npart**3/2**24])
+        self.numfiles = int(np.max([2,self.npart**3//2**24]))
         #Total matter density
         self.omega0 = self.omegac + self.omegab + self.omeganu
         #Extra redshifts at which to generate CAMB output, in addition to self.redshift and self.redshift/2
@@ -264,7 +264,7 @@ class SimulationICs(object):
         self.camb_git = utils.get_git_hash(camb)
         #In python 3.5, can use subprocess.run to do this.
         #But for backwards compat, use check_output
-        subprocess.check_call([camb, camb_param], cwd=os.path.dirname(camb))
+        subprocess.check_call([os.path.join(os.getcwd(), camb), camb_param], cwd=os.path.dirname(camb))
         #Change the power spectrum file on disc if we want to do that
         self._alter_power(camb_output)
         #Now generate the GenIC parameters
