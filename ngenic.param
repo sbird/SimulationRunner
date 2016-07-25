@@ -62,4 +62,4 @@ NU_Vtherm_On= 1
 NU_PartMass_in_ev= 0
 
 TWOLPT =            1       # Enable twolpt
-
+ICFormat = 3
