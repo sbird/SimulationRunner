@@ -1,21 +1,13 @@
 """Specialization of the Simulation class to Lyman-alpha forest simulations."""
 
 from . import simulation
+from . import simulationics
 
-class NeutrinoSim(simulation.Simulation):
-    """Specialise the Simulation class for massive neutrinos.
-    """
-    __doc__ = __doc__+simulation.Simulation.__doc__
-    def __init__(self, outdir, box, npart, *, m_nu = 0.1, hubble=0.7, omegac=0.2408,separate_gas=False, **kwargs):
-        #Set neutrino mass
-        assert m_nu > 0
-        omeganu = m_nu/93.14/hubble/hubble
+class NeutrinoPartICs(simulationics.SimulationICs):
+    """Specialise the initial conditions for particle neutrinos."""
+    def __init__(self, *, m_nu=0.1, **kwargs):
         self.m_nu = m_nu
-        #Subtract omeganu from omegac, so that with changing
-        #neutrino mass the total matter fraction remains constant.
-        #Note this does mean that omegab/omegac will increase, but not by much.
-        omegac = omegac-omeganu
-        simulation.Simulation.__init__(self, outdir=outdir, box=box, npart=npart, omegac=omegac, omeganu=omeganu, separate_nu=True, separate_gas=separate_gas, hubble=hubble, **kwargs)
+        super().__init__(**kwargs)
 
     def _camb_neutrinos(self, config):
         """Config options so CAMB can use massive neutrinos.
@@ -29,15 +21,6 @@ class NeutrinoSim(simulation.Simulation):
         config['share_delta_neff'] = 'T'
         return config
 
-    def _gadget3_child_options(self, config, prefix=""):
-        """Config options to turn on the right neutrino method"""
-        config.write(prefix+"NEUTRINOS\n")
-        return
-
-class NeutrinoPartSim(NeutrinoSim):
-    """Further specialise the Simulation class for particle based massive neutrinos.
-    """
-    __doc__ = __doc__+simulation.Simulation.__doc__
     def _genicfile_child_options(self, config):
         """Set up particle neutrino parameters for GenIC"""
         config['NU_On'] = 1
@@ -46,21 +29,46 @@ class NeutrinoPartSim(NeutrinoSim):
         config['NU_PartMass_in_ev'] = self.m_nu
         return config
 
+class NeutrinoSim(simulation.Simulation):
+    """Specialise the Simulation class for massive neutrinos.
+    """
+    __doc__ = __doc__+simulation.Simulation.__doc__
+    def __init__(self, *, m_nu = 0.1, hubble=0.7, omegac=0.2408, separate_gas=False, ic_class=NeutrinoPartICs, **kwargs):
+        #Set neutrino mass
+        assert m_nu > 0
+        omeganu = m_nu/93.14/hubble/hubble
+        self.m_nu = m_nu
+        #Subtract omeganu from omegac, so that with changing
+        #neutrino mass the total matter fraction remains constant.
+        #Note this does mean that omegab/omegac will increase, but not by much.
+        omegac = omegac-omeganu
+        simulation.Simulation.__init__(self, omegac=omegac, omeganu=omeganu, separate_gas=separate_gas, hubble=hubble, ic_class=ic_class, ic_args={'m_nu':m_nu,'separate_nu':True }, **kwargs)
+
+class NeutrinoPartSim(NeutrinoSim):
+    """Further specialise the Simulation class for particle based massive neutrinos.
+    """
+    __doc__ = __doc__+simulation.Simulation.__doc__
     def _gadget3_child_options(self, config, prefix=""):
         """Config options to turn on the right neutrino method"""
         config.write(prefix+"NEUTRINOS\n")
         return
 
-class NeutrinoSemiLinearSim(NeutrinoSim):
-    """Further specialise the Simulation class for semi-linear analytic massive neutrinos.
+class NeutrinoSemiLinearICs(NeutrinoPartICs):
+    """Further specialise the NeutrinoPartICs class for semi-linear analytic massive neutrinos.
     """
-    __doc__ = __doc__+simulation.Simulation.__doc__
     def _genicfile_child_options(self, config):
         """Set up neutrino parameters for GenIC.
         This just includes a change in OmegaNu, but no actual particles."""
         config['NNeutrino'] = 0
         config['NU_KSPACE'] = 0
         return config
+
+class NeutrinoSemiLinearSim(NeutrinoSim):
+    """Further specialise the Simulation class for semi-linear analytic massive neutrinos.
+    """
+    __doc__ = __doc__+simulation.Simulation.__doc__
+    def __init__(self, *, m_nu = 0.1, ic_class=NeutrinoSemiLinearICs, **kwargs):
+        NeutrinoSim.__init__(self, m_nu=m_nu,  ic_class=ic_class, **kwargs)
 
     def _gadget3_child_options(self, config, prefix=""):
         """Config options to turn on the right neutrino method"""
@@ -79,14 +87,13 @@ class NeutrinoSemiLinearSim(NeutrinoSim):
         config['OmegaBaryonCAMB'] = self.omegab
         return config
 
-class NeutrinoHybridSim(NeutrinoSemiLinearSim):
-    """Further specialise to hybrid neutrino simulations, which have both analytic and particle neutrinos."""
-    __doc__ = __doc__+simulation.Simulation.__doc__
-    def __init__(self, outdir, box, npart, *, m_nu = 0., vcrit=500, npartnufac = 0.5, zz_transition=1., **kwargs):
-        NeutrinoSim.__init__(self, outdir=outdir, box=box, npart=npart, m_nu=m_nu, **kwargs)
-        self.vcrit = vcrit
-        self.zz_transition = zz_transition
+class NeutrinoHybridICs(NeutrinoPartICs):
+    """Further specialise the NeutrinoPartICs class for semi-linear analytic massive neutrinos.
+    """
+    def __init__(self, *, npartnufac=0.5, vcrit=500, **kwargs):
         self.npartnufac = npartnufac
+        self.vcrit = vcrit
+        super().__init__(**kwargs)
 
     def _genicfile_child_options(self, config):
         """Set up neutrino parameters for GenIC.
@@ -98,6 +105,15 @@ class NeutrinoHybridSim(NeutrinoSemiLinearSim):
         config['NU_KSPACE'] = 0
         config['Max_nuvel'] = self.vcrit
         return config
+
+class NeutrinoHybridSim(NeutrinoSemiLinearSim):
+    """Further specialise to hybrid neutrino simulations, which have both analytic and particle neutrinos."""
+    __doc__ = __doc__+simulation.Simulation.__doc__
+    def __init__(self, *, m_nu = 0., vcrit=500, npartnufac = 0.5, zz_transition=1., **kwargs):
+        super().__init__(self, m_nu=m_nu,  ic_class=NeutrinoHybridICs, ic_args={'npartnufac':npartnufac, 'vcrit':vcrit}, **kwargs)
+        self.vcrit = vcrit
+        self.zz_transition = zz_transition
+        self.npartnufac = npartnufac
 
     def _gadget3_child_options(self, config, prefix=""):
         """Config options to turn on the right neutrino method"""
@@ -114,4 +130,3 @@ class NeutrinoHybridSim(NeutrinoSemiLinearSim):
         config['VCRIT'] = self.vcrit
         config['NuPartTime'] = 1./(1+self.zz_transition)
         return config
-

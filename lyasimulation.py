@@ -5,6 +5,7 @@ import string
 import numpy as np
 import scipy.interpolate as interp
 from . import simulation
+from . import simulationics
 from . import clusters
 
 class LymanAlphaSim(simulation.Simulation):
@@ -43,12 +44,29 @@ class LymanAlphaSim(simulation.Simulation):
         redshifts = np.concatenate([[49,9],np.arange(4.2,1.9,-0.2)])
         return 1./(1.+redshifts)
 
+class LymanAlphaKnotICs(simulationics.SimulationICs):
+    """Specialise the generation of initial conditions to change the power spectrum via knots."""
+    def __init__(self, knot_pos= (0.15,0.475,0.75,1.19), knot_val = (1.,1.,1.,1.), **kwargs):
+        self.knot_pos = knot_pos
+        self.knot_val = knot_val
+        super().__init__(**kwargs)
+
+    def _alter_power(self, camb_output):
+        """Generate a new CAMB power spectrum multiplied by the knot values."""
+        camb_file = camb_output+"_matterpow_"+str(self.redshift)+".dat"
+        matpow = np.loadtxt(camb_file)
+        matpow2 = change_power_spectrum_knots(self.knot_pos, self.knot_val, matpow)
+        #Save a copy of the old file
+        os.rename(camb_file, camb_file+".orig")
+        np.savetxt(camb_file, matpow2)
+        return
+
 class LymanAlphaKnotSim(LymanAlphaSim):
     """Specialise the Simulation class for the Lyman alpha forest.
         This uses the QuickLya star formation module and allows for altering the power spectrum with knots
         """
     __doc__ = __doc__+simulation.Simulation.__doc__
-    def __init__(self, outdir, box, npart, *, knot_pos = (0.15,0.475,0.75,1.19), knot_val = (1.,1.,1.,1.), rescale_gamma = False, rescale_amp = 1., rescale_slope = -0.7, seed = 9281110, redshift=99, redend = 2, omegac=0.2408, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, uvb="hm"):
+    def __init__(self, *, outdir, box, npart, knot_pos = (0.15,0.475,0.75,1.19), knot_val = (1.,1.,1.,1.), rescale_gamma = False, rescale_amp = 1., rescale_slope = -0.7, redshift=99, redend = 2, omegac=0.2408, omegab=0.0472, hubble=0.7, uvb="hm"):
         #Set up the knot parameters
         self.knot_pos = knot_pos
         self.knot_val = knot_val
@@ -67,17 +85,7 @@ class LymanAlphaKnotSim(LymanAlphaSim):
             os.makedirs(new_outdir)
         except FileExistsError:
             pass
-        LymanAlphaSim.__init__(self, outdir=new_outdir, box=box, npart=npart,rescale_gamma=rescale_gamma,rescale_amp=rescale_amp,rescale_slope=rescale_slope, seed=seed, redshift=redshift, redend=redend, separate_gas=True, omegac=omegac, omegab=omegab, hubble=hubble, scalar_amp=scalar_amp, ns=ns, uvb=uvb)
-
-    def _alter_power(self, camb_output):
-        """Generate a new CAMB power spectrum multiplied by the knot values."""
-        camb_file = camb_output+"_matterpow_"+str(self.redshift)+".dat"
-        matpow = np.loadtxt(camb_file)
-        matpow2 = change_power_spectrum_knots(self.knot_pos, self.knot_val, matpow)
-        #Save a copy of the old file
-        os.rename(camb_file, camb_file+".orig")
-        np.savetxt(camb_file, matpow2)
-        return
+        super().__init__(outdir=new_outdir, box=box, npart=npart,rescale_gamma=rescale_gamma,rescale_amp=rescale_amp,rescale_slope=rescale_slope, redshift=redshift, redend=redend, separate_gas=True, omegac=omegac, omegab=omegab, hubble=hubble, uvb=uvb, ic_class=LymanAlphaKnotICs, ic_args={self.knot_pos, self.knot_val})
 
 def change_power_spectrum_knots(knotpos, knotval, matpow):
     """Multiply the power spectrum file by a function specified by our knots.
