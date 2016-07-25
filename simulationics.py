@@ -14,7 +14,29 @@ from . import cambpower
 from . import utils
 
 class SimulationICs(object):
-    """Separate class for generating initial conditions for a simulation."""
+    """
+    Class for creating the initial conditions for a simulation.
+    There are a few things this class needs to do:
+
+    - Generate CAMB input files
+    - Generate N-GenIC input files (to use CAMB output)
+    - Run CAMB and N-GenIC to generate ICs
+
+    The class will store the parameters of the simulation.
+    We also save a copy of the input and enough information to reproduce the resutls exactly in SimulationICs.json.
+    Many things are left hard-coded.
+    We assume flatness.
+
+    Init parameters:
+    outdir - Directory in which to save ICs
+    box - Box size in comoving Mpc/h
+    npart - Cube root of number of particles
+    separate_gas - if true the ICs will contain baryonic particles. If false, just DM.
+    redshift - redshift at which to generate ICs
+    omegab - baryon density. Note that if we do not have gas particles, still set omegab, but set separate_gas = False
+    omegam - Matter density
+    hubble - Hubble parameter, h, which is H0 / (100 km/s/Mpc)
+    """
     def __init__(self, *, outdir, box, npart, icformat=3, seed = 9281110, redshift=99, separate_gas=True, separate_nu=False, omegac=0.2408, omegab=0.0472, omeganu=0.,hubble=0.7, scalar_amp=2.427e-9, ns=0.97, code_class=simulation.Simulation, code_args=None):
         #This lets us safely have a default dictionary argument
         self.code_args = {'redend': 0, 'uvb':'hm', 'do_build':True}

@@ -19,17 +19,8 @@ from . import utils
 
 class Simulation(object):
     """
-    Class for creating config files needed to run a single simulation.
-    There are a few things this class needs to do:
-
-    - Generate CAMB input files
-    - Generate N-GenIC input files (to use CAMB output)
-    - Run CAMB and N-GenIC to generate ICs
-    - Generate Gadget input files that match the ICs
-
-    The class will store the parameters of the simulation, and each public method will do one of these things.
-    Many things are left hard-coded.
-    We assume flatness.
+    Class for creating config files for Gadget to run a single simulation.
+    ICs are generated in simulationics.py
 
     Init parameters:
     outdir - Directory in which to save ICs
@@ -40,8 +31,6 @@ class Simulation(object):
     omegab - baryon density. Note that if we do not have gas particles, still set omegab, but set separate_gas = False
     omegam - Matter density
     hubble - Hubble parameter, h, which is H0 / (100 km/s/Mpc)
-    scalar_amp - Initial amplitude of scalar power spectrum to feed to CAMB
-    ns - tilt of scalar power spectrum to feed to CAMB
     """
     def __init__(self, *, outdir, box, npart, redshift=99, redend = 0, separate_gas=True, omegac=0.2408, omegab=0.0472, omeganu=0.,hubble=0.7, uvb="hm", do_build=True):
         #Check that input is reasonable and set parameters
