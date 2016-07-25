@@ -3,7 +3,7 @@ from __future__ import print_function
 import os.path
 import math
 import subprocess
-import json
+import jsonpickle
 import numpy as np
 import configobj
 import matplotlib
@@ -184,12 +184,14 @@ class SimulationICs(object):
         #But ditch the output of make
         self.make_output = ""
         with open(os.path.join(self.outdir, "SimulationICs.json"), 'w') as jsout:
-            json.dump(self.__dict__, jsout)
+            jsonstr = jsonpickle.encode(self.__dict__)
+            jsout.write(jsonstr)
 
     def load_txt_description(self):
         """Load the text file describing the parameters of the code that generated a simulation."""
         with open(os.path.join(self.outdir, "SimulationICs.json"), 'r') as jsin:
-            self.__dict__ = json.load(jsin)
+            jsonstr = jsin.read()
+            self.__dict__ = jsonpickle.decode(jsonstr)
 
     def check_ic_power_spectra(self, camb_output, genicfileout):
         """Generate the power spectrum for each particle type from the generated simulation files, using GenPK,
