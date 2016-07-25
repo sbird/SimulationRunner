@@ -9,11 +9,12 @@ from . import simulationics
 
 def test_full_integration():
     """Create a full simulation snapshot and check it corresponds to the saved results"""
-    Sim = simulationics.SimulationICs(outdir="./test1",box = 256,npart = 256, redshift = 99, code_args={'redend':0,'do_build':False})
+    defaultpath = os.path.dirname(__file__)
+    Sim = simulationics.SimulationICs(outdir=os.path.join(defaultpath, "test1"),box = 256,npart = 256, redshift = 99, code_args={'redend':0,'do_build':False})
     Sim.make_simulation()
     #Check the following files were created
     assert os.path.exists("./test1")
-    for ff in ("times.txt", "TREECOOL", "mpi_submit", "camb_linear", "ICS", "output", "camb_linear/ics_matterpow_99.dat", "ICS/PK-DM-256_256_99", "Simulation.json"):
+    for ff in ("times.txt", "TREECOOL", "mpi_submit", "camb_linear", "ICS", "output", "camb_linear/ics_matterpow_99.dat", "ICS/PK-DM-256_256_99", "Simulation.json", "SimulationICs.json"):
         assert os.path.exists(os.path.join("./test1/", ff))
     #Check these files have not changed
     for f in ("_camb_params.ini", "_genic_params.ini"):
@@ -30,7 +31,7 @@ def test_full_integration():
 
 def test_only_DM():
     """Create a full simulation with no gas"""
-    Sim = simulationics.SimulationICs(outdir="./test2",box = 256,npart = 256, redshift = 99, separate_gas=False, code_args={'redend':0, 'do_build':False})
+    Sim = simulationics.SimulationICs(outdir=os.path.join(os.path.dirname(__file__),"test2"),box = 256,npart = 256, redshift = 99, separate_gas=False, code_args={'redend':0, 'do_build':False})
     Sim.make_simulation()
     assert os.path.exists("./test2")
     #shutil.rmtree("./test1/")
