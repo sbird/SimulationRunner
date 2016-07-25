@@ -10,8 +10,8 @@ from . import neutrinosimulation as nus
 
 def test_neutrino_part():
     """Create a full simulation with particle neutrinos."""
-    test_dir = "./test_nu/"
-    Sim = nus.NeutrinoPartSim(outdir=test_dir,box = 256,npart = 256, m_nu = 0.45, redshift = 99, redend=0, separate_gas=False, do_build=False)
+    test_dir = os.path.join(os.getcwd(),"test_nu/")
+    Sim = nus.NeutrinoPartICs(outdir=test_dir,box = 256,npart = 256, m_nu = 0.45, redshift = 99, separate_gas=False, code_args={'redend':0, 'do_build':False})
     Sim.make_simulation()
     assert os.path.exists(test_dir)
     #Check these we are writing reasonable values.
@@ -40,8 +40,8 @@ def test_neutrino_part():
 def test_neutrino_semilinear():
     """Create a full simulation with semi-linear neutrinos.
     The important thing here is to test that OmegaNu is correctly set."""
-    test_dir = "./test_nu_semilin/"
-    Sim = nus.NeutrinoSemiLinearSim(outdir=test_dir,box = 256,npart = 256, m_nu = 0.45, redshift = 99, redend=0, separate_gas=False, do_build=False)
+    test_dir = os.path.join(os.getcwd(),"test_nu_semilin/")
+    Sim = nus.NeutrinoSemiLinearICs(outdir=test_dir,box = 256,npart = 256, m_nu = 0.45, redshift = 99, separate_gas=False, code_args={'redend':0, 'do_build':False})
     Sim.make_simulation()
     assert os.path.exists(test_dir)
     #Check these files have not changed
