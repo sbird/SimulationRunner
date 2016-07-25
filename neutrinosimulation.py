@@ -24,7 +24,7 @@ class NeutrinoPartICs(simulationics.SimulationICs):
         #neutrino mass the total matter fraction remains constant.
         #Note this does mean that omegab/omegac will increase, but not by much.
         omegac = omegac-omeganu
-        super().__init__(omegac=omegac, omeganu=omeganu, hubble=hubble, separate_gas=separate_gas, code_class=code_class, **kwargs)
+        super().__init__(omegac=omegac, omeganu=omeganu, hubble=hubble, separate_gas=separate_gas, separate_nu=True, code_class=code_class, **kwargs)
 
     def _camb_neutrinos(self, config):
         """Config options so CAMB can use massive neutrinos.
@@ -79,7 +79,7 @@ class NeutrinoSemiLinearICs(NeutrinoPartICs):
             code_args['m_nu'] = m_nu
         else:
             code_args = {'m_nu':m_nu}
-        super().__init__(code_class=code_class, code_args=code_args, **kwargs)
+        super().__init__(m_nu = m_nu, code_class=code_class, code_args=code_args, **kwargs)
 
     def _genicfile_child_options(self, config):
         """Set up neutrino parameters for GenIC.

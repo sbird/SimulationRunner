@@ -49,7 +49,8 @@ class SimulationICs(object):
         self.seed = seed
         #Baryons?
         self.separate_gas = separate_gas
-        #Neutrinos?
+        #Neutrinos: note this only affects the power spectrum check.
+        #Altering this does not change ICs
         self.separate_nu = separate_nu
         self.outdir = outdir
         defaultpath = os.path.dirname(__file__)
