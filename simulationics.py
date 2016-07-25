@@ -64,6 +64,13 @@ class SimulationICs(object):
         self.scalar_amp = scalar_amp
         assert ns > 0 and ns < 2
         self.ns = ns
+        outdir = os.path.realpath(os.path.expanduser(outdir))
+        #Make the output directory: will fail if parent does not exist
+        if not os.path.exists(outdir):
+            os.mkdir(outdir)
+        else:
+            if os.listdir(outdir) != []:
+                print("Warning: ",outdir," is non-empty")
         #Structure seed.
         self.seed = seed
         #Baryons?

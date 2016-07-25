@@ -77,12 +77,7 @@ class Simulation(object):
         #Total matter density
         self.omega0 = self.omegac + self.omegab + self.omeganu
         outdir = os.path.realpath(os.path.expanduser(outdir))
-        #Make the output directory: will fail if parent does not exist
-        if not os.path.exists(outdir):
-            os.mkdir(outdir)
-        else:
-            if os.listdir(outdir) != []:
-                print("Warning: ",outdir," is non-empty")
+        assert os.path.exists(outdir)
         self.outdir = outdir
         #Default parameter file names
         defaultpath = os.path.dirname(__file__)
