@@ -42,12 +42,11 @@ class Simulation(object):
         assert npart > 1 and npart < 16000
         self.npart = int(npart)
         #Physically reasonable
-        assert omegac <= 1 and omegac > 0
-        self.omegac = omegac
         assert omegab > 0 and omegab < 1
         self.omegab = omegab
-        assert omeganu >=0 and omeganu < omegac
-        self.omeganu = omeganu
+        #Total matter density
+        self.omega0 = omegac + self.omegab + omeganu
+        assert 0 < self.omega0 <= 1
         assert redshift > 1 and redshift < 1100
         self.redshift = redshift
         assert redend >= 0 and redend < 1100
@@ -59,26 +58,35 @@ class Simulation(object):
         #UVB? Only matters if gas
         self.uvb = uvb
         assert self.uvb == "hm" or self.uvb == "fg"
-        #CPU parameters: these are specified to a default here, but should be over-ridden in a machine-specific decorator.
-        self.nproc = 8
-        self.email = "sbird4@jhu.edu"
-        self.timelimit = 10
-        #Maximum memory available for an MPI task
-        self.memory = 1800
         #Will we try to build gadget?
         self.do_build = do_build
         #Number of files per snapshot
         #This is chosen to give a reasonable number and
         #a constant number of particles per file.
         self.numfiles = int(np.max([2,self.npart**3//2**24]))
-        #Maximum number of files to write in parallel.
-        #Cannot be larger than number of processors
-        self.maxpwrite = self.nproc
-        #Total matter density
-        self.omega0 = self.omegac + self.omegab + self.omeganu
         outdir = os.path.realpath(os.path.expanduser(outdir))
         assert os.path.exists(outdir)
         self.outdir = outdir
+        self._set_cpu_defaults()
+        self._set_default_paths()
+        #For repeatability, we store git hashes of Gadget, GenIC, CAMB and ourselves
+        #at time of running.
+        self.simulation_git = utils.get_git_hash(os.path.dirname(__file__))
+
+    def _set_cpu_defaults(self):
+        """CPU parameters (walltime, number of cpus, etc):
+        these are specified to a default here, but should be over-ridden in a machine-specific decorator."""
+        self.nproc = 8
+        self.email = "sbird4@jhu.edu"
+        self.timelimit = 10
+        #Maximum memory available for an MPI task
+        self.memory = 1800
+        #Maximum number of files to write in parallel.
+        #Cannot be larger than number of processors
+        self.maxpwrite = self.nproc
+
+    def _set_default_paths(self):
+        """Default paths and parameter names."""
         #Default parameter file names
         defaultpath = os.path.dirname(__file__)
         self.gadgetdefaultparam = os.path.join(defaultpath,"gadgetparams.param")
@@ -87,9 +95,6 @@ class Simulation(object):
         self.gadgetexe = "P-Gadget3"
         self.gadgetconfig = "Config.sh"
         self.gadget_dir = os.path.expanduser("~/codes/P-Gadget3/")
-        #For repeatability, we store git hashes of Gadget, GenIC, CAMB and ourselves
-        #at time of running.
-        self.simulation_git = utils.get_git_hash(os.path.dirname(__file__))
 
     def gadget3config(self, prefix=""):
         """Generate a Gadget Config.sh file. This doesn't fit nicely into configobj.
