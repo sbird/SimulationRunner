@@ -16,7 +16,6 @@ import configobj
 import numpy as np
 from . import read_uvb_tab
 from . import utils
-from . import simulationics
 
 class Simulation(object):
     """
@@ -44,11 +43,7 @@ class Simulation(object):
     scalar_amp - Initial amplitude of scalar power spectrum to feed to CAMB
     ns - tilt of scalar power spectrum to feed to CAMB
     """
-    def __init__(self, *, outdir, box, npart, redshift=99, redend = 0, separate_gas=True, omegac=0.2408, omegab=0.0472, omeganu=0.,hubble=0.7, uvb="hm", do_build=True, ic_class=simulationics.SimulationICs, ic_args=None):
-        #This lets us safely have a default dictionary argument
-        self.ic_args = {'seed': 9281110, 'scalar_amp': 2.427e-9, 'ns': 0.97, 'separate_nu':False }
-        if ic_args is not None:
-            self.ic_args.update(ic_args)
+    def __init__(self, *, outdir, box, npart, redshift=99, redend = 0, separate_gas=True, omegac=0.2408, omegab=0.0472, omeganu=0.,hubble=0.7, uvb="hm", do_build=True):
         #Check that input is reasonable and set parameters
         #In Mpc/h
         assert box < 20000
@@ -110,8 +105,6 @@ class Simulation(object):
         #For repeatability, we store git hashes of Gadget, GenIC, CAMB and ourselves
         #at time of running.
         self.simulation_git = utils.get_git_hash(".")
-        #Class with which to generate ICs.
-        self.ic_class_name = ic_class
 
     def gadget3config(self, prefix=""):
         """Generate a Gadget Config.sh file. This doesn't fit nicely into configobj.
@@ -316,11 +309,8 @@ class Simulation(object):
             jsonstr = jsin.read()
             self.__dict__ = jsonpickle.decode(jsonstr)
 
-    def make_simulation(self):
+    def make_simulation(self, genic_output):
         """Wrapper function to make all the simulation parameter files in turn."""
-        #Make the ICs.
-        ics = self.ic_class_name(outdir=self.outdir, box=self.box, npart=self.npart, icformat=3, redshift=self.redshift, separate_gas=self.separate_gas, omegac=self.omegac, omegab=self.omegab, omeganu=self.omeganu, hubble=self.hubble, **self.ic_args)
-        genic_output = ics.make_ics()
         #Generate Gadget makefile
         gadget_config = self.gadget3config()
         #Symlink the new gadget config to the source directory

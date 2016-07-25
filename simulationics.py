@@ -9,12 +9,17 @@ import configobj
 import matplotlib
 matplotlib.use("PDF")
 import matplotlib.pyplot as plt
+from . import simulation
 from . import cambpower
 from . import utils
 
 class SimulationICs(object):
     """Separate class for generating initial conditions for a simulation."""
-    def __init__(self, *, outdir, box, npart, icformat=3, seed = 9281110, redshift=99, separate_gas=True, separate_nu=False, omegac=0.2408, omegab=0.0472, omeganu=0.,hubble=0.7, scalar_amp=2.427e-9, ns=0.97):
+    def __init__(self, *, outdir, box, npart, icformat=3, seed = 9281110, redshift=99, separate_gas=True, separate_nu=False, omegac=0.2408, omegab=0.0472, omeganu=0.,hubble=0.7, scalar_amp=2.427e-9, ns=0.97, code_class=simulation.Simulation, code_args=None):
+        #This lets us safely have a default dictionary argument
+        self.code_args = {'redend': 0, 'uvb':'hm', 'do_build':True}
+        if code_args is not None:
+            self.code_args.update(code_args)
         #Check that input is reasonable and set parameters
         #In Mpc/h
         assert box < 20000
@@ -66,6 +71,8 @@ class SimulationICs(object):
         self.omega0 = self.omegac + self.omegab + self.omeganu
         #Extra redshifts at which to generate CAMB output, in addition to self.redshift and self.redshift/2
         self.camb_times = [9,4,2,1,0]
+        #Class with which to generate ICs.
+        self.code_class_name = code_class
 
     def cambfile(self):
         """Generate the CAMB parameter file from the (cosmological) simulation parameters and the default values"""
@@ -246,7 +253,7 @@ class SimulationICs(object):
             if np.size(np.where(error > accuracy)) > 3:
                 raise RuntimeError("Pk accuracy check failed for "+sp+". Max error: "+str(np.max(error)))
 
-    def make_ics(self):
+    def make_simulation(self):
         """Wrapper function to make the simulation ICs."""
         #First generate the input files for CAMB
         (camb_output, camb_param) = self.cambfile()
@@ -268,7 +275,9 @@ class SimulationICs(object):
         self.txt_description()
         #Check that the ICs have the right power spectrum
         self.check_ic_power_spectra(camb_output, genic_output)
-        return genic_output
+        #Make the parameter files.
+        ics = self.code_class_name(outdir=self.outdir, box=self.box, npart=self.npart, redshift=self.redshift, separate_gas=self.separate_gas, omegac=self.omegac, omegab=self.omegab, omeganu=self.omeganu, hubble=self.hubble, **self.code_args)
+        return ics.make_simulation(genic_output)
 
 def load_genpk(infile, box, minmode=1):
     """Load a power spectrum from a Gen-PK output, modifying units to agree with CAMB"""

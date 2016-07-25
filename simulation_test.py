@@ -1,15 +1,15 @@
 """Integration tests for the Simulation module"""
 
 import filecmp
-import shutil
+# import shutil
 import os
 import re
 import configobj
-from . import simulation
+from . import simulationics
 
 def test_full_integration():
     """Create a full simulation snapshot and check it corresponds to the saved results"""
-    Sim = simulation.Simulation("./test1",box = 256,npart = 256, redshift = 99, redend=0,do_build=False)
+    Sim = simulationics.SimulationICs(outdir="./test1",box = 256,npart = 256, redshift = 99, code_args={'redend':0,'do_build':False})
     Sim.make_simulation()
     #Check the following files were created
     assert os.path.exists("./test1")
@@ -30,6 +30,7 @@ def test_full_integration():
 
 def test_only_DM():
     """Create a full simulation with no gas"""
-    Sim = simulation.Simulation("./test2",box = 256,npart = 256, redshift = 99, redend=0, separate_gas=False, do_build=False)
+    Sim = simulationics.SimulationICs(outdir="./test2",box = 256,npart = 256, redshift = 99, separate_gas=False, code_args={'redend':0, 'do_build':False})
     Sim.make_simulation()
     assert os.path.exists("./test2")
+    #shutil.rmtree("./test1/")
