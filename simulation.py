@@ -32,6 +32,7 @@ class Simulation(object):
     omegam - Matter density
     hubble - Hubble parameter, h, which is H0 / (100 km/s/Mpc)
     """
+    icformat = 3
     def __init__(self, *, outdir, box, npart, redshift=99, redend = 0, separate_gas=True, omegac=0.2408, omegab=0.0472, omeganu=0.,hubble=0.7, uvb="hm", do_build=True):
         #Check that input is reasonable and set parameters
         #In Mpc/h
