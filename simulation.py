@@ -104,7 +104,7 @@ class Simulation(object):
         self.gadget_dir = os.path.expanduser("~/codes/P-Gadget3/")
         #For repeatability, we store git hashes of Gadget, GenIC, CAMB and ourselves
         #at time of running.
-        self.simulation_git = utils.get_git_hash(".")
+        self.simulation_git = utils.get_git_hash(os.path.dirname(__file__))
 
     def gadget3config(self, prefix=""):
         """Generate a Gadget Config.sh file. This doesn't fit nicely into configobj.
