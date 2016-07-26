@@ -112,6 +112,7 @@ class MPSimulation(simulation.Simulation):
         config['HubbleParam'] = self.hubble
         config['RadiationOn'] = 1
         config['BoxSize'] = self.box * 1000
+        config['Nmesh'] = 2*self.npart
         config['OutputList'] =  ','.join([str(t) for t in self._generate_times()])
         #This should just be larger than the simulation time limit
         config['CpuTimeBetRestartFile'] = 60*60*self.timelimit*10
@@ -122,6 +123,11 @@ class MPSimulation(simulation.Simulation):
             config['Softening'+ptype+'MaxPhys'] = soften
         #This could be tuned in lower memory conditions
         config['BufferSize'] = 100
+        #These are only used for gas, but must be set anyway
+        config['MinGasTemp'] = 100
+        #In equilibrium with the CMB at early times.
+        config['InitGasTemp'] = 2.7*(1+self.redshift)
+        config['DensityKernelType'] = 'quintic'
         if self.separate_gas:
             config['CoolingOn'] = 1
             config['TreeCoolFile'] = "TREECOOL"
@@ -144,6 +150,8 @@ class MPSimulation(simulation.Simulation):
     def _sfr_params(self, config):
         """Config parameters for the default Springel & Hernquist star formation model"""
         config['StarformationOn'] = 1
+        config['FOFHaloLinkingLength'] = 0.2
+        config['StarformationCriterion'] = 'density'
         return config
 
     def _feedback_params(self, config):
