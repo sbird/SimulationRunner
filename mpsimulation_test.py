@@ -18,7 +18,7 @@ def test_full_integration():
         assert os.path.exists(os.path.join(defaultpath, ff))
     #Check these files have not changed
     testdatadir = os.path.join(os.path.dirname(__file__),"testdata/test1-mp/")
-    for f in ("Options.mk", "gadget3.param"):
+    for f in ("mpgadget.param"):
         config_new = configobj.ConfigObj(os.path.join(defaultpath,f))
         config_old = configobj.ConfigObj(os.path.join(testdatadir,f))
         for key in config_old.keys():
