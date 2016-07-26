@@ -95,6 +95,7 @@ class Simulation(object):
         self.gadgetexe = "P-Gadget3"
         self.gadgetconfig = "Config.sh"
         self.gadget_dir = os.path.expanduser("~/codes/P-Gadget3/")
+        self.gadget_binary_dir = self.gadget_dir
 
     def gadget3config(self, prefix=""):
         """Generate a Gadget Config.sh file. This doesn't fit nicely into configobj.
@@ -318,12 +319,16 @@ class Simulation(object):
         os.remove(os.path.join(self.gadget_dir, self.gadgetconfig))
         os.symlink(gadget_config, os.path.join(self.gadget_dir, self.gadgetconfig))
         #Build gadget
-        gadget_binary = os.path.join(self.gadget_dir, self.gadgetexe)
+        gadget_binary = os.path.join(self.gadget_binary_dir, self.gadgetexe)
         try:
             g_mtime = os.stat(gadget_binary).st_mtime
         except FileNotFoundError:
             g_mtime = -1
         self.gadget_git = utils.get_git_hash(gadget_binary)
-        self.make_output = subprocess.check_output(["make", "-j8"], cwd=self.gadget_dir, universal_newlines=True)
+        try:
+            self.make_output = subprocess.check_output(["make", "-j8"], cwd=self.gadget_dir, universal_newlines=True, stderr=subprocess.STDOUT, shell=True)
+        except subprocess.CalledProcessError as e:
+            print(e.output)
+            raise
         #Check that the last-changed time of the binary has actually changed..
         assert g_mtime != os.stat(gadget_binary).st_mtime
