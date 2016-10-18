@@ -146,7 +146,7 @@ class MARCCClass(ClusterClass):
         #Number of cpus (threads) per task (process)
         qstring += prefix+" --cpus-per-task=1\n"
         #Max 128 GB per node (24 cores)
-        qstring += prefix+" --mem-per-cpu="+self.memory+"\n"
+        qstring += prefix+" --mem-per-cpu="+str(self.memory)+"\n"
         qstring += prefix+" --mail-type=end\n"
         qstring += prefix+" --mail-user="+self.email+"\n"
         return qstring
