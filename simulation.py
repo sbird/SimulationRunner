@@ -114,7 +114,7 @@ class Simulation(object):
             config.write(prefix+"HAVE_HDF5\n")
             #We may need this sometimes, depending on the machine
             #Options for gas simulations
-            self._cluster_config_options(config, prefix)
+            self._cluster._cluster_config_options(config, prefix)
             if self.separate_gas:
                 config.write(prefix+"COOLING\n")
                 #This needs implementing
@@ -123,16 +123,6 @@ class Simulation(object):
                 self._feedback_config_options(config, prefix)
             self._gadget3_child_options(config, prefix)
         return g_config_filename
-
-    def _cluster_config_options(self,config, prefix=""):
-        """Config options that might be specific to a particular cluster"""
-        _ = (config, prefix)
-        #isend/irecv is quite slow on some clusters because of the extra memory allocations.
-        #Maybe test this on your specific system and see if it helps.
-        #config.write(prefix+"NO_ISEND_IRECV_IN_DOMAIN\n")
-        #config.write(prefix+"NO_ISEND_IRECV_IN_PM\n")
-        #config.write(prefix+"NOTYPEPREFIX_FFTW\n")
-        return
 
     def _feedback_config_options(self, config, prefix=""):
         """Options in the Config.sh file for a potential star-formation/feedback model"""

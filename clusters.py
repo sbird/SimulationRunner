@@ -39,6 +39,16 @@ class ClusterClass(object):
         qstring += prefix+" -l walltime="+str(self.timelimit)+":00:00\n"
         return qstring
 
+    def _cluster_config_options(self,config, prefix=""):
+        """Config options that might be specific to a particular cluster"""
+        _ = (config, prefix)
+        #isend/irecv is quite slow on some clusters because of the extra memory allocations.
+        #Maybe test this on your specific system and see if it helps.
+        #config.write(prefix+"NO_ISEND_IRECV_IN_DOMAIN\n")
+        #config.write(prefix+"NO_ISEND_IRECV_IN_PM\n")
+        #config.write(prefix+"NOTYPEPREFIX_FFTW\n")
+        return
+
 class ComaClass(ClusterClass):
     """Subclassed for specific properties of the Coma cluster at CMU.
     __init__ and _queue_directive are changed."""
@@ -53,8 +63,9 @@ class ComaClass(ClusterClass):
         qstring += prefix+" -l nodes="+str(int(self.nproc/16))+":ppn=16\n"
         return qstring
 
-    def _cluster_config_options(self,config):
+    def _cluster_config_options(self,config, prefix=""):
         """Config options that might be specific to a particular cluster"""
+        _ = prefix
         #isend/irecv is quite slow on some clusters because of the extra memory allocations.
         #Maybe test this on your specific system and see if it helps.
         config.write("NO_ISEND_IRECV_IN_DOMAIN\n")
