@@ -110,10 +110,6 @@ def change_power_spectrum_knots(knotpos, knotval, matpow):
     i_limits = np.searchsorted(kval, [knotpos[0]*0.66, knotpos[-1]*1.5])
     (imin, imax) = (np.max([0,i_limits[0]-5]), np.min([len(kval)-1,i_limits[-1]+5]))
     pint = interp.interp1d(np.log(kval[imin:imax]), np.log(pval[imin:imax]), kind='cubic')
-    #Make sure that points to be inserted are not too close to the already existing ones.
-    #avg_distance = np.mean(np.log(kval[imin+1:imax+1]) - np.log(kval[imin:imax]))
-    #closest = np.array([np.min(np.abs(kn - kval[imin:imax])) for kn in knotpos])
-    #ii = np.where(closest > avg_distance/4)
     #Also add an extra point in the midpoint of their interval. This helps spline interpolators.
     locations = np.searchsorted(kval[imin:imax], knotpos)
     midpoints = (kval[imin:imax][locations] + kval[imin:imax][locations-1])/2.
@@ -123,6 +119,13 @@ def change_power_spectrum_knots(knotpos, knotval, matpow):
     index = np.searchsorted(kval, ins_knotpos)
     kval = np.insert(kval, index, ins_knotpos)
     pval = np.insert(pval, index, np.exp(pint(np.log(ins_knotpos))))
+    #Check for very close entries and remove them
+    collision = np.where(np.abs(kval[1:] - kval[:-1]) < 1e-5 * kval[1:])
+    if np.size(collision) > 0:
+        kval = np.delete(kval,collision)
+        pval = np.delete(pval,collision)
+    #Check we didn't add the same row twice.
+    assert np.size(np.unique(kval)) == np.size(kval)
     #Linearly interpolate between these values
     dpk = interp.interp1d(ext_knotpos, ext_knotval, kind='linear')
     #Multiply by the knotted power spectrum interpolated to the point given in the power spectrum file.
