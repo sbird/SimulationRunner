@@ -16,6 +16,7 @@ import configobj
 import numpy as np
 from . import read_uvb_tab
 from . import utils
+from . import clusters
 
 class Simulation(object):
     """
@@ -33,7 +34,7 @@ class Simulation(object):
     hubble - Hubble parameter, h, which is H0 / (100 km/s/Mpc)
     """
     icformat = 3
-    def __init__(self, *, outdir, box, npart, redshift=99, redend = 0, separate_gas=True, omegac=0.2408, omegab=0.0472, omeganu=0.,hubble=0.7, uvb="hm", do_build=True):
+    def __init__(self, *, outdir, box, npart, redshift=99, redend = 0, separate_gas=True, omegac=0.2408, omegab=0.0472, omeganu=0.,hubble=0.7, uvb="hm", do_build=True, cluster_class=clusters.ClusterClass):
         #Check that input is reasonable and set parameters
         #In Mpc/h
         assert box < 20000
@@ -67,23 +68,11 @@ class Simulation(object):
         outdir = os.path.realpath(os.path.expanduser(outdir))
         assert os.path.exists(outdir)
         self.outdir = outdir
-        self._set_cpu_defaults()
         self._set_default_paths()
+        self._cluster = cluster_class(gadget=self.gadgetexe, param=self.gadgetparam)
         #For repeatability, we store git hashes of Gadget, GenIC, CAMB and ourselves
         #at time of running.
         self.simulation_git = utils.get_git_hash(os.path.dirname(__file__))
-
-    def _set_cpu_defaults(self):
-        """CPU parameters (walltime, number of cpus, etc):
-        these are specified to a default here, but should be over-ridden in a machine-specific decorator."""
-        self.nproc = 8
-        self.email = "sbird4@jhu.edu"
-        self.timelimit = 10
-        #Maximum memory available for an MPI task
-        self.memory = 1800
-        #Maximum number of files to write in parallel.
-        #Cannot be larger than number of processors
-        self.maxpwrite = self.nproc
 
     def _set_default_paths(self):
         """Default paths and parameter names."""
@@ -169,7 +158,7 @@ class Simulation(object):
         except FileExistsError:
             pass
         config['SnapshotFileBase'] = "snap"
-        config['TimeLimitCPU'] = int(60*60*self.timelimit*20/17.-3000)
+        config['TimeLimitCPU'] = int(60*60*self._cluster.timelimit*20/17.-3000)
         config['TimeBegin'] = 1./(1+self.redshift)
         config['TimeMax'] = 1./(1+self.redend)
         config['Omega0'] = self.omega0
@@ -183,10 +172,10 @@ class Simulation(object):
         config['OutputListFilename'] = timefile
         self._print_times(timefile)
         #This should just be larger than the simulation time limit
-        config['CpuTimeBetRestartFile'] = 60*60*self.timelimit*10
+        config['CpuTimeBetRestartFile'] = 60*60*self._cluster.timelimit*10
         config['NumFilesPerSnapshot'] = self.numfiles
         #There is a maximum here because some filesystems may not like parallel writes!
-        config['NumFilesWrittenInParallel'] = np.min([self.maxpwrite, self.numfiles])
+        config['NumFilesWrittenInParallel'] = np.min([self._cluster.nproc, self.numfiles])
         #Softening is 1/30 of the mean linear interparticle spacing
         soften = 1000 * self.box/self.npart/30.
         for ptype in ('Gas', 'Halo', 'Disk', 'Bulge', 'Stars', 'Bndry'):
@@ -207,7 +196,7 @@ class Simulation(object):
             config['PartAllocFactor'] = 4
         else:
             config['PartAllocFactor'] = 2
-        config['MaxMemSize'] = self.memory
+        config['MaxMemSize'] = self._cluster.memory
         #Add other config parameters
         config = self._other_params(config)
         config.write()
@@ -265,26 +254,7 @@ class Simulation(object):
         """Generate a sample mpi_submit file.
         The prefix argument is a string at the start of each line.
         It separates queueing system directives from normal comments"""
-        with open(os.path.join(self.outdir, "mpi_submit"),'w') as mpis:
-            mpis.write("#!/bin/bash\n")
-            mpis.write(self._queue_directive())
-            mpis.write(self._mpi_program())
-
-    def _mpi_program(self):
-        """String for MPI program to execute"""
-        qstring = "mpirun -np "+str(self.nproc)+" "+self.gadgetexe+" "+self.gadgetparam+"\n"
-        return qstring
-
-    def _queue_directive(self, prefix="#PBS"):
-        """Write the part of the mpi_submit file that directs the queueing system.
-        This is usually specific to a given cluster.
-        The prefix argument is a string at the start of each line.
-        It separates queueing system directives from normal comments"""
-        qstring = prefix+" -j eo\n"
-        qstring += prefix+" -m bae\n"
-        qstring += prefix+" -M "+self.email+"\n"
-        qstring += prefix+" -l walltime="+str(self.timelimit)+":00:00\n"
-        return qstring
+        self._cluster.generate_mpi_submit(self.outdir)
 
     def txt_description(self):
         """Generate a text file describing the parameters of the code that generated this simulation, for reproducibility."""

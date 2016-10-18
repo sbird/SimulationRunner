@@ -6,7 +6,6 @@ import numpy as np
 import scipy.interpolate as interp
 from . import simulation
 from . import simulationics
-from . import clusters
 
 class LymanAlphaSim(simulation.Simulation):
     """Specialise the Simulation class for the Lyman alpha forest.
@@ -131,6 +130,5 @@ def change_power_spectrum_knots(knotpos, knotval, matpow):
     return np.vstack([kval, pval]).T
 
 if __name__ == "__main__":
-    LymanAlphaKnotICs = clusters.coma_mpi_decorate(LymanAlphaKnotICs)
     ss = LymanAlphaKnotICs(knot_val = (1.,1.2,1.,1.),outdir=os.path.expanduser("~/data/Lya_Boss/test3"), box=60, npart=512)
     ss.make_simulation()
