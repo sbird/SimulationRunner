@@ -52,22 +52,22 @@ class LymanAlphaKnotICs(simulationics.SimulationICs):
         #Set up the knot parameters
         self.knot_pos = knot_pos
         self.knot_val = knot_val
-        knot_names = list(string.ascii_lowercase[:len(knot_pos)])
+        #knot_names = list(string.ascii_lowercase[:len(knot_pos)])
         #Set up new output directory hierarchy for Lyman alpha simulations
         #First give number of knots and their positions
-        knot_spec = [kn+str(kp) for (kn, kp) in zip(knot_names, self.knot_pos)]
-        new_outdir = os.path.join(outdir, "".join(knot_spec))
+        #knot_spec = [kn+str(kp) for (kn, kp) in zip(knot_names, self.knot_pos)]
+        #new_outdir = os.path.join(outdir, "".join(knot_spec))
         #Then box and npart, as we will want to correct by these
-        new_outdir = os.path.join(os.path.join(new_outdir, str(box)), str(npart))
+        #new_outdir = os.path.join(os.path.join(new_outdir, str(box)), str(npart))
         #Then the knot values that have changed - we may want to add thermal parameters or cosmology here at some point
-        knot_changed = [kn+str(kv) for (kn,kv) in zip(knot_names, self.knot_val) if kv != 1.]
-        new_outdir = os.path.join(new_outdir,"knot_"+"".join(knot_changed))
+        #knot_changed = [kn+str(kv) for (kn,kv) in zip(knot_names, self.knot_val) if kv != 1.]
+        #new_outdir = os.path.join(new_outdir,"knot_"+"".join(knot_changed))
         #Make this directory tree
-        try:
-            os.makedirs(new_outdir)
-        except FileExistsError:
-            pass
-        super().__init__(outdir=new_outdir, box=box, npart=npart, code_args=code_args, code_class=code_class, **kwargs)
+        #try:
+        #    os.makedirs(new_outdir)
+        #except FileExistsError:
+        #    pass
+        super().__init__(outdir=outdir, box=box, npart=npart, code_args=code_args, code_class=code_class, **kwargs)
 
     def _alter_power(self, camb_output):
         """Generate a new CAMB power spectrum multiplied by the knot values."""
