@@ -124,6 +124,47 @@ class HHPCClass(ClusterClass):
         qstring += "mpirun -machinefile $PBS_NODEFILE "+self.gadgetexe+" "+self.gadgetparam+"\n"
         return qstring
 
+class MARCCClass(ClusterClass):
+    """Subclassed for the MARCC cluster at JHU.
+    This has 24 cores per node, shared memory of 128GB pr node.
+    Ask for complete nodes.
+    Uses SLURM."""
+    def __init__(self, *args, nproc=48,timelimit=4,**kwargs):
+        #Complete nodes!
+        assert nproc % 24 == 0
+        super().__init__(*args, **kwargs,nproc=nproc,timelimit=timelimit)
+        self.memory = 3000
+
+    def _queue_directive(self, prefix="#SBATCH"):
+        """Generate mpi_submit with coma specific parts"""
+        qstring = prefix+" --partition=parallel\n"
+        qstring += prefix+" --job-name=emulator\n" #Make this dynamic!
+        qstring += prefix+" --time="+str(int(self.timelimit))+":00:0\n"
+        qstring += prefix+" --nodes="+str(int(self.nproc/24))+"\n"
+        #Number of tasks (processes) per node
+        qstring += prefix+" --ntasks-per-node=24\n"
+        #Number of cpus (threads) per task (process)
+        qstring += prefix+" --cpus-per-task=1\n"
+        #Max 128 GB per node (24 cores)
+        qstring += prefix+" --mem-per-cpu="+self.memory+"\n"
+        qstring += prefix+" --mail-type=end\n"
+        qstring += prefix+" --mail-user="+self.email+"\n"
+        return qstring
+
+    def _mpi_program(self):
+        """String for MPI program to execute.
+        Note that this assumes you aren't using threads!"""
+        #Change to current directory
+        qstring = "export OMP_NUM_THREADS=1\n"
+        #This is for threads
+        #qstring += "export OMP_NUM_THREADS = $SLURM_CPUS_PER_TASK\n"
+        #Adjust for thread/proc balance per socket.
+        #qstring += "mpirun --map-by ppr:3:socket:PE=4 "+self.gadgetexe+" "+self.gadgetparam+"\n"
+        #So we pick up fftw2
+        qstring += "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.locallibs/lib\n"
+        qstring += "mpirun --map-by core "+self.gadgetexe+" "+self.gadgetparam+"\n"
+        return qstring
+
 class HypatiaClass(ClusterClass):
     """Subclass for Hypatia cluster in UCL"""
     def __init__(self, *args, **kwargs):
