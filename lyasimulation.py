@@ -67,7 +67,7 @@ class LymanAlphaKnotICs(simulationics.SimulationICs):
             os.makedirs(new_outdir)
         except FileExistsError:
             pass
-        super().__init__(outdir=new_outdir, code_args=code_args, code_class=code_class, **kwargs)
+        super().__init__(outdir=new_outdir, box=box, npart=npart, code_args=code_args, code_class=code_class, **kwargs)
 
     def _alter_power(self, camb_output):
         """Generate a new CAMB power spectrum multiplied by the knot values."""
