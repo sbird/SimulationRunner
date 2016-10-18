@@ -114,7 +114,7 @@ class Simulation(object):
             config.write(prefix+"HAVE_HDF5\n")
             #We may need this sometimes, depending on the machine
             #Options for gas simulations
-            self._cluster._cluster_config_options(config, prefix)
+            self._cluster.cluster_config_options(config, prefix)
             if self.separate_gas:
                 config.write(prefix+"COOLING\n")
                 #This needs implementing

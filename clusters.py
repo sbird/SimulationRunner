@@ -39,7 +39,7 @@ class ClusterClass(object):
         qstring += prefix+" -l walltime="+str(self.timelimit)+":00:00\n"
         return qstring
 
-    def _cluster_config_options(self,config, prefix=""):
+    def cluster_config_options(self,config, prefix=""):
         """Config options that might be specific to a particular cluster"""
         _ = (config, prefix)
         #isend/irecv is quite slow on some clusters because of the extra memory allocations.
@@ -63,7 +63,7 @@ class ComaClass(ClusterClass):
         qstring += prefix+" -l nodes="+str(int(self.nproc/16))+":ppn=16\n"
         return qstring
 
-    def _cluster_config_options(self,config, prefix=""):
+    def cluster_config_options(self,config, prefix=""):
         """Config options that might be specific to a particular cluster"""
         _ = prefix
         #isend/irecv is quite slow on some clusters because of the extra memory allocations.
