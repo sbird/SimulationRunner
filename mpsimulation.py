@@ -56,7 +56,7 @@ class MPSimulation(simulation.Simulation):
             config.write(prefix+"OPENMP_USE_SPINLOCK\n")
             config.write(prefix+"TOPNODEFACTOR=5.0\n")
             config.write(prefix+"INHOMOG_GASDISTR_HINT\n")
-            self._cluster_config_options(config, prefix)
+            self._cluster.cluster_config_options(config, prefix)
             if self.separate_gas:
                 #This needs implementing
                 #config.write(prefix+"UVB_SELF_SHIELDING")
