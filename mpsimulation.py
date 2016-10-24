@@ -29,7 +29,6 @@ class MPSimulation(simulation.Simulation):
     def _set_default_paths(self):
         """Default paths and parameter names."""
         #Default parameter file names
-        defaultpath = os.path.dirname(__file__)
         self.gadgetparam = "mpgadget.param"
         #Executable names
         self.gadgetexe = "MP-Gadget"
@@ -66,13 +65,6 @@ class MPSimulation(simulation.Simulation):
             self._gadget3_child_options(config, prefix)
         return g_config_filename
 
-    def _cluster_config_options(self,config, prefix=""):
-        """Config options that might be specific to a particular cluster"""
-        _ = (config, prefix)
-        #This is better tested with this code, so leave it on by default.
-        config.write(prefix+"NO_ISEND_IRECV_IN_DOMAIN\n")
-        return
-
     def _feedback_config_options(self, config, prefix=""):
         """Options in the Config.sh file for a potential star-formation/feedback model"""
         config.write(prefix+"SFR\n")
@@ -102,7 +94,7 @@ class MPSimulation(simulation.Simulation):
         except FileExistsError:
             pass
         config['SnapshotFileBase'] = "snap"
-        config['TimeLimitCPU'] = int(60*60*self.timelimit*20/17.-3000)
+        config['TimeLimitCPU'] = int(60*60*self._cluster.timelimit*20/17.-3000)
         config['TimeBegin'] = 1./(1+self.redshift)
         config['TimeMax'] = 1./(1+self.redend)
         config['Omega0'] = self.omega0
@@ -115,7 +107,7 @@ class MPSimulation(simulation.Simulation):
         config['Nmesh'] = 2*self.npart
         config['OutputList'] =  ','.join([str(t) for t in self._generate_times()])
         #This should just be larger than the simulation time limit
-        config['CpuTimeBetRestartFile'] = 60*60*self.timelimit*10
+        config['CpuTimeBetRestartFile'] = 60*60*self._cluster.timelimit*10
         #Softening is 1/30 of the mean linear interparticle spacing
         soften = 1000 * self.box/self.npart/30.
         for ptype in ('Gas', 'Halo', 'Disk', 'Bulge', 'Stars', 'Bndry'):
@@ -141,7 +133,7 @@ class MPSimulation(simulation.Simulation):
             config['CoolingOn'] = 0
             config['StarformationOn'] = 0
             config['PartAllocFactor'] = 2
-        config['MaxMemSizePerCore'] = self.memory
+        config['MaxMemSizePerCore'] = self._cluster.memory
         #Add other config parameters
         config = self._other_params(config)
         config.write()
