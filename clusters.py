@@ -105,7 +105,7 @@ class HHPCClass(ClusterClass):
     and pass PBS_NODEFILE to mpirun.
     __init__ and _queue_directive are changed."""
     def __init__(self, *args, nproc=252,timelimit=8,**kwargs):
-        super().__init__(*args, **kwargs,nproc=nproc,timelimit=timelimit)
+        super().__init__(*args, nproc=nproc,timelimit=timelimit, **kwargs)
         self.memory = 3000
 
     def _queue_directive(self, prefix="#PBS"):
@@ -132,7 +132,7 @@ class MARCCClass(ClusterClass):
     def __init__(self, *args, nproc=48,timelimit=4,**kwargs):
         #Complete nodes!
         assert nproc % 24 == 0
-        super().__init__(*args, **kwargs,nproc=nproc,timelimit=timelimit)
+        super().__init__(*args, nproc=nproc,timelimit=timelimit, **kwargs)
         self.memory = 3000
 
     def _queue_directive(self, prefix="#SBATCH"):
