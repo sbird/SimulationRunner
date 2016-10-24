@@ -1,7 +1,6 @@
 """Specialization of the Simulation class to Lyman-alpha forest simulations."""
 
 import os
-import string
 import numpy as np
 import scipy.interpolate as interp
 from . import simulation

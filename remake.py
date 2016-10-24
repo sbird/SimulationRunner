@@ -119,8 +119,3 @@ def resub_not_complete(rundir, output_file="output/info.txt", endz=2, script_fil
                     line = ifile.readline()
         print("Re-submitting: ",path.join(odir, script_file_resub))
         subprocess.call([resub_command, script_file_resub], cwd=odir)
-
-
-
-
-

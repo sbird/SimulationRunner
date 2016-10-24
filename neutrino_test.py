@@ -1,7 +1,6 @@
 """Integration tests for the neutrinosimulation module"""
 
 import filecmp
-import shutil
 import os
 import h5py
 import numpy as np
@@ -63,7 +62,7 @@ def test_neutrino_semilinear():
     assert config['massive_neutrinos'] == "3"
 
     test_files = ("gadget3.param",)
-    match, mismatch, errors = filecmp.cmpfiles(test_dir, "./testdata/test_nu_semilin/",test_files)
+    _, mismatch, errors = filecmp.cmpfiles(test_dir, "./testdata/test_nu_semilin/",test_files)
     assert len(errors) == 0
     assert len(mismatch) == 0
     #Check that the output has no neutrino particles

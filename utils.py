@@ -20,4 +20,3 @@ def get_git_hash(path):
         rpath = os.path.dirname(rpath)
     commit_hash = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd = rpath, universal_newlines=True)
     return commit_hash
-

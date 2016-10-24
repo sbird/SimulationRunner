@@ -1,6 +1,5 @@
 """Integration tests for the MP-Simulation: we remake the ICs, because the N-GenIC output format changed."""
 
-import filecmp
 import os
 import re
 import configobj
@@ -18,7 +17,7 @@ def test_full_integration():
         assert os.path.exists(os.path.join(defaultpath, ff))
     #Check these files have not changed
     testdatadir = os.path.join(os.path.dirname(__file__),"testdata/test1-mp/")
-    for f in ("mpgadget.param"):
+    for f in "mpgadget.param":
         config_new = configobj.ConfigObj(os.path.join(defaultpath,f))
         config_old = configobj.ConfigObj(os.path.join(testdatadir,f))
         for key in config_old.keys():
