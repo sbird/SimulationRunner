@@ -39,7 +39,7 @@ class SimulationICs(object):
     """
     def __init__(self, *, outdir, box, npart, seed = 9281110, redshift=99, separate_gas=True, separate_nu=False, omegac=0.2408, omegab=0.0472, omeganu=0.,hubble=0.7, scalar_amp=2.427e-9, ns=0.97, code_class=simulation.Simulation, code_args=None):
         #This lets us safely have a default dictionary argument
-        self.code_args = {'redend': 0, 'uvb':'hm', 'do_build':True}
+        self.code_args = {}
         if code_args is not None:
             self.code_args.update(code_args)
         #Check that input is reasonable and set parameters
