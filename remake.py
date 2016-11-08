@@ -10,6 +10,7 @@ import shutil
 import re
 import os
 import os.path as path
+import distutils.spawn
 
 def rebuild(rundir, codedir, config_file="Config.sh", binary="P-Gadget3"):
     """Rebuild all Gadget binaries in subdirectories of rundir.
@@ -49,9 +50,23 @@ def rebuild(rundir, codedir, config_file="Config.sh", binary="P-Gadget3"):
         shutil.copy2(path.join(codedir, binary), path.join(directory, binary))
     return configs
 
-def resub(rundir, script_file="mpi_submit", submit_command="qsub"):
+def detect_submit():
+    """Auto-detect the resubmission command. """
+    #Python 3.3 has shutils.which, but we need python 2 compatibility here.
+    #Use sbatch if it exists
+    if distutils.spawn.find_executable('sbatch') is not None:
+        return 'sbatch'
+    #Try for qsub
+    if distutils.spawn.find_executable('qsub') is not None:
+        return 'qsub'
+    #Otherwise not sure what to do.
+    raise ValueError("Could not find sbatch or qsub")
+
+def resub(rundir, script_file="mpi_submit", submit_command=None):
     """Submit all jobs in the emulator to the queueing system"""
     #Find all subdirs with config files.
+    if submit_command is None:
+        submit_command = detect_submit()
     rundir = path.expanduser(rundir)
     configs = glob.glob(path.join(path.join(rundir, "*"),script_file))
     for cc in configs:
@@ -96,9 +111,11 @@ def print_status(rundir, output_file="output/info.txt", endz=2):
         else:
             print("COMPLETE")
 
-def resub_not_complete(rundir, output_file="output/info.txt", endz=2, script_file="mpi_submit", resub_command="qsub", paramfile="gadget3.param"):
+def resub_not_complete(rundir, output_file="output/info.txt", endz=2, script_file="mpi_submit", resub_command=None, paramfile="gadget3.param"):
     """Resubmit incomplete simulations to the queue.
     We also edit the script file to add a RestartFlag"""
+    if resub_command is None:
+        resub_command = detect_submit()
     outputs, completes, _ = check_status(rundir, output_file, endz)
     #Pathnames for incomplete simulations
     for oo,cc in zip(outputs,completes):
