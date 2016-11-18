@@ -3,7 +3,9 @@ from __future__ import print_function
 import os.path
 import math
 import subprocess
-import jsonpickle
+import json
+#To do crazy munging of types for the storage format
+import importlib
 import numpy as np
 import configobj
 import matplotlib
@@ -209,19 +211,43 @@ class SimulationICs(object):
         """Set extra parameters in child classes"""
         return config
 
+    def _fromarray(self):
+        """Convert the data stored as lists back to what it was."""
+        for arr in self._really_arrays:
+            self.__dict__[arr] = np.array(self.__dict__[arr])
+        self._really_arrays = []
+        for arr in self._really_types:
+            #Some crazy nonsense to convert the module, name
+            #string tuple we stored back into a python type.
+            mod = importlib.import_module(self.__dict__[arr][0])
+            self.__dict__[arr] = getattr(mod, self.__dict__[arr][1])
+        self._really_types = []
+
     def txt_description(self):
         """Generate a text file describing the parameters of the code that generated this simulation, for reproducibility."""
         #But ditch the output of make
         self.make_output = ""
+        self._really_arrays = []
+        self._really_types = []
+        for nn, val in self.__dict__.items():
+            #Convert arrays to lists
+            if isinstance(val, np.ndarray):
+                self.__dict__[nn] = val.tolist()
+                self._really_arrays.append(nn)
+            #Convert types to string tuples
+            if isinstance(val, type):
+                self.__dict__[nn] = (val.__module__, val.__name__)
+                self._really_types.append(nn)
         with open(os.path.join(self.outdir, "SimulationICs.json"), 'w') as jsout:
-            jsonstr = jsonpickle.encode(self.__dict__)
-            jsout.write(jsonstr)
+            json.dump(self.__dict__,jsout)
+        #Turn the changed types back.
+        self._fromarray()
 
     def load_txt_description(self):
         """Load the text file describing the parameters of the code that generated a simulation."""
         with open(os.path.join(self.outdir, "SimulationICs.json"), 'r') as jsin:
-            jsonstr = jsin.read()
-            self.__dict__ = jsonpickle.decode(jsonstr)
+            self.__dict__ = json.load(jsin)
+        self._fromarray()
 
     def check_ic_power_spectra(self, camb_output, genicfileout):
         """Generate the power spectrum for each particle type from the generated simulation files, using GenPK,

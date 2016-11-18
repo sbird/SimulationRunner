@@ -11,7 +11,6 @@ import os.path
 import re
 import shutil
 import subprocess
-import jsonpickle
 import configobj
 import numpy as np
 from . import read_uvb_tab
@@ -246,20 +245,6 @@ class Simulation(object):
         It separates queueing system directives from normal comments"""
         self._cluster.generate_mpi_submit(self.outdir)
 
-    def txt_description(self):
-        """Generate a text file describing the parameters of the code that generated this simulation, for reproducibility."""
-        #But ditch the output of make
-        self.make_output = ""
-        with open(os.path.join(self.outdir, "Simulation.json"), 'w') as jsout:
-            jsonstr = jsonpickle.encode(self.__dict__)
-            jsout.write(jsonstr)
-
-    def load_txt_description(self):
-        """Load the text file describing the parameters of the code that generated a simulation."""
-        with open(os.path.join(self.outdir, "Simulation.json"), 'r') as jsin:
-            jsonstr = jsin.read()
-            self.__dict__ = jsonpickle.decode(jsonstr)
-
     def make_simulation(self, genic_output):
         """Wrapper function to make all the simulation parameter files in turn."""
         #Generate Gadget makefile
@@ -271,8 +256,6 @@ class Simulation(object):
         self.gadget3params(genic_output)
         #Generate mpi_submit file
         self.generate_mpi_submit()
-        #Save a json of ourselves.
-        self.txt_description()
 
     def do_gadget_build(self, gadget_config):
         """Make a gadget build and check it succeeded."""
