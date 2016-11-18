@@ -5,6 +5,7 @@ import filecmp
 import os
 import re
 import configobj
+import numpy as np
 from . import simulationics
 
 def test_full_integration():
@@ -33,7 +34,14 @@ def test_full_integration():
 def test_only_DM():
     """Create a full simulation with no gas"""
     outdir = os.path.join(os.path.dirname(__file__),"test2")
-    Sim = simulationics.SimulationICs(outdir=outdir, box = 256, npart = 256, redshift = 99, separate_gas=False, code_args={'redend':0, 'do_build':False})
+    Sim = simulationics.SimulationICs(outdir=outdir, box = 256, npart = 256, redshift = 99, separate_gas=False, code_args={'redend':0, 'do_build':False},hubble=0.71)
     Sim.make_simulation()
     assert os.path.exists(outdir)
+
+    Sim2 = simulationics.SimulationICs(outdir=outdir, box=128, npart=256)
+    Sim2.load_txt_description()
+    assert Sim2.box == Sim.box
+    assert Sim2.hubble == Sim.hubble
+    assert Sim.code_class_name is Sim2.code_class_name
+    assert Sim.code_args == Sim2.code_args
     #shutil.rmtree(outdir)
