@@ -17,7 +17,6 @@ addons:
             - python3-matplotlib
             - python3-scipy
             - python3-h5py
-            - python3-jsonpickle
 virtualenv:
     system_site_packages: true
 
