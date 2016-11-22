@@ -59,6 +59,7 @@ class MPSimulation(simulation.Simulation):
             self._cluster.cluster_config_options(config, prefix)
             if self.separate_gas:
                 #This needs implementing
+                config.write(prefix+"SFR\n")
                 #config.write(prefix+"UVB_SELF_SHIELDING")
                 #Optional feedback model options
                 self._feedback_config_options(config, prefix)
@@ -67,15 +68,14 @@ class MPSimulation(simulation.Simulation):
 
     def _feedback_config_options(self, config, prefix=""):
         """Options in the Config.sh file for a potential star-formation/feedback model"""
-        config.write(prefix+"SFR\n")
-        config.write(prefix+"FOF\n")
         config.write(prefix+"WINDS\n")
         config.write(prefix+"METALS\n")
         config.write(prefix+"BLACKHOLES\n")
         return
 
     def _gadget3_child_options(self, _, __):
-        """Gadget-3 compilation options for Config.sh which should be written by the child class."""
+        """Gadget-3 compilation options for Config.sh which should be written by the child class
+        This is MP-Gadget, so it is likely there are none."""
         return
 
     def gadget3params(self, genicfileout):
@@ -105,6 +105,8 @@ class MPSimulation(simulation.Simulation):
         config['RadiationOn'] = 1
         config['BoxSize'] = self.box * 1000
         config['Nmesh'] = 2*self.npart
+        config['SnapshotWithFOF'] = 1
+        config['FOFHaloLinkingLength'] = 0.2
         config['OutputList'] =  ','.join([str(t) for t in self._generate_times()])
         #This should just be larger than the simulation time limit
         config['CpuTimeBetRestartFile'] = 60*60*self._cluster.timelimit*10
@@ -119,9 +121,11 @@ class MPSimulation(simulation.Simulation):
         config['MinGasTemp'] = 100
         #In equilibrium with the CMB at early times.
         config['InitGasTemp'] = 2.7*(1+self.redshift)
-        config['DensityKernelType'] = 'quintic'
+        #This needs to be here until I fix the flux extractor to allow quintic kernels.
+        config['DensityKernelType'] = 'cubic'
         if self.separate_gas:
             config['CoolingOn'] = 1
+            config['StarformationOn'] = 0
             config['TreeCoolFile'] = "TREECOOL"
             config = self._sfr_params(config)
             config = self._feedback_params(config)
@@ -142,7 +146,6 @@ class MPSimulation(simulation.Simulation):
     def _sfr_params(self, config):
         """Config parameters for the default Springel & Hernquist star formation model"""
         config['StarformationOn'] = 1
-        config['FOFHaloLinkingLength'] = 0.2
         config['StarformationCriterion'] = 'density'
         return config
 
