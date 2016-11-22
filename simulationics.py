@@ -50,7 +50,7 @@ class SimulationICs(object):
         self.box = box
         #Cube root
         assert npart > 1 and npart < 16000
-        self.npart = npart
+        self.npart = int(npart)
         #Physically reasonable
         assert omegac <= 1 and omegac > 0
         self.omegac = omegac
