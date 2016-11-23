@@ -34,7 +34,7 @@ class MPSimulation(simulation.Simulation):
         self.gadgetexe = "MP-Gadget"
         self.gadgetconfig = "Options.mk"
         self.gadget_dir = os.path.expanduser("~/codes/MP-Gadget/")
-        self.gadget_binary_dir = os.path.join(self.outdir,"build")
+        self.gadget_binary_dir = os.path.join(self.gadget_dir,"build")
 
     def gadget3config(self, prefix="OPT += -D"):
         """Generate a config Options file for Yu Feng's MP-Gadget.
@@ -47,8 +47,8 @@ class MPSimulation(simulation.Simulation):
             pass
         g_config_filename = os.path.join(self.outdir, self.gadgetconfig)
         with open(g_config_filename,'w') as config:
-            config.write("# off-tree build into $(DESTDIR)\nDESTDIR  = "+self.gadget_binary_dir+"\n")
-            config.write("CC       =   mpicc\nOPTIMIZE =  -fopenmp -O2 -g -Wall\n")
+            config.write("# off-tree build into $(DESTDIR)\nDESTDIR  = build\n")
+            config.write("MPICC       =   mpicc\nOPTIMIZE =  -fopenmp -O2 -g -Wall\n")
             config.write("HDF_INCL = \nHDF_LIBS = -lhdf5\nGSL_INCL = \nGSL_LIBS = -lgsl -lgslcblas\n")
             #We may want DENSITY_INDEPENDENT_SPH as well.
             #config.write(prefix+"DENSITY_INDEPENDENT_SPH\n")
@@ -103,6 +103,7 @@ class MPSimulation(simulation.Simulation):
         config['OmegaBaryon'] = self.omegab*self.separate_gas
         config['HubbleParam'] = self.hubble
         config['RadiationOn'] = 1
+        config['HydroOn'] = 1
         config['BoxSize'] = self.box * 1000
         config['Nmesh'] = 2*self.npart
         config['SnapshotWithFOF'] = 1
