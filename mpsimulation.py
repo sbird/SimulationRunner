@@ -40,11 +40,6 @@ class MPSimulation(simulation.Simulation):
         """Generate a config Options file for Yu Feng's MP-Gadget.
         This code is intended tobe configured primarily via runtime options.
         Many of the Gadget options are always on, and there is a new PM gravity solver."""
-        #Make the build directory
-        try:
-            os.mkdir(self.gadget_binary_dir)
-        except FileExistsError:
-            pass
         g_config_filename = os.path.join(self.outdir, self.gadgetconfig)
         with open(g_config_filename,'w') as config:
             config.write("# off-tree build into $(DESTDIR)\nDESTDIR  = build\n")
