@@ -57,6 +57,14 @@ class LymanAlphaMPSim(mpsimulation.MPSimulation, LymanAlphaSim):
         #These are parameters for the Quick Lyman alpha star formation.
         config["QuickLymanAlphaProbability"] = 1.0
         config['WindModel'] = 'nowind'
+        #These are parameters for the model to rescale the temperature-density relation
+        if self.rescale_gamma:
+            config["HeliumHeatOn"] = 1
+            config["HeliumHeatThresh"] = 10.0
+            config["HeliumHeatAmp"]  = self.rescale_amp
+            config["HeliumHeatExp"] = self.rescale_slope
+        return config
+
         return config
 
 class LymanAlphaKnotICs(simulationics.SimulationICs):
