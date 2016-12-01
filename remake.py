@@ -12,6 +12,10 @@ import os
 import os.path as path
 import distutils.spawn
 
+def rebuild_MP(rundir, codedir, config_file="Options.mk", binary="build/MP-Gadget"):
+    """rebuild, but with defaults appropriate for MP-Gadget."""
+    return rebuild(rundir, codedir,config_file=config_file, binary=binary)
+
 def rebuild(rundir, codedir, config_file="Config.sh", binary="P-Gadget3"):
     """Rebuild all Gadget binaries in subdirectories of rundir.
     Arguments:
