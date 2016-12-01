@@ -47,7 +47,7 @@ def rebuild(rundir, codedir, config_file="Config.sh", binary="P-Gadget3"):
             first = False
         #Note that if dst is a symlink, this will overwrite the contents
         #of the symlink instead of breaking it.
-        shutil.copy2(path.join(codedir, binary), path.join(directory, binary))
+        shutil.copy2(path.join(codedir, binary), path.join(directory, os.path.basename(binary)))
     return configs
 
 def detect_submit():
