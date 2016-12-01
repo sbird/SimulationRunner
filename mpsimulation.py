@@ -45,7 +45,7 @@ class MPSimulation(simulation.Simulation):
             config.write("# off-tree build into $(DESTDIR)\nDESTDIR = build\n")
             config.write("MPICC = mpicc\nMPICXX = mpic++\n")
             config.write("OPTIMIZE = -fopenmp -O3 -g -Wall -ffast-math -march=native\n")
-            config.write("HDF_INCL = \nHDF_LIBS = -lhdf5\nGSL_INCL = \nGSL_LIBS = -lgsl -lgslcblas\n")
+            config.write("GSL_INCL = $(shell pkg-config --cflags gsl)\nGSL_LIBS = $(shell pkg-config --libs gsl)\n")
             #We may want DENSITY_INDEPENDENT_SPH as well.
             #config.write(prefix+"DENSITY_INDEPENDENT_SPH\n")
             config.write(prefix+"PETAPM_ORDER=1\n")
