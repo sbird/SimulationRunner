@@ -31,10 +31,10 @@ class MPSimulation(simulation.Simulation):
         #Default parameter file names
         self.gadgetparam = "mpgadget.param"
         #Executable names
-        self.gadgetexe = "MP-Gadget"
+        self.gadgetexe = "build/MP-Gadget"
         self.gadgetconfig = "Options.mk"
         self.gadget_dir = os.path.expanduser("~/codes/MP-Gadget/")
-        self.gadget_binary_dir = os.path.join(self.gadget_dir,"build")
+        self.gadget_binary_dir = self.gadget_dir
 
     def gadget3config(self, prefix="OPT += -D"):
         """Generate a config Options file for Yu Feng's MP-Gadget.
