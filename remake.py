@@ -27,7 +27,7 @@ def rebuild(rundir, codedir, config_file="Config.sh", binary="P-Gadget3"):
     rundir = path.expanduser(rundir)
     codedir = path.expanduser(codedir)
     configs = glob.glob(path.join(path.join(rundir, "*"),config_file))
-    configs.append(glob.glob(path.join(rundir,config_file)))
+    configs += glob.glob(path.join(rundir,config_file))
     #First run.
     first = True
     for cc in configs:
