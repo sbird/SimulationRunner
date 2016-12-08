@@ -32,6 +32,8 @@ class LymanAlphaSim(simulation.Simulation):
 
     def _feedback_params(self, config):
         """Config options specific to the lyman alpha forest"""
+        #Quick star formation threshold from 1605.03462
+        config["CritOverDensity"] = 1000.
         #These are parameters for the model to rescale the temperature-density relation
         if self.rescale_gamma:
             config["ExtraHeatingThresh"] = 10.0
@@ -56,6 +58,8 @@ class LymanAlphaMPSim(mpsimulation.MPSimulation, LymanAlphaSim):
         """Config options specific to the lyman alpha forest"""
         #These are parameters for the Quick Lyman alpha star formation.
         config["QuickLymanAlphaProbability"] = 1.0
+        #Quick star formation threshold from 1605.03462
+        config["CritOverDensity"] = 1000.
         config['WindModel'] = 'nowind'
         #These are parameters for the model to rescale the temperature-density relation
         if self.rescale_gamma:
