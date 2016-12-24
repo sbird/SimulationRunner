@@ -62,7 +62,7 @@ class SimulationICs(object):
         self.redshift = redshift
         assert hubble < 1 and hubble > 0
         self.hubble = hubble
-        assert scalar_amp < 1e-8 and scalar_amp > 0
+        assert scalar_amp < 1e-7 and scalar_amp > 0
         self.scalar_amp = scalar_amp
         assert ns > 0 and ns < 2
         self.ns = ns
