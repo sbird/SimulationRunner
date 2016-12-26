@@ -102,12 +102,15 @@ def _get_regex(odir, output_file):
     """Determine which file type we are parsing: Gadget-3 or MP-Gadget."""
     output_txt = path.join(output_file, "info.txt")
     output = glob.glob(path.join(odir,output_txt))
+    regex = r"Redshift: ([0-9]{1,3}\.?[0-9]*)"
     #If no info.txt, probably we are MP-Gadget and need cpu.txt instead
     if len(output) == 0:
         output_txt = path.join(output_file, "cpu.txt")
         output = glob.glob(path.join(odir,output_txt))
+        if len(output) == 0:
+            return "", regex
         return output, r"Step [0-9]*, Time: ([0-9]{1,3}\.?[0-9]*)"
-    return output, r"Redshift: ([0-9]{1,3}\.?[0-9]*)"
+    return output_txt, regex
 
 def check_status(rundir, output_file="output", endz=2):
     """Get completeness status for every directory in the suite.
