@@ -83,6 +83,7 @@ def _check_single_status(fname, regex):
         simulation reached the desired redshift."""
     #Get the last line of the file:
     #need to open in binary to get negative seeks fom the end.
+    redshift = 1100.
     with open(fname, 'rb') as fh:
         match = None
         while match is None:
@@ -94,25 +95,36 @@ def _check_single_status(fname, regex):
             last = fh.readline().decode()
             #Parse it to find the redshift
             match = re.search(regex, last)
-    redshift = float(match.group(1))
+        redshift = float(match.group(1))
     return redshift
+
+def _get_regex(odir, output_file):
+    """Determine which file type we are parsing: Gadget-3 or MP-Gadget."""
+    output_txt = path.join(output_file, "info.txt")
+    output = glob.glob(path.join(odir,output_txt))
+    #If no info.txt, probably we are MP-Gadget and need cpu.txt instead
+    if len(output) == 0:
+        output_txt = path.join(output_file, "cpu.txt")
+        output = glob.glob(path.join(odir,output_txt))
+        return output, r"Step [0-9]*, Time: ([0-9]{1,3}\.?[0-9]*)"
+    return output, r"Redshift: ([0-9]{1,3}\.?[0-9]*)"
 
 def check_status(rundir, output_file="output", endz=2):
     """Get completeness status for every directory in the suite.
     Ultimately this should work out whether there
     was an error or just a timeout."""
     rundir = path.expanduser(rundir)
-    output_txt = "info.txt"
-    outputs = glob.glob(path.join(path.join(rundir, "*"),path.join(output_file, output_txt)))
-    #If no info.txt, probably we are MP-Gadget and need cpu.txt instead
-    if len(outputs) == 0:
-        output_txt = "cpu.txt"
-        outputs = glob.glob(path.join(path.join(rundir, "*"),path.join(output_file, output_txt)))
-        regex = r"Step [0-9]*, Time: ([0-9]{1,3}\.?[0-9]*)"
-    else:
-        regex = r"Redshift: ([0-9]{1,3}\.?[0-9]*)"
-    redshifts = [_check_single_status(cc, regex) for cc in outputs]
-    return outputs, [zz <= endz for zz in redshifts], redshifts
+    odirs = glob.glob(path.join(rundir, "*"))
+    if len(odirs) == 0:
+        raise IOError(rundir +" is empty.")
+    #Check for info.txt or cpu.txt:
+    output_txt, regex = _get_regex(odirs[0], output_file)
+    #If we are handed a single directory rather than a set.
+    if len(output_txt) == 0:
+        odirs = glob.glob(rundir)
+        output_txt, regex = _get_regex(odirs[0], output_file="out*")
+    redshifts = [_check_single_status(path.join(cc,output_txt), regex) for cc in odirs]
+    return odirs, [zz <= endz for zz in redshifts], redshifts
 
 def print_status(rundir, output_file="output", endz=2):
     """Get completeness status for every directory in the suite.
@@ -120,7 +132,7 @@ def print_status(rundir, output_file="output", endz=2):
     was an error or just a timeout."""
     outputs, completes, redshifts = check_status(rundir, output_file, endz)
     for oo, cc,zz in zip(outputs, completes, redshifts):
-        print(oo[len(rundir):-len(output_file)-1]," : ",end="")
+        print(oo," : ",end="")
         if not cc:
             print("NOT COMPLETE: z=",zz)
         else:
@@ -133,11 +145,9 @@ def resub_not_complete(rundir, output_file="output", endz=2, script_file="mpi_su
         resub_command = detect_submit()
     outputs, completes, _ = check_status(rundir, output_file, endz)
     #Pathnames for incomplete simulations
-    for oo,cc in zip(outputs,completes):
+    for odir,cc in zip(outputs,completes):
         if cc:
             continue
-        #Remove the output_file from the output, getting the directory.
-        odir = oo[:-len(output_file)]
         script_file_resub = script_file+"_resub"
         with open(path.join(odir, script_file),'r') as ifile:
             with open(path.join(odir, script_file_resub),'w') as ofile:
