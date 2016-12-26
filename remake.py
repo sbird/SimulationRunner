@@ -117,7 +117,7 @@ def check_status(rundir, output_file="output", endz=2):
     Ultimately this should work out whether there
     was an error or just a timeout."""
     rundir = path.expanduser(rundir)
-    odirs = glob.glob(path.join(rundir, "*"))
+    odirs = glob.glob(path.join(rundir, "*"+os.path.sep))
     if len(odirs) == 0:
         raise IOError(rundir +" is empty.")
     #Check for info.txt or cpu.txt:
