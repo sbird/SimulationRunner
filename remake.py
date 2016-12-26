@@ -109,7 +109,7 @@ def _get_regex(odir, output_file):
         output = glob.glob(path.join(odir,output_txt))
         if len(output) == 0:
             return "", regex
-        return output, r"Step [0-9]*, Time: ([0-9]{1,3}\.?[0-9]*)"
+        return output_txt, r"Step [0-9]*, Time: ([0-9]{1,3}\.?[0-9]*)"
     return output_txt, regex
 
 def check_status(rundir, output_file="output", endz=2):
@@ -126,6 +126,9 @@ def check_status(rundir, output_file="output", endz=2):
     if len(output_txt) == 0:
         odirs = glob.glob(path.join(rundir, "out*"))
         output_txt, regex = _get_regex(odirs[0], output_file="")
+    #If the simulation didn't start yet
+    if len(output_txt) == 0:
+        return odirs, [False for _ in odirs], 1100.*np.ones_like(odirs)
     redshifts = [_check_single_status(path.join(cc,output_txt), regex) for cc in odirs]
     return odirs, [zz <= endz for zz in redshifts], redshifts
 
