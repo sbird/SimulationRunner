@@ -86,16 +86,21 @@ def _check_single_status(fname, regex):
     redshift = 1100.
     with open(fname, 'rb') as fh:
         match = None
+        #Start at the end and seek backwards until we find a newline.
+        fh.seek(-2,os.SEEK_END)
         while match is None:
-            #Start at the end and seek backwards until we find a newline.
-            fh.seek(-2,os.SEEK_END)
             while fh.read(1) != b'\n':
                 fh.seek(-2,os.SEEK_CUR)
-            #This should be before the final redshift.
+            #Complete line
             last = fh.readline().decode()
+            #Seek back to beginning
+            fh.seek(-len(last)-2,os.SEEK_CUR)
             #Parse it to find the redshift
             match = re.search(regex, last)
         redshift = float(match.group(1))
+        #Convert to z from a if needed
+        if re.search("Time", regex):
+            redshift = 1./redshift - 1.
     return redshift
 
 def _get_regex(odir, output_file):
