@@ -78,33 +78,43 @@ def resub(rundir, script_file="mpi_submit", submit_command=None):
         cdir = path.dirname(cc)
         subprocess.call([submit_command, script_file], cwd=cdir)
 
-def _check_single_status(fname):
+def _check_single_status(fname, regex):
     """Given a file, check whether it shows the
         simulation reached the desired redshift."""
     #Get the last line of the file:
     #need to open in binary to get negative seeks fom the end.
     with open(fname, 'rb') as fh:
-        #Start at the end and seek backwards until we find a newline.
-        fh.seek(-2,os.SEEK_END)
-        while fh.read(1) != b'\n':
-            fh.seek(-2,os.SEEK_CUR)
-        #This should be before the final redshift.
-        last = fh.readline().decode()
-    #Parse it to find the redshift
-    match = re.search(r"Redshift: ([0-9]{1,3}\.?[0-9]*)",last)
+        match = None
+        while match is None:
+            #Start at the end and seek backwards until we find a newline.
+            fh.seek(-2,os.SEEK_END)
+            while fh.read(1) != b'\n':
+                fh.seek(-2,os.SEEK_CUR)
+            #This should be before the final redshift.
+            last = fh.readline().decode()
+            #Parse it to find the redshift
+            match = re.search(regex, last)
     redshift = float(match.group(1))
     return redshift
 
-def check_status(rundir, output_file="output/info.txt", endz=2):
+def check_status(rundir, output_file="output", endz=2):
     """Get completeness status for every directory in the suite.
     Ultimately this should work out whether there
     was an error or just a timeout."""
     rundir = path.expanduser(rundir)
-    outputs = glob.glob(path.join(path.join(rundir, "*"),output_file))
-    redshifts = [_check_single_status(cc) for cc in outputs]
+    output_txt = "info.txt"
+    outputs = glob.glob(path.join(path.join(rundir, "*"),path.join(output_file, output_txt)))
+    #If no info.txt, probably we are MP-Gadget and need cpu.txt instead
+    if len(outputs) == 0:
+        output_txt = "cpu.txt"
+        outputs = glob.glob(path.join(path.join(rundir, "*"),path.join(output_file, output_txt)))
+        regex = r"Step [0-9]*, Time: ([0-9]{1,3}\.?[0-9]*)"
+    else:
+        regex = r"Redshift: ([0-9]{1,3}\.?[0-9]*)"
+    redshifts = [_check_single_status(cc, regex) for cc in outputs]
     return outputs, [zz <= endz for zz in redshifts], redshifts
 
-def print_status(rundir, output_file="output/info.txt", endz=2):
+def print_status(rundir, output_file="output", endz=2):
     """Get completeness status for every directory in the suite.
     Ultimately this should work out whether there
     was an error or just a timeout."""
@@ -116,7 +126,7 @@ def print_status(rundir, output_file="output/info.txt", endz=2):
         else:
             print("COMPLETE")
 
-def resub_not_complete(rundir, output_file="output/info.txt", endz=2, script_file="mpi_submit", resub_command=None, paramfile="gadget3.param"):
+def resub_not_complete(rundir, output_file="output", endz=2, script_file="mpi_submit", resub_command=None, paramfile="gadget3.param"):
     """Resubmit incomplete simulations to the queue.
     We also edit the script file to add a RestartFlag"""
     if resub_command is None:
