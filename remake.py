@@ -149,16 +149,16 @@ def print_status(rundir, output_file="output", endz=2):
         else:
             print("COMPLETE")
 
-def _find_snap(outputs,snap="PART_"):
+def _find_snap(outputs,output_file, snap="PART_"):
     """Find the last written snapshot"""
-    written = glob.glob(path.join(outputs, snap+"[0-9][0-9][0-9]"))
+    written = glob.glob(path.join(path.join(outputs, output_file),snap+"[0-9][0-9][0-9]"))
     if len(written) == 0:
         raise IOError("No snapshots for",outputs)
     matches = [re.search(snap+"([0-9][0-9][0-9])",wr) for wr in written]
-    snapnums = [int(matches.group(1))]
+    snapnums = [int(mm.group(1)) for mm in matches]
     return sorted(snapnums)[-1]
 
-def resub_not_complete(rundir, output_file="output", endz=2, script_file="mpi_submit", resub_command=None, paramfile="gadget3.param", restart=2):
+def resub_not_complete(rundir, output_file="output", endz=2, script_file="mpi_submit", resub_command=None, paramfile="gadget3.param", restart=2, snap="PART_"):
     """Resubmit incomplete simulations to the queue.
     We also edit the script file to add a RestartFlag"""
     if resub_command is None:
@@ -169,8 +169,9 @@ def resub_not_complete(rundir, output_file="output", endz=2, script_file="mpi_su
         if cc:
             continue
         rest = " "+str(restart)
-        if rest == 2:
-            snapnum = _find_snap(odir)
+        if restart == 2:
+            snapnum = _find_snap(odir, output_file,snap=snap)
+            print(snapnum)
             rest += " "+str(snapnum)
         script_file_resub = script_file+"_resub"
         with open(path.join(odir, script_file),'r') as ifile:
