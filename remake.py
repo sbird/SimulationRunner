@@ -158,7 +158,7 @@ def _find_snap(outputs,output_file, snap="PART_"):
     snapnums = [int(mm.group(1)) for mm in matches]
     return sorted(snapnums)[-1]
 
-def resub_not_complete(rundir, output_file="output", endz=2, script_file="mpi_submit", resub_command=None, paramfile="gadget3.param", restart=2, snap="PART_"):
+def resub_not_complete(rundir, output_file="output", endz=2, script_file="mpi_submit", resub_command=None, paramfile="mpgadget.param", restart=2, snap="PART_"):
     """Resubmit incomplete simulations to the queue.
     We also edit the script file to add a RestartFlag"""
     if resub_command is None:
@@ -171,7 +171,6 @@ def resub_not_complete(rundir, output_file="output", endz=2, script_file="mpi_su
         rest = " "+str(restart)
         if restart == 2:
             snapnum = _find_snap(odir, output_file,snap=snap)
-            print(snapnum)
             rest += " "+str(snapnum)
         script_file_resub = script_file+"_resub"
         with open(path.join(odir, script_file),'r') as ifile:
