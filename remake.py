@@ -133,7 +133,7 @@ def check_status(rundir, output_file="output", endz=2):
         output_txt, regex = _get_regex(odirs[0], output_file="")
     #If the simulation didn't start yet
     if len(output_txt) == 0:
-        return odirs, [False for _ in odirs], 1100.*np.ones_like(odirs)
+        return odirs, [False for _ in odirs], [1100. for _ in odirs]
     redshifts = [_check_single_status(path.join(cc,output_txt), regex) for cc in odirs]
     return odirs, [zz <= endz for zz in redshifts], redshifts
 
