@@ -84,6 +84,7 @@ def _check_single_status(fname, regex):
     #Get the last line of the file:
     #need to open in binary to get negative seeks fom the end.
     redshift = 1100.
+    fname = sorted(glob.glob(fname))[-1]
     with open(fname, 'rb') as fh:
         match = None
         #Start at the end and seek backwards until we find a newline.
@@ -114,7 +115,7 @@ def _get_regex(odir, output_file):
     regex = r"Redshift: ([0-9]{1,3}\.?[0-9]*)"
     #If no info.txt, probably we are MP-Gadget and need cpu.txt instead
     if len(output) == 0:
-        output_txt = path.join(output_file, "cpu.txt")
+        output_txt = path.join(output_file, "cpu.tx*")
         output = glob.glob(path.join(odir,output_txt))
         if len(output) == 0:
             return "", regex
