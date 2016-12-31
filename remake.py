@@ -173,15 +173,22 @@ def resub_not_complete(rundir, output_file="output", endz=2, script_file="mpi_su
             snapnum = _find_snap(odir, output_file,snap=snap)
             rest += " "+str(snapnum)
         script_file_resub = script_file+"_resub"
+        found = False
         with open(path.join(odir, script_file),'r') as ifile:
             with open(path.join(odir, script_file_resub),'w') as ofile:
                 line = ifile.readline()
                 while line != '':
                     #Find the actual submission line and add a '1' after the paramfile.
                     if re.search("mpirun|mpiexec", line):
-                        line = re.sub(paramfile, paramfile+rest,line)
+                        nline = re.sub(paramfile, paramfile+rest,line)
+                        assert nline != line
+                        line = nline
+                        found = True
                     #Write each line straight through to the output by default.
                     ofile.write(line)
                     line = ifile.readline()
-        print("Re-submitting: ",path.join(odir, script_file_resub))
-        subprocess.call([resub_command, script_file_resub], cwd=odir)
+        if found:
+            print("Re-submitting: ",path.join(odir, script_file_resub))
+            subprocess.call([resub_command, script_file_resub], cwd=odir)
+        else:
+            print("ERROR: no change, not re-submitting: ",path.join(odir, script_file_resub))
