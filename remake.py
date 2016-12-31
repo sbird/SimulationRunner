@@ -87,14 +87,18 @@ def _check_single_status(fname, regex):
     with open(fname, 'rb') as fh:
         match = None
         #Start at the end and seek backwards until we find a newline.
-        fh.seek(-2,os.SEEK_END)
+        fh.seek(0,os.SEEK_END)
         while match is None:
+            fh.seek(-2,os.SEEK_CUR)
             while fh.read(1) != b'\n':
+                if fh.tell() < 2:
+                    fh.seek(0)
+                    break
                 fh.seek(-2,os.SEEK_CUR)
             #Complete line
             last = fh.readline().decode()
             #Seek back to beginning
-            fh.seek(-len(last)-2,os.SEEK_CUR)
+            fh.seek(-len(last),os.SEEK_CUR)
             #Parse it to find the redshift
             match = re.search(regex, last)
         redshift = float(match.group(1))
