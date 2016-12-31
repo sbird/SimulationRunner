@@ -84,17 +84,22 @@ def _check_single_status(fname, regex):
     #Get the last line of the file:
     #need to open in binary to get negative seeks fom the end.
     redshift = 1100.
+    fname = sorted(glob.glob(fname))[-1]
     with open(fname, 'rb') as fh:
         match = None
         #Start at the end and seek backwards until we find a newline.
-        fh.seek(-2,os.SEEK_END)
+        fh.seek(0,os.SEEK_END)
         while match is None:
+            fh.seek(-2,os.SEEK_CUR)
             while fh.read(1) != b'\n':
+                if fh.tell() < 2:
+                    fh.seek(0)
+                    break
                 fh.seek(-2,os.SEEK_CUR)
             #Complete line
             last = fh.readline().decode()
             #Seek back to beginning
-            fh.seek(-len(last)-2,os.SEEK_CUR)
+            fh.seek(-len(last),os.SEEK_CUR)
             #Parse it to find the redshift
             match = re.search(regex, last)
         redshift = float(match.group(1))
@@ -110,7 +115,7 @@ def _get_regex(odir, output_file):
     regex = r"Redshift: ([0-9]{1,3}\.?[0-9]*)"
     #If no info.txt, probably we are MP-Gadget and need cpu.txt instead
     if len(output) == 0:
-        output_txt = path.join(output_file, "cpu.txt")
+        output_txt = path.join(output_file, "cpu.tx*")
         output = glob.glob(path.join(odir,output_txt))
         if len(output) == 0:
             return "", regex
@@ -173,15 +178,22 @@ def resub_not_complete(rundir, output_file="output", endz=2, script_file="mpi_su
             snapnum = _find_snap(odir, output_file,snap=snap)
             rest += " "+str(snapnum)
         script_file_resub = script_file+"_resub"
+        found = False
         with open(path.join(odir, script_file),'r') as ifile:
             with open(path.join(odir, script_file_resub),'w') as ofile:
                 line = ifile.readline()
                 while line != '':
                     #Find the actual submission line and add a '1' after the paramfile.
                     if re.search("mpirun|mpiexec", line):
-                        line = re.sub(paramfile, paramfile+rest,line)
+                        nline = re.sub(paramfile, paramfile+rest,line)
+                        assert nline != line
+                        line = nline
+                        found = True
                     #Write each line straight through to the output by default.
                     ofile.write(line)
                     line = ifile.readline()
-        print("Re-submitting: ",path.join(odir, script_file_resub))
-        subprocess.call([resub_command, script_file_resub], cwd=odir)
+        if found:
+            print("Re-submitting: ",path.join(odir, script_file_resub))
+            subprocess.call([resub_command, script_file_resub], cwd=odir)
+        else:
+            print("ERROR: no change, not re-submitting: ",path.join(odir, script_file_resub))
