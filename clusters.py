@@ -129,7 +129,7 @@ class MARCCClass(ClusterClass):
     This has 24 cores per node, shared memory of 128GB pr node.
     Ask for complete nodes.
     Uses SLURM."""
-    def __init__(self, *args, nproc=48,timelimit=6,**kwargs):
+    def __init__(self, *args, nproc=48,timelimit=8,**kwargs):
         #Complete nodes!
         assert nproc % 24 == 0
         super().__init__(*args, nproc=nproc,timelimit=timelimit, **kwargs)
