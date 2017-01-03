@@ -72,7 +72,9 @@ class LymanAlphaMPSim(mpsimulation.MPSimulation, LymanAlphaSim):
         return config
 
 class LymanAlphaKnotICs(simulationics.SimulationICs):
-    """Specialise the generation of initial conditions to change the power spectrum via knots."""
+    """Specialise the generation of initial conditions to change the power spectrum via knots.
+    knot_val is a multiplicative factor applied to the power spectrum at knot_pos
+    knot_pos is in units of the k bins for the power spectrum output by CAMB, by default h/Mpc."""
     def __init__(self, *, outdir, box, npart, knot_pos= (0.15,0.475,0.75,1.19), knot_val = (1.,1.,1.,1.), code_class=LymanAlphaMPSim, code_args=None, **kwargs):
         lcode_args = {'rescale_gamma': False, 'rescale_amp' : 1., 'rescale_slope': -0.7}
         if code_args is not None:
