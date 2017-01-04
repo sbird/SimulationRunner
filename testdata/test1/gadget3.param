@@ -3,7 +3,7 @@ InitCondFile   ICS/256_256_99
 OutputDir   output
 SnapshotFileBase   snap
 % CPU time-limit
-TimeLimitCPU   22411
+TimeLimitCPU   30882
 ResubmitOn   0
 ResubmitCommand   my-scriptfile
 %  Characteristics of run
@@ -19,7 +19,7 @@ OutputListOn   1
 OutputListFilename   times.txt
 TimeBetSnapshot   1.07
 TimeOfFirstSnapshot   0.1
-CpuTimeBetRestartFile   216000% here in seconds
+CpuTimeBetRestartFile   288000% here in seconds
 TimeBetStatistics   0.05
 NumFilesPerSnapshot   2
 NumFilesWrittenInParallel   2
