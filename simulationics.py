@@ -249,7 +249,7 @@ class SimulationICs(object):
             self.__dict__ = json.load(jsin)
         self._fromarray()
 
-    def check_ic_power_spectra(self, camb_output, genicfileout):
+    def check_ic_power_spectra(self, camb_output, genicfileout,accuracy=0.05):
         """Generate the power spectrum for each particle type from the generated simulation files, using GenPK,
         and check that it matches the input. This is a consistency test on each simulation output."""
         #Generate power spectra
@@ -262,7 +262,6 @@ class SimulationICs(object):
         transfer = camb_output + "_transfer_"+str(self.redshift)+".dat"
         camb = cambpower.CAMBPowerSpectrum(matterpow, transfer, kmin=2*math.pi/self.box/5, kmax = self.npart*2*math.pi/self.box*10)
         #Error to tolerate on simulated power spectrum
-        accuracy = 0.05
         for sp in ["DM","by", "nu"]:
             #GenPK output is at PK-[nu,by,DM]-basename(genicfileout)
             gpkout = "PK-"+sp+"-"+os.path.basename(genicfileout)
@@ -288,7 +287,7 @@ class SimulationICs(object):
                 #Neutrinos get special treatment here.
                 #Because they don't really cluster, getting the initial power really right
                 #(especially on small scales) is both hard and rather futile.
-                accuracy = 0.1
+                accuracy *= 2
                 ii = np.where(Pk_ic < Pk_ic[0]*1e-5)
                 if np.size(ii) > 0:
                     imax = ii[0][0]
@@ -311,7 +310,7 @@ class SimulationICs(object):
             if np.size(np.where(error > accuracy)) > 3:
                 raise RuntimeError("Pk accuracy check failed for "+sp+". Max error: "+str(np.max(error)))
 
-    def make_simulation(self):
+    def make_simulation(self, pkaccuracy=0.05):
         """Wrapper function to make the simulation ICs."""
         #First generate the input files for CAMB
         (camb_output, camb_param) = self.cambfile()
@@ -332,7 +331,7 @@ class SimulationICs(object):
         #Save a json of ourselves.
         self.txt_description()
         #Check that the ICs have the right power spectrum
-        self.check_ic_power_spectra(camb_output, genic_output)
+        self.check_ic_power_spectra(camb_output, genic_output,accuracy=pkaccuracy)
         #Make the parameter files.
         ics = self.code_class_name(outdir=self.outdir, box=self.box, npart=self.npart, redshift=self.redshift, separate_gas=self.separate_gas, omegac=self.omegac, omegab=self.omegab, omeganu=self.omeganu, hubble=self.hubble, **self.code_args)
         return ics.make_simulation(genic_output)
