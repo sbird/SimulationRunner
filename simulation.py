@@ -259,8 +259,12 @@ class Simulation(object):
 
     def do_gadget_build(self, gadget_config):
         """Make a gadget build and check it succeeded."""
-        os.remove(os.path.join(self.gadget_dir, self.gadgetconfig))
-        os.symlink(gadget_config, os.path.join(self.gadget_dir, self.gadgetconfig))
+        conffile = os.path.join(self.gadget_dir, self.gadgetconfig)
+        if os.path.islink(conffile):
+            os.remove(conffile)
+        if os.path.exists(conffile):
+            os.rename(conffile, conffile+".backup")
+        os.symlink(gadget_config, conffile)
         #Build gadget
         gadget_binary = os.path.join(self.gadget_binary_dir, self.gadgetexe)
         try:
