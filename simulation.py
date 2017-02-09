@@ -279,3 +279,4 @@ class Simulation(object):
             raise
         #Check that the last-changed time of the binary has actually changed..
         assert g_mtime != os.stat(gadget_binary).st_mtime
+        shutil.copy(gadget_binary, os.path.join(os.path.dirname(gadget_config),self.gadgetexe))
