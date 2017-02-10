@@ -78,9 +78,9 @@ def get_uvb_filename(uvb):
     """Get the filename for a UVB table (in gadget format)"""
     if uvb == "fg":
         fuvb = get_fg11_filename()
-    if uvb == "hm":
+    elif uvb == "hm":
         fuvb = get_hm12_filename()
-    if uvb == "sh":
+    elif uvb == "sh":
         fuvb = get_sherwood_filename()
     else:
         raise ValueError("Unsupported UVB table")
