@@ -12,7 +12,7 @@ class LymanAlphaSim(simulation.Simulation):
        This uses the QuickLya star formation module with sigma_8 and n_s.
     """
     __doc__ = __doc__+simulation.Simulation.__doc__
-    def __init__(self, *, outdir, box, npart, rescale_gamma = False, rescale_amp = 1., rescale_slope = -0.7, redshift=99, redend = 2, omegac=0.2408, omegab=0.0472, omeganu=0., hubble=0.7, uvb="hm", do_build=False, separate_gas=True):
+    def __init__(self, *, outdir, box, npart, rescale_gamma = False, rescale_amp = 1., rescale_slope = -0.7, redshift=99, redend = 2, omegac=0.2408, omegab=0.0472, omeganu=0., hubble=0.7, uvb="sh", do_build=False, separate_gas=True):
         assert separate_gas
         #Parameters of the heating rate rescaling to account for helium reionisation
         #Default parameters do nothing

@@ -57,7 +57,7 @@ class Simulation(object):
         self.separate_gas = separate_gas
         #UVB? Only matters if gas
         self.uvb = uvb
-        assert self.uvb == "hm" or self.uvb == "fg"
+        assert self.uvb == "hm" or self.uvb == "fg" or self.uvb == "sh"
         #Will we try to build gadget?
         self.do_build = do_build
         #Number of files per snapshot

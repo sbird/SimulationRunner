@@ -64,12 +64,24 @@ def get_hm12_filename():
     """File where the HM2012 table is stored (in gadget format)"""
     return os.path.join(os.path.dirname(__file__),"TREECOOL_hm_2012")
 
+def get_sherwood_filename():
+    """File where the Sherwood-like (modified HM2012) table
+    is stored (in gadget format).
+    The modifications are:
+        a) start at z=11 rather than z=15.
+        The rates from z=15 to z=9 are now compressed into z=11-z=9.
+        b) Helium photoheating rate increased by 1.7 between z=2.2 and z=3.4
+        to match the temperature measurements."""
+    return os.path.join(os.path.dirname(__file__),"TREECOOL_hm_2012_sherwood")
+
 def get_uvb_filename(uvb):
     """Get the filename for a UVB table (in gadget format)"""
     if uvb == "fg":
         fuvb = get_fg11_filename()
     if uvb == "hm":
         fuvb = get_hm12_filename()
+    if uvb == "sh":
+        fuvb = get_sherwood_filename()
     else:
         raise ValueError("Unsupported UVB table")
     return fuvb
