@@ -108,6 +108,34 @@ def _check_single_status(fname, regex):
             redshift = 1./redshift - 1.
     return redshift
 
+def _check_single_status_snap(outdir, output_file, snap="PART_"):
+    """Get the final redshift of a simulation from the last written snapshot"""
+    try:
+        snapnum = _find_snap(outdir, output_file,snap=snap)
+    except IOError:
+        return 1100
+    snapdir = path.join(path.join(outdir,output_file),snap+str(snapnum).rjust(3,'0'))
+    return _get_redshift_snapshot(snapdir)
+
+def _get_redshift_snapshot(snapshot):
+    """Get the redshift of a BigFile snapshot"""
+    fname = os.path.join(snapshot,"Header/attr-v2")
+    with open(fname,'r') as fh:
+        for line in fh:
+            if re.search("Time",line) is not None:
+                m = re.search(r"#HUMANE \[ ([\d\.]*) \]",line)
+                return 1./float(m.groups()[0])-1
+    raise IOError("No redshift in file")
+
+def _find_snap(outputs,output_file, snap="PART_"):
+    """Find the last written snapshot"""
+    written = glob.glob(path.join(path.join(outputs, output_file),snap+"[0-9][0-9][0-9]"))
+    if len(written) == 0:
+        raise IOError("No snapshots for",outputs)
+    matches = [re.search(snap+"([0-9][0-9][0-9])",wr) for wr in written]
+    snapnums = [int(mm.group(1)) for mm in matches]
+    return sorted(snapnums)[-1]
+
 def _get_regex(odir, output_file):
     """Determine which file type we are parsing: Gadget-3 or MP-Gadget."""
     output_txt = path.join(output_file, "info.txt")
@@ -122,7 +150,7 @@ def _get_regex(odir, output_file):
         return output_txt, r"Step [0-9]*, Time: ([0-9]{1,3}\.?[0-9]*)"
     return output_txt, regex
 
-def check_status(rundir, output_file="output", endz=2):
+def check_status(rundir, output_file="output", endz=2, restart=2, snap="PART_"):
     """Get completeness status for every directory in the suite.
     Ultimately this should work out whether there
     was an error or just a timeout."""
@@ -130,23 +158,26 @@ def check_status(rundir, output_file="output", endz=2):
     odirs = glob.glob(path.join(rundir, "*"+os.path.sep))
     if len(odirs) == 0:
         raise IOError(rundir +" is empty.")
-    #Check for info.txt or cpu.txt:
-    output_txt, regex = _get_regex(odirs[0], output_file)
-    #If we are handed a single directory rather than a set.
-    if len(output_txt) == 0:
-        odirs = glob.glob(path.join(rundir, "out*"))
-        output_txt, regex = _get_regex(odirs[0], output_file="")
-    #If the simulation didn't start yet
-    if len(output_txt) == 0:
-        return odirs, [False for _ in odirs], [1100. for _ in odirs]
-    redshifts = [_check_single_status(path.join(cc,output_txt), regex) for cc in odirs]
+    if restart == 2:
+        redshifts = [_check_single_status_snap(cc,output_file=output_file,snap=snap) for cc in odirs]
+    else:
+        #Check for info.txt or cpu.txt:
+        output_txt, regex = _get_regex(odirs[0], output_file)
+        #If we are handed a single directory rather than a set.
+        if len(output_txt) == 0:
+            odirs = glob.glob(path.join(rundir, "out*"))
+            output_txt, regex = _get_regex(odirs[0], output_file="")
+        #If the simulation didn't start yet
+        if len(output_txt) == 0:
+            return odirs, [False for _ in odirs], [1100. for _ in odirs]
+        redshifts = [_check_single_status(path.join(cc,output_txt), regex) for cc in odirs]
     return odirs, [zz <= endz for zz in redshifts], redshifts
 
-def print_status(rundir, output_file="output", endz=2):
+def print_status(rundir, output_file="output", endz=2, restart=2):
     """Get completeness status for every directory in the suite.
     Ultimately this should work out whether there
     was an error or just a timeout."""
-    outputs, completes, redshifts = check_status(rundir, output_file, endz)
+    outputs, completes, redshifts = check_status(rundir, output_file, endz,restart=restart)
     for oo, cc,zz in zip(outputs, completes, redshifts):
         print(oo," : ",end="")
         if not cc:
@@ -154,21 +185,12 @@ def print_status(rundir, output_file="output", endz=2):
         else:
             print("COMPLETE")
 
-def _find_snap(outputs,output_file, snap="PART_"):
-    """Find the last written snapshot"""
-    written = glob.glob(path.join(path.join(outputs, output_file),snap+"[0-9][0-9][0-9]"))
-    if len(written) == 0:
-        raise IOError("No snapshots for",outputs)
-    matches = [re.search(snap+"([0-9][0-9][0-9])",wr) for wr in written]
-    snapnums = [int(mm.group(1)) for mm in matches]
-    return sorted(snapnums)[-1]
-
 def resub_not_complete(rundir, output_file="output", endz=2, script_file="mpi_submit", resub_command=None, paramfile="mpgadget.param", restart=2, snap="PART_"):
     """Resubmit incomplete simulations to the queue.
     We also edit the script file to add a RestartFlag"""
     if resub_command is None:
         resub_command = detect_submit()
-    outputs, completes, _ = check_status(rundir, output_file, endz)
+    outputs, completes, _ = check_status(rundir, output_file, endz, restart=restart)
     #Pathnames for incomplete simulations
     for odir,cc in zip(outputs,completes):
         if cc:
