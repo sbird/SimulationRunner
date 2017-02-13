@@ -49,6 +49,11 @@ class ClusterClass(object):
         #config.write(prefix+"NOTYPEPREFIX_FFTW\n")
         return
 
+    def cluster_optimize(self):
+        """Compiler optimisation options for a specific cluster.
+        Only MP-Gadget pays attention to this."""
+        return "-fopenmp -O3 -g -Wall -ffast-math -march=native"
+
 class ComaClass(ClusterClass):
     """Subclassed for specific properties of the Coma cluster at CMU.
     __init__ and _queue_directive are changed."""
@@ -164,6 +169,12 @@ class MARCCClass(ClusterClass):
         qstring += "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.locallibs/lib\n"
         qstring += "mpirun --map-by core "+self.gadgetexe+" "+self.gadgetparam+"\n"
         return qstring
+
+    def cluster_optimize(self):
+        """Compiler optimisation options for a specific cluster.
+        Only MP-Gadget pays attention to this."""
+        return "-fopenmp -O3 -g -Wall -march=native"
+
 
 class HypatiaClass(ClusterClass):
     """Subclass for Hypatia cluster in UCL"""

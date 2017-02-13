@@ -44,7 +44,8 @@ class MPSimulation(simulation.Simulation):
         with open(g_config_filename,'w') as config:
             config.write("# off-tree build into $(DESTDIR)\nDESTDIR = build\n")
             config.write("MPICC = mpicc\nMPICXX = mpic++\n")
-            config.write("OPTIMIZE = -fopenmp -O3 -g -Wall -ffast-math -march=native\n")
+            optimize = self._cluster.cluster_optimize()
+            config.write("OPTIMIZE = "+optimize+"\n")
             config.write("GSL_INCL = $(shell pkg-config --cflags gsl)\nGSL_LIBS = $(shell pkg-config --libs gsl)\n")
             #We may want DENSITY_INDEPENDENT_SPH as well.
             #config.write(prefix+"DENSITY_INDEPENDENT_SPH\n")
