@@ -33,6 +33,5 @@ class CAMBPowerSpectrum(object):
         lgkvals = np.log10(kvals)
         if species == 'tot':
             return 10**self.dpk(lgkvals)
-        else:
-            tk =  self.dtk[species](lgkvals)
-            return 10**self.dpk(lgkvals)*tk
+        tk =  self.dtk[species](lgkvals)
+        return 10**self.dpk(lgkvals)*tk

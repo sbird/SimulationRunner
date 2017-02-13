@@ -69,8 +69,6 @@ class LymanAlphaMPSim(mpsimulation.MPSimulation, LymanAlphaSim):
             config["HeliumHeatExp"] = self.rescale_slope
         return config
 
-        return config
-
 class LymanAlphaKnotICs(simulationics.SimulationICs):
     """Specialise the generation of initial conditions to change the power spectrum via knots.
     knot_val is a multiplicative factor applied to the power spectrum at knot_pos

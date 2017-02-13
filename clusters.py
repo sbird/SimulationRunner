@@ -178,10 +178,6 @@ class MARCCClass(ClusterClass):
 
 class HypatiaClass(ClusterClass):
     """Subclass for Hypatia cluster in UCL"""
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        #hypatia has no timelimit
-
     def generate_mpi_submit(self, outdir):
         """Generate a sample mpi_submit file.
         The prefix argument is a string at the start of each line.

@@ -5,7 +5,6 @@ import filecmp
 import os
 import re
 import configobj
-import numpy as np
 from . import simulationics
 
 def test_full_integration():
