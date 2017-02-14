@@ -2,7 +2,7 @@
 
 import filecmp
 import os
-import h5py
+import bigfile
 import numpy as np
 import configobj
 from . import neutrinosimulation as nus
@@ -24,8 +24,8 @@ def test_neutrino_part():
     assert config['NU_Vtherm_On'] == "1"
     assert config['NU_PartMass_in_ev'] == "0.45"
     #Check that the output has neutrino particles
-    f = h5py.File(os.path.join(test_dir,"ICS/256_256_99.0.hdf5"),'r')
-    assert f["Header"].attrs["NumPart_Total"][2] == 256**3
+    f = bigfile.BigFile(os.path.join(test_dir,"ICS/256_256_99"),'r')
+    assert f["Header"].attrs["TotNumPart"][2] == 256**3
     #Clean the test directory if test was successful
     #Check the mass is correct
     mcdm = f["Header"].attrs["MassTable"][1]
@@ -61,13 +61,18 @@ def test_neutrino_semilinear():
     assert config['massless_neutrinos'] == "0.046"
     assert config['massive_neutrinos'] == "3"
 
-    test_files = ("gadget3.param",)
-    _, mismatch, errors = filecmp.cmpfiles(test_dir, "./testdata/test_nu_semilin/",test_files)
-    assert len(errors) == 0
-    assert len(mismatch) == 0
+    config = configobj.ConfigObj(os.path.join(test_dir,"mpgadget.param"))
+    assert config['MNue'] == "0.15"
+    assert config['MNum'] == "0.15"
+    assert config['MNut'] == "0.15"
+    assert config['MassiveNuLinRespOn'] == "1"
+    assert config['TimeTransfer'] == "0.01"
+    assert config['OmegaBaryonCAMB'] == "0.0472"
+    assert config['InputSpectrum_UnitLength_in_cm'] == "3.085678e+24"
+    assert config['KspaceTransferFunction'] == "camb_linear/ics_transfer_99.dat"
     #Check that the output has no neutrino particles
-    f = h5py.File(os.path.join(test_dir, "ICS/256_256_99.0.hdf5"),'r')
-    assert f["Header"].attrs["NumPart_Total"][2] == 0
+    f = bigfile.BigFile(os.path.join(test_dir, "ICS/256_256_99"),'r')
+    assert f["Header"].attrs["TotNumPart"][2] == 0
     #Check the mass is correct: the CDM particles should have the same mass as in the particle simulation
     assert np.abs(f["Header"].attrs["MassTable"][1] / 7.71977292 - 1) < 1e-5
     f.close()

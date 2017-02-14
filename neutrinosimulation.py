@@ -1,16 +1,17 @@
 """Specialization of the Simulation class to Lyman-alpha forest simulations."""
 
-from . import simulation
+from . import mpsimulation
 from . import simulationics
 
-class NeutrinoPartSim(simulation.Simulation):
+class NeutrinoPartSim(mpsimulation.MPSimulation):
     """Further specialise the Simulation class for particle based massive neutrinos.
     """
-    __doc__ = __doc__+simulation.Simulation.__doc__
-    def _gadget3_child_options(self, config, prefix=""):
-        """Config options to turn on the right neutrino method"""
-        config.write(prefix+"NEUTRINOS\n")
-        return
+    __doc__ = __doc__+mpsimulation.MPSimulation.__doc__
+    def _other_params(self, config):
+        """Config options to make type 2 particles neutrinos."""
+        config['FastParticleType'] = 2
+        config['NoTreeType'] = 2
+        return config
 
 class NeutrinoPartICs(simulationics.SimulationICs):
     """Specialise the initial conditions for particle neutrinos."""
@@ -46,21 +47,16 @@ class NeutrinoPartICs(simulationics.SimulationICs):
         config['NU_PartMass_in_ev'] = self.m_nu
         return config
 
-class NeutrinoSemiLinearSim(simulation.Simulation):
+class NeutrinoSemiLinearSim(mpsimulation.MPSimulation):
     """Further specialise the Simulation class for semi-linear analytic massive neutrinos.
     """
     def __init__(self, *, m_nu=0.1, **kwargs):
         self.m_nu = m_nu
         super().__init__(**kwargs)
 
-    def _gadget3_child_options(self, config, prefix=""):
-        """Config options to turn on the right neutrino method"""
-        #Note for some Gadget versions we may need KSPACE_NEUTRINOS
-        config.write(prefix+"KSPACE_NEUTRINOS_2\n")
-        return
-
     def _other_params(self, config):
         """Config options specific to kspace neutrinos. Hierarchy is off for now."""
+        config['MassiveNuLinRespOn'] = 1
         config['MNue'] = self.m_nu/3.
         config['MNum'] = self.m_nu/3.
         config['MNut'] = self.m_nu/3.
@@ -90,25 +86,17 @@ class NeutrinoSemiLinearICs(NeutrinoPartICs):
 
 class NeutrinoHybridSim(NeutrinoSemiLinearSim):
     """Further specialise to hybrid neutrino simulations, which have both analytic and particle neutrinos."""
-    __doc__ = __doc__+simulation.Simulation.__doc__
+    __doc__ = __doc__+mpsimulation.MPSimulation.__doc__
     def __init__(self, *, zz_transition=1., vcrit=500, **kwargs):
         super().__init__(**kwargs)
         self.vcrit = vcrit
         self.zz_transition = zz_transition
 
-    def _gadget3_child_options(self, config, prefix=""):
-        """Config options to turn on the right neutrino method"""
-        #Note for some Gadget versions we may need KSPACE_NEUTRINOS
-        config.write(prefix+"KSPACE_NEUTRINOS_2\n")
-        config.write(prefix+"HYBRID_NEUTRINOS\n")
-        #Turn off the tree
-        config.write(prefix+"NEUTRINOS\n")
-        return
-
     def _other_params(self, config):
         """Config options specific to kspace neutrinos. Hierarchy is off for now."""
         config = NeutrinoSemiLinearSim._other_params(self, config)
-        config['VCRIT'] = self.vcrit
+        config['HybridNeutrinosOn'] = 1
+        config['Vcrit'] = self.vcrit
         config['NuPartTime'] = 1./(1+self.zz_transition)
         return config
 
