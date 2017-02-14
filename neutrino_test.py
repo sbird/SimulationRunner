@@ -19,8 +19,7 @@ def test_neutrino_part():
     assert config['Omega'] == "0.288"
     assert config['OmegaLambda'] == "0.712"
     assert config['NNeutrino'] == "256"
-    assert config['NU_KSPACE'] == "0"
-    assert config['NU_On'] == "1"
+    assert config['NU_in_DM'] == "0"
     assert config['NU_Vtherm_On'] == "1"
     assert config['NU_PartMass_in_ev'] == "0.45"
     #Check that the output has neutrino particles
@@ -45,12 +44,11 @@ def test_neutrino_semilinear():
     assert os.path.exists(test_dir)
     #Check these files have not changed
     config = configobj.ConfigObj(os.path.join(test_dir,"_genic_params.ini"))
-    assert abs(float(config['OmegaDM_2ndSpecies']) - 0.009860074585986426) < 1e-7
+    assert abs(float(config['OmegaNeutrino']) - 0.009860074585986426) < 1e-7
     assert config['Omega'] == "0.288"
     assert config['OmegaLambda'] == "0.712"
     assert config['NNeutrino'] == "0"
-    assert config['NU_KSPACE'] == "0"
-    assert config['NU_On'] == "0"
+    assert config['NU_in_DM'] == "0"
     assert config['NU_Vtherm_On'] == "1"
     assert config['NU_PartMass_in_ev'] == "0"
 
