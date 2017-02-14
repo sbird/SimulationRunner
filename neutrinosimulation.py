@@ -41,7 +41,6 @@ class NeutrinoPartICs(simulationics.SimulationICs):
 
     def _genicfile_child_options(self, config):
         """Set up particle neutrino parameters for GenIC"""
-        config['NU_On'] = 1
         config['NU_Vtherm_On'] = 1
         config['NNeutrino'] = self.npart
         config['NU_PartMass_in_ev'] = self.m_nu
@@ -81,7 +80,7 @@ class NeutrinoSemiLinearICs(NeutrinoPartICs):
         """Set up neutrino parameters for GenIC.
         This just includes a change in OmegaNu, but no actual particles."""
         config['NNeutrino'] = 0
-        config['NU_KSPACE'] = 0
+        config['NU_in_DM'] = 0
         return config
 
 class NeutrinoHybridSim(NeutrinoSemiLinearSim):
@@ -114,10 +113,9 @@ class NeutrinoHybridICs(NeutrinoPartICs):
     def _genicfile_child_options(self, config):
         """Set up neutrino parameters for GenIC.
         This just includes a change in OmegaNu, but no actual particles."""
-        config['NU_On'] = 1
         config['NU_Vtherm_On'] = 1
         config['NNeutrino'] = int(self.npart*self.npartnufac)
         config['NU_PartMass_in_ev'] = self.m_nu
-        config['NU_KSPACE'] = 0
+        config['NU_in_DM'] = 0
         config['Max_nuvel'] = self.vcrit
         return config

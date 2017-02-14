@@ -15,7 +15,7 @@ def test_neutrino_part():
     assert os.path.exists(test_dir)
     #Check these we are writing reasonable values.
     config = configobj.ConfigObj(os.path.join(test_dir,"_genic_params.ini"))
-    assert abs(float(config['OmegaDM_2ndSpecies']) - 0.009860074585986426) < 1e-7
+    assert abs(float(config['OmegaNeutrino']) - 0.009860074585986426) < 1e-7
     assert config['Omega'] == "0.288"
     assert config['OmegaLambda'] == "0.712"
     assert config['NNeutrino'] == "256"

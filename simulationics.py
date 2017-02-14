@@ -186,7 +186,7 @@ class SimulationICs(object):
         config['Omega'] = self.omega0
         config['OmegaLambda'] = 1- self.omega0
         config['OmegaBaryon'] = self.omegab
-        config['OmegaDM_2ndSpecies'] = self.omeganu
+        config['OmegaNeutrino'] = self.omeganu
         config['HubbleParam'] = self.hubble
         config['Redshift'] = self.redshift
         config['FileWithInputSpectrum'] = camb_output + "_matterpow_"+str(self.redshift)+".dat"
@@ -194,7 +194,7 @@ class SimulationICs(object):
         config['NumFiles'] = int(self.numfiles)
         assert config['InputSpectrum_UnitLength_in_cm'] == '3.085678e24'
         config['Seed'] = self.seed
-        config['NU_On'] = 0
+        config['NU_Vtherm_On'] = 0
         config['NNeutrino'] = 0
         config = self._genicfile_child_options(config)
         config.write()
