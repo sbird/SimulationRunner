@@ -111,8 +111,7 @@ class NeutrinoHybridICs(NeutrinoPartICs):
         super().__init__(code_class=code_class, code_args=ncode_args, **kwargs)
 
     def _genicfile_child_options(self, config):
-        """Set up neutrino parameters for GenIC.
-        This just includes a change in OmegaNu, but no actual particles."""
+        """Set up hybrid neutrino parameters for GenIC."""
         config['NU_Vtherm_On'] = 1
         config['NNeutrino'] = int(self.npart*self.npartnufac)
         config['NU_PartMass_in_ev'] = self.m_nu

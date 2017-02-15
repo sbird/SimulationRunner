@@ -49,7 +49,7 @@ def test_neutrino_semilinear():
     assert config['OmegaLambda'] == "0.712"
     assert config['NNeutrino'] == "0"
     assert config['NU_in_DM'] == "0"
-    assert config['NU_Vtherm_On'] == "1"
+    assert config['NU_Vtherm_On'] == "0"
     assert config['NU_PartMass_in_ev'] == "0"
 
     config = configobj.ConfigObj(os.path.join(test_dir,"_camb_params.ini"))
