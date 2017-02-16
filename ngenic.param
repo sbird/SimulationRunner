@@ -1,4 +1,3 @@
-
 # This is the size of the FFT grid used to 
 # compute the displacement field. One
 # should have Nmesh >= Npart.
@@ -8,22 +7,29 @@ Nmesh=768
 Box= 512000.0
 
 # Base-filename of output files
-FileBase =test  
+FileBase =test
 # Directory for storing output files
-OutputDir= test 
+OutputDir= test
 
 # (Cube root of) number of particles
 NBaryon = 0
 NCDM = 128
 NNeutrino = 0
 
-Omega= 0.2793       # Total matter density  (at z=0)
-OmegaLambda= 0.7207       # Cosmological constant (at z=0)
-OmegaBaryon= 0.0463      # Baryon density        (at z=0)
-OmegaNeutrino = 0      # Omega for a second dark matter species (at z=0)
-HubbleParam= 0.7       # Hubble paramater (may be used for power spec parameterization)
+# Total matter density  (at z=0)
+Omega= 0.2793
+# Cosmological constant (at z=0)
+OmegaLambda= 0.7207
+# Baryon density        (at z=0)
+OmegaBaryon= 0.0463
+# Omega for neutrinos (at z=0, assuming non-relativistic)
+# Note O_nu = M_nu/93.14 h^2 is not enforced.
+OmegaNeutrino = 0
+# Hubble paramater (may be used for power spec parameterization)
+HubbleParam= 0.7
 
-Redshift= 99        # Starting redshift
+# Starting redshift
+Redshift= 99
 
 # "1" selects Eisenstein & Hu spectrum,
 # "2" selects a tabulated power spectrum in
@@ -32,9 +38,11 @@ Redshift= 99        # Starting redshift
 WhichSpectrum=2 
 
 NumFiles= 4
-FileWithInputSpectrum= /home/spb/data/hybrid-kspace/b512p512nu0.15z99/ics_matterpow_99.dat  # filename of tabulated MATTER powerspectrum from CAMB
+# filename of tabulated MATTER powerspectrum from CAMB
+FileWithInputSpectrum= /home/spb/data/hybrid-kspace/b512p512nu0.15z99/ics_matterpow_99.dat
                                            
-FileWithTransfer= /home/spb/data/hybrid-kspace/b512p512nu0.15z99/ics_transfer_99.dat  # filename of transfer functions from CAMB
+# filename of transfer functions from CAMB
+FileWithTransfer= /home/spb/data/hybrid-kspace/b512p512nu0.15z99/ics_transfer_99.dat
 
 # defines length unit of tabulated
 # input spectrum in cm/h. 
@@ -48,7 +56,8 @@ InputSpectrum_UnitLength_in_cm= 3.085678e24
 ReNormalizeInputSpectrum=0
 
 Sigma8 =                0.8
-Seed =181170    #  seed for IC-generator
+# seed for IC-generator
+Seed =181170
 RayleighScatter  =    0
 
 UnitLength_in_cm =        3.085678e21   # defines length unit of output (in cm/h) 
@@ -56,8 +65,11 @@ UnitMass_in_g    =        1.989e43      # defines mass unit of output (in g/cm)
 UnitVelocity_in_cm_per_s= 1e5           # defines velocity unit of output (in cm/sec)
 
 
-NU_in_DM =0      # Fake neutrinos rather than real ones
+# Neutrinos are included in the dark matter by changing the transfer function
+NU_in_DM = 0
+#Include thermal velocities for the neutrinos
 NU_Vtherm_On= 1
+#Particle mass for the neutrinos
 NU_PartMass_in_ev= 0
 
 TWOLPT =            1       # Enable twolpt
