@@ -35,14 +35,13 @@ class SimulationICs(object):
     npart - Cube root of number of particles
     redshift - redshift at which to generate ICs
     separate_gas - if true the ICs will contain baryonic particles. If false, just DM.
-    separate_nu - if true the power spectrum check will run for neutrino particles as well (actual ICs are not changed).
     omegab - baryon density. Note that if we do not have gas particles, still set omegab, but set separate_gas = False
     omega0 - Total matter density at z=0 (includes massive neutrinos and baryons)
     hubble - Hubble parameter, h, which is H0 / (100 km/s/Mpc)
     scalar_amp - A_s at k = 2e-3, comparable to the WMAP value.
     ns - Scalar spectral index
     """
-    def __init__(self, *, outdir, box, npart, seed = 9281110, redshift=99, separate_gas=True, separate_nu=False, omega0=0.288, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, rscatter = False, code_class=simulation.Simulation, code_args=None):
+    def __init__(self, *, outdir, box, npart, seed = 9281110, redshift=99, separate_gas=True, omega0=0.288, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, rscatter = False, code_class=simulation.Simulation, code_args=None):
         #This lets us safely have a default dictionary argument
         self.code_args = {}
         if code_args is not None:
@@ -79,9 +78,6 @@ class SimulationICs(object):
         self.seed = seed
         #Baryons?
         self.separate_gas = separate_gas
-        #Neutrinos: note this only affects the power spectrum check.
-        #Altering this does not change ICs
-        self.separate_nu = separate_nu
         self.outdir = outdir
         defaultpath = os.path.dirname(__file__)
         #Default values for the CAMB parameters
@@ -265,10 +261,15 @@ class SimulationICs(object):
         transfer = camb_output + "_transfer_"+str(self.redshift)+".dat"
         camb = cambpower.CAMBPowerSpectrum(matterpow, transfer, kmin=2*math.pi/self.box/5, kmax = self.npart*2*math.pi/self.box*10)
         #Error to tolerate on simulated power spectrum
+        def gpk_out(spe):
+            """Get the output filename for a species"""
+            gpkout = "PK-"+spe+"-"+os.path.basename(genicfileout)
+            return os.path.join(os.path.dirname(genicfileout), gpkout)
+        #Check whether we output neutrinos
+        sepnu = os.path.exists(gpk_out("nu"))
         for sp in ["DM","by", "nu"]:
             #GenPK output is at PK-[nu,by,DM]-basename(genicfileout)
-            gpkout = "PK-"+sp+"-"+os.path.basename(genicfileout)
-            go = os.path.join(os.path.dirname(genicfileout), gpkout)
+            go = gpk_out(sp)
             if sp == "DM" or (self.separate_gas and sp == "by"):
                 assert os.path.exists(go)
             elif not os.path.exists(go):
@@ -276,9 +277,9 @@ class SimulationICs(object):
             #Load the power spectra
             (kk_ic, Pk_ic) = load_genpk(go, self.box)
             #Load the power spectrum. Note that DM may incorporate other particle types.
-            if not self.separate_gas and not self.separate_nu and sp =="DM":
+            if not self.separate_gas and not sepnu and sp =="DM":
                 Pk_camb = camb.get_camb_power(kk_ic, species="tot")
-            elif not self.separate_gas and self.separate_nu and sp == "DM":
+            elif not self.separate_gas and sepnu and sp == "DM":
                 Pk_camb = camb.get_camb_power(kk_ic, species="DMby")
             #Case with self.separate_gas true and separate_nu false is assumed to have omega_nu = 0.
             else:
