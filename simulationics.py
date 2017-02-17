@@ -37,12 +37,12 @@ class SimulationICs(object):
     separate_gas - if true the ICs will contain baryonic particles. If false, just DM.
     separate_nu - if true the power spectrum check will run for neutrino particles as well (actual ICs are not changed).
     omegab - baryon density. Note that if we do not have gas particles, still set omegab, but set separate_gas = False
-    omegam - Matter density
+    omega0 - Total matter density at z=0 (includes massive neutrinos and baryons)
     hubble - Hubble parameter, h, which is H0 / (100 km/s/Mpc)
     scalar_amp - A_s at k = 2e-3, comparable to the WMAP value.
     ns - Scalar spectral index
     """
-    def __init__(self, *, outdir, box, npart, seed = 9281110, redshift=99, separate_gas=True, separate_nu=False, omegac=0.2408, omegab=0.0472, omeganu=0.,hubble=0.7, scalar_amp=2.427e-9, ns=0.97, code_class=simulation.Simulation, code_args=None):
+    def __init__(self, *, outdir, box, npart, seed = 9281110, redshift=99, separate_gas=True, separate_nu=False, omega0=0.288, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, rscatter = False, code_class=simulation.Simulation, code_args=None):
         #This lets us safely have a default dictionary argument
         self.code_args = {}
         if code_args is not None:
@@ -55,12 +55,10 @@ class SimulationICs(object):
         assert npart > 1 and npart < 16000
         self.npart = int(npart)
         #Physically reasonable
-        assert omegac <= 1 and omegac > 0
-        self.omegac = omegac
+        assert omega0 <= 1 and omega0 > 0
+        self.omega0 = omega0
         assert omegab > 0 and omegab < 1
         self.omegab = omegab
-        assert omeganu >=0 and omeganu < omegac
-        self.omeganu = omeganu
         assert redshift > 1 and redshift < 1100
         self.redshift = redshift
         assert hubble < 1 and hubble > 0
@@ -100,8 +98,6 @@ class SimulationICs(object):
         #This is chosen to give a reasonable number and
         #a constant number of particles per file.
         self.numfiles = int(np.max([2,self.npart**3//2**24]))
-        #Total matter density
-        self.omega0 = self.omegac + self.omegab + self.omeganu
         #Extra redshifts at which to generate CAMB output, in addition to self.redshift and self.redshift/2
         self.camb_times = [9,4,2,1,0]
         #Class with which to generate ICs.
@@ -127,8 +123,7 @@ class SimulationICs(object):
         assert config['use_physical'] == 'T'
         config['hubble'] = self.hubble * 100
         config['ombh2'] = self.omegab*self.hubble**2
-        config['omch2'] = self.omegac*self.hubble**2
-        config['omnuh2'] = self.omeganu*self.hubble**2
+        config['omch2'] = (self.omega0 - self.omegab)*self.hubble**2
         config['omk'] = 0.
         #Initial power spectrum: MAKE SURE you set the pivot scale to the WMAP value!
         config['pivot_scalar'] = 2e-3
@@ -158,6 +153,7 @@ class SimulationICs(object):
         Designed to be easily over-ridden"""
         config['massless_neutrinos'] = 3.046
         config['massive_neutrinos'] = 0
+        config['omnuh2'] = 0
         return config
 
     def genicfile(self, camb_output):
@@ -176,6 +172,7 @@ class SimulationICs(object):
         genicfile = str(self.box)+"_"+str(self.npart)+"_"+str(self.redshift)
         config['FileBase'] = genicfile
         config['NCDM'] = self.npart
+        config['NNeutrino'] = 0
         config['ICFormat'] = self.icformat
         if self.separate_gas:
             config['NBaryon'] = self.npart
@@ -186,11 +183,12 @@ class SimulationICs(object):
             #that the baryon 2LPT term is dominated by the CDM potential
             #(YAH, private communication)
             config['TWOLPT'] = 0
+        else:
+            config['NBaryon'] = 0
         #Total matter density, not CDM matter density.
         config['Omega'] = self.omega0
         config['OmegaLambda'] = 1- self.omega0
         config['OmegaBaryon'] = self.omegab
-        config['OmegaNeutrino'] = self.omeganu
         config['HubbleParam'] = self.hubble
         config['Redshift'] = self.redshift
         config['FileWithInputSpectrum'] = camb_output + "_matterpow_"+str(self.redshift)+".dat"
@@ -338,7 +336,7 @@ class SimulationICs(object):
         #Check that the ICs have the right power spectrum
         self.check_ic_power_spectra(camb_output, genic_output,accuracy=pkaccuracy)
         #Make the parameter files.
-        ics = self.code_class_name(outdir=self.outdir, box=self.box, npart=self.npart, redshift=self.redshift, separate_gas=self.separate_gas, omegac=self.omegac, omegab=self.omegab, omeganu=self.omeganu, hubble=self.hubble, **self.code_args)
+        ics = self.code_class_name(outdir=self.outdir, box=self.box, npart=self.npart, redshift=self.redshift, separate_gas=self.separate_gas, omega0=self.omega0, omegab=self.omegab, hubble=self.hubble, **self.code_args)
         return ics.make_simulation(genic_output)
 
 def load_genpk(infile, box, minmode=1):

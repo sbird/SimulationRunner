@@ -15,10 +15,10 @@ def test_neutrino_part():
     assert os.path.exists(test_dir)
     #Check these we are writing reasonable values.
     config = configobj.ConfigObj(os.path.join(test_dir,"_genic_params.ini"))
-    assert abs(float(config['OmegaNeutrino']) - 0.009860074585986426) < 1e-7
     assert config['Omega'] == "0.288"
     assert config['OmegaLambda'] == "0.712"
     assert config['NNeutrino'] == "256"
+    assert config['NBaryon'] == "0"
     assert config['NU_in_DM'] == "0"
     assert config['NU_Vtherm_On'] == "1"
     assert config['NU_PartMass_in_ev'] == "0.45"
@@ -30,8 +30,8 @@ def test_neutrino_part():
     mcdm = f["Header"].attrs["MassTable"][1]
     mnu = f["Header"].attrs["MassTable"][2]
     #The mass ratio should be given by the ratio of omega_nu by omega_cdm
-    assert np.abs(mnu/mcdm / ( Sim.omeganu/(Sim.omegac+Sim.omegab)) - 1) < 1e-5
-    assert np.abs(f["Header"].attrs["MassTable"][1] / 7.71977292 - 1) < 1e-5
+    assert np.abs(mnu/(mcdm+mnu) / ( (Sim.m_nu/93.146/Sim.hubble**2)/(Sim.omega0)) - 1) < 1e-5
+    assert np.abs(f["Header"].attrs["MassTable"][1] / 7.71739 - 1) < 1e-5
     f.close()
     #shutil.rmtree("./test_nu/")
 
@@ -44,13 +44,12 @@ def test_neutrino_semilinear():
     assert os.path.exists(test_dir)
     #Check these files have not changed
     config = configobj.ConfigObj(os.path.join(test_dir,"_genic_params.ini"))
-    assert abs(float(config['OmegaNeutrino']) - 0.009860074585986426) < 1e-7
     assert config['Omega'] == "0.288"
     assert config['OmegaLambda'] == "0.712"
     assert config['NNeutrino'] == "0"
     assert config['NU_in_DM'] == "0"
     assert config['NU_Vtherm_On'] == "0"
-    assert config['NU_PartMass_in_ev'] == "0"
+    assert config['NU_PartMass_in_ev'] == "0.45"
 
     config = configobj.ConfigObj(os.path.join(test_dir,"_camb_params.ini"))
     assert abs(float(config['ombh2']) - 0.023127999999999996) < 1e-7
@@ -72,6 +71,6 @@ def test_neutrino_semilinear():
     f = bigfile.BigFile(os.path.join(test_dir, "ICS/256_256_99"),'r')
     assert f["Header"].attrs["TotNumPart"][2] == 0
     #Check the mass is correct: the CDM particles should have the same mass as in the particle simulation
-    assert np.abs(f["Header"].attrs["MassTable"][1] / 7.71977292 - 1) < 1e-5
+    assert np.abs(f["Header"].attrs["MassTable"][1] / 7.71739 - 1) < 1e-5
     f.close()
     #shutil.rmtree("./test_nu/")

@@ -33,7 +33,7 @@ class Simulation(object):
     hubble - Hubble parameter, h, which is H0 / (100 km/s/Mpc)
     """
     icformat = 3
-    def __init__(self, *, outdir, box, npart, redshift=99, redend = 0, separate_gas=True, omegac=0.2408, omegab=0.0472, omeganu=0.,hubble=0.7, uvb="hm", do_build=False, cluster_class=clusters.MARCCClass):
+    def __init__(self, *, outdir, box, npart, redshift=99, redend = 0, separate_gas=True, omega0=0.288, omegab=0.0472, hubble=0.7, uvb="hm", do_build=False, cluster_class=clusters.MARCCClass):
         #Check that input is reasonable and set parameters
         #In Mpc/h
         assert box < 20000
@@ -45,7 +45,7 @@ class Simulation(object):
         assert omegab > 0 and omegab < 1
         self.omegab = omegab
         #Total matter density
-        self.omega0 = omegac + self.omegab + omeganu
+        self.omega0 = omega0
         assert 0 < self.omega0 <= 1
         assert redshift > 1 and redshift < 1100
         self.redshift = redshift

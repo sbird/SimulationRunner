@@ -16,20 +16,17 @@ class NeutrinoPartSim(mpsimulation.MPSimulation):
 class NeutrinoPartICs(simulationics.SimulationICs):
     """Specialise the initial conditions for particle neutrinos."""
     __doc__ = __doc__+simulationics.SimulationICs.__doc__
-    def __init__(self, *, m_nu=0.1, hubble=0.7, omegac=0.2408, separate_gas=False, code_class=NeutrinoPartSim, **kwargs):
+    def __init__(self, *, m_nu=0.1, separate_gas=False, code_class=NeutrinoPartSim, **kwargs):
         #Set neutrino mass
         assert m_nu > 0
-        omeganu = m_nu/93.14/hubble/hubble
+        #Note that omega0 does remains constant if we change m_nu.
+        #This does mean that omegab/omegac will increase, but not by much.
         self.m_nu = m_nu
-        #Subtract omeganu from omegac, so that with changing
-        #neutrino mass the total matter fraction remains constant.
-        #Note this does mean that omegab/omegac will increase, but not by much.
-        omegac = omegac-omeganu
-        super().__init__(omegac=omegac, omeganu=omeganu, hubble=hubble, separate_gas=separate_gas, separate_nu=True, code_class=code_class, **kwargs)
+        super().__init__(separate_nu=True, separate_gas=separate_gas, code_class=code_class, **kwargs)
 
     def _camb_neutrinos(self, config):
         """Config options so CAMB can use massive neutrinos.
-        For particle neutrinos we want to neglect hierarchy."""
+        For particle neutrinos we want degenerate neutrinos."""
         config['massless_neutrinos'] = 0.046
         config['massive_neutrinos'] = 3
         config['nu_mass_fractions'] = 1
@@ -37,6 +34,10 @@ class NeutrinoPartICs(simulationics.SimulationICs):
         #Actually does nothing, but we set it to avoid the library setting it to ""
         config['nu_mass_degeneracies'] = 0
         config['share_delta_neff'] = 'T'
+        #Set the neutrino density and subtract it from omega0
+        omeganuh2 = self.m_nu/93.14
+        config['omnuh2'] = omeganuh2
+        config['omch2'] = (self.omega0 - self.omegab)*self.hubble**2- omeganuh2
         return config
 
     def _genicfile_child_options(self, config):
@@ -44,6 +45,8 @@ class NeutrinoPartICs(simulationics.SimulationICs):
         config['NU_Vtherm_On'] = 1
         config['NNeutrino'] = self.npart
         config['NU_PartMass_in_ev'] = self.m_nu
+        #Degenerate neutrinos
+        config['Hierarchy'] = 0
         return config
 
 class NeutrinoSemiLinearSim(mpsimulation.MPSimulation):
@@ -81,6 +84,9 @@ class NeutrinoSemiLinearICs(NeutrinoPartICs):
         This just includes a change in OmegaNu, but no actual particles."""
         config['NNeutrino'] = 0
         config['NU_in_DM'] = 0
+        config['NU_PartMass_in_ev'] = self.m_nu
+        #Degenerate neutrinos
+        config['Hierarchy'] = 0
         return config
 
 class NeutrinoHybridSim(NeutrinoSemiLinearSim):
