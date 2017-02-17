@@ -1,5 +1,6 @@
 """Specialization of the Simulation class to Lyman-alpha forest simulations."""
 
+import numpy as np
 from . import mpsimulation
 from . import simulationics
 
@@ -48,6 +49,36 @@ class NeutrinoPartICs(simulationics.SimulationICs):
         #Degenerate neutrinos
         config['Hierarchy'] = 0
         return config
+
+def _get_neutrino_masses(total_mass, hierarchy):
+    """Get the three neutrino masses, including the mass splittings.
+        Hierarchy is -1 for inverted (two heavy), 1 for normal (two light) and 0 for degenerate."""
+    #Neutrino mass splittings
+    nu_M21 = 7.53e-5 #Particle data group 2016: +- 0.18e-5 eV2
+    nu_M32n = 2.44e-3 #Particle data group: +- 0.06e-3 eV2
+    nu_M32i = 2.51e-3 #Particle data group: +- 0.06e-3 eV2
+
+    if hierarchy > 0:
+        nu_M32 = nu_M32n
+        #If the total mass is below that allowed by the hierarchy,
+        #assign one active neutrino.
+        if total_mass < np.sqrt(nu_M32n) + np.sqrt(nu_M21):
+            return np.array([total_mass, 0, 0])
+    elif hierarchy < 0:
+        nu_M32 = -nu_M32i
+        if total_mass < 2*np.sqrt(nu_M32i) - np.sqrt(nu_M21):
+            return np.array([total_mass/2., total_mass/2., 0])
+    #Hierarchy == 0 is 3 degenerate neutrinos
+    else:
+        return np.ones(3)*total_mass/3.
+
+    #DD is the summed masses of the two closest neutrinos
+    DD1 = 4 * total_mass/3. - 2/3.*np.sqrt(total_mass**2 + 3*nu_M32 + 1.5*nu_M21)
+    #Last term was neglected initially. This should be very well converged.
+    DD = 4 * total_mass/3. - 2/3.*np.sqrt(total_mass**2 + 3*nu_M32 + 1.5*nu_M21+0.75*nu_M21**2/DD1**2)
+    assert np.isfinite(DD)
+    assert np.abs(DD1/DD -1) < 1e-2
+    return np.array([ total_mass - DD, 0.5*(DD + nu_M21/DD), 0.5*(DD - nu_M21/DD)])
 
 class NeutrinoSemiLinearSim(mpsimulation.MPSimulation):
     """Further specialise the Simulation class for semi-linear analytic massive neutrinos.
