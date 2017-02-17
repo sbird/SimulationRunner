@@ -33,11 +33,14 @@ class SimulationICs(object):
     outdir - Directory in which to save ICs
     box - Box size in comoving Mpc/h
     npart - Cube root of number of particles
-    separate_gas - if true the ICs will contain baryonic particles. If false, just DM.
     redshift - redshift at which to generate ICs
+    separate_gas - if true the ICs will contain baryonic particles. If false, just DM.
+    separate_nu - if true the power spectrum check will run for neutrino particles as well (actual ICs are not changed).
     omegab - baryon density. Note that if we do not have gas particles, still set omegab, but set separate_gas = False
     omegam - Matter density
     hubble - Hubble parameter, h, which is H0 / (100 km/s/Mpc)
+    scalar_amp - A_s at k = 2e-3, comparable to the WMAP value.
+    ns - Scalar spectral index
     """
     def __init__(self, *, outdir, box, npart, seed = 9281110, redshift=99, separate_gas=True, separate_nu=False, omegac=0.2408, omegab=0.0472, omeganu=0.,hubble=0.7, scalar_amp=2.427e-9, ns=0.97, code_class=simulation.Simulation, code_args=None):
         #This lets us safely have a default dictionary argument
@@ -66,6 +69,7 @@ class SimulationICs(object):
         self.scalar_amp = scalar_amp
         assert ns > 0 and ns < 2
         self.ns = ns
+        self.rscatter = rscatter
         outdir = os.path.realpath(os.path.expanduser(outdir))
         #Make the output directory: will fail if parent does not exist
         if not os.path.exists(outdir):
@@ -196,6 +200,7 @@ class SimulationICs(object):
         config['Seed'] = self.seed
         config['NU_Vtherm_On'] = 0
         config['NNeutrino'] = 0
+        config['RayleighScatter'] = int(self.rscatter)
         config = self._genicfile_child_options(config)
         config.write()
         return (os.path.join(genicout, genicfile), config.filename)
