@@ -12,14 +12,13 @@ class LymanAlphaSim(simulation.Simulation):
        This uses the QuickLya star formation module with sigma_8 and n_s.
     """
     __doc__ = __doc__+simulation.Simulation.__doc__
-    def __init__(self, *, outdir, box, npart, rescale_gamma = False, rescale_amp = 1., rescale_slope = -0.7, redshift=99, redend = 2, omegac=0.2408, omegab=0.0472, omeganu=0., hubble=0.7, uvb="sh", do_build=False, separate_gas=True):
-        assert separate_gas
+    def __init__(self, *, rescale_gamma = False, rescale_amp = 1., rescale_slope = -0.7, redend = 2, uvb="sh", **kwargs):
         #Parameters of the heating rate rescaling to account for helium reionisation
         #Default parameters do nothing
         self.rescale_gamma = rescale_gamma
         self.rescale_amp = rescale_amp
         self.rescale_slope = rescale_slope
-        super().__init__(outdir=outdir, box=box, npart=npart, redshift=redshift, redend=redend, separate_gas=True, omegac=omegac, omegab=omegab, omeganu=omeganu, hubble=hubble, uvb=uvb,do_build=do_build)
+        super().__init__(redend=redend, separate_gas=True, uvb=uvb, **kwargs)
         self.camb_times = [9,]+[x for x in np.arange(4.2,1.9,-0.2)]
 
     def _feedback_config_options(self, config, prefix=""):
@@ -73,29 +72,14 @@ class LymanAlphaKnotICs(simulationics.SimulationICs):
     """Specialise the generation of initial conditions to change the power spectrum via knots.
     knot_val is a multiplicative factor applied to the power spectrum at knot_pos
     knot_pos is in units of the k bins for the power spectrum output by CAMB, by default h/Mpc."""
-    def __init__(self, *, outdir, box, npart, knot_pos= (0.15,0.475,0.75,1.19), knot_val = (1.,1.,1.,1.), code_class=LymanAlphaMPSim, code_args=None, **kwargs):
+    def __init__(self, *, knot_pos= (0.15,0.475,0.75,1.19), knot_val = (1.,1.,1.,1.), code_class=LymanAlphaMPSim, code_args=None, **kwargs):
         lcode_args = {'rescale_gamma': False, 'rescale_amp' : 1., 'rescale_slope': -0.7}
         if code_args is not None:
             code_args.update(lcode_args)
         #Set up the knot parameters
         self.knot_pos = knot_pos
         self.knot_val = knot_val
-        #knot_names = list(string.ascii_lowercase[:len(knot_pos)])
-        #Set up new output directory hierarchy for Lyman alpha simulations
-        #First give number of knots and their positions
-        #knot_spec = [kn+str(kp) for (kn, kp) in zip(knot_names, self.knot_pos)]
-        #new_outdir = os.path.join(outdir, "".join(knot_spec))
-        #Then box and npart, as we will want to correct by these
-        #new_outdir = os.path.join(os.path.join(new_outdir, str(box)), str(npart))
-        #Then the knot values that have changed - we may want to add thermal parameters or cosmology here at some point
-        #knot_changed = [kn+str(kv) for (kn,kv) in zip(knot_names, self.knot_val) if kv != 1.]
-        #new_outdir = os.path.join(new_outdir,"knot_"+"".join(knot_changed))
-        #Make this directory tree
-        #try:
-        #    os.makedirs(new_outdir)
-        #except FileExistsError:
-        #    pass
-        super().__init__(outdir=outdir, box=box, npart=npart, code_args=code_args, code_class=code_class, **kwargs)
+        super().__init__(code_args=code_args, code_class=code_class, **kwargs)
 
     def _alter_power(self, camb_output):
         """Generate a new CAMB power spectrum multiplied by the knot values."""
