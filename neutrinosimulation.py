@@ -24,6 +24,7 @@ class NeutrinoPartICs(simulationics.SimulationICs):
         #This does mean that omegab/omegac will increase, but not by much.
         self.m_nu = m_nu
         super().__init__(separate_gas=separate_gas, code_class=code_class, **kwargs)
+        self.separate_nu = True
 
     def _camb_neutrinos(self, config):
         """Config options so CAMB can use massive neutrinos.

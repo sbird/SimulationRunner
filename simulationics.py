@@ -78,6 +78,9 @@ class SimulationICs(object):
         self.seed = seed
         #Baryons?
         self.separate_gas = separate_gas
+        #If neutrinos are combined into the DM,
+        #we want to use a different CAMB transfer when checking output power.
+        self.separate_nu = False
         self.outdir = outdir
         defaultpath = os.path.dirname(__file__)
         #Default values for the CAMB parameters
@@ -266,7 +269,6 @@ class SimulationICs(object):
             gpkout = "PK-"+spe+"-"+os.path.basename(genicfileout)
             return os.path.join(os.path.dirname(genicfileout), gpkout)
         #Check whether we output neutrinos
-        sepnu = os.path.exists(gpk_out("nu"))
         for sp in ["DM","by", "nu"]:
             #GenPK output is at PK-[nu,by,DM]-basename(genicfileout)
             go = gpk_out(sp)
@@ -277,9 +279,9 @@ class SimulationICs(object):
             #Load the power spectra
             (kk_ic, Pk_ic) = load_genpk(go, self.box)
             #Load the power spectrum. Note that DM may incorporate other particle types.
-            if not self.separate_gas and not sepnu and sp =="DM":
+            if not self.separate_gas and not self.separate_nu and sp =="DM":
                 Pk_camb = camb.get_camb_power(kk_ic, species="tot")
-            elif not self.separate_gas and sepnu and sp == "DM":
+            elif not self.separate_gas and self.separate_nu and sp == "DM":
                 Pk_camb = camb.get_camb_power(kk_ic, species="DMby")
             #Case with self.separate_gas true and separate_nu false is assumed to have omega_nu = 0.
             else:
