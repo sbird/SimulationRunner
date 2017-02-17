@@ -90,7 +90,7 @@ class NeutrinoSemiLinearSim(mpsimulation.MPSimulation):
         super().__init__(**kwargs)
 
     def _other_params(self, config):
-        """Config options specific to kspace neutrinos. Hierarchy is off for now."""
+        """Config options specific to kspace neutrinos, which computes neutrino hierarchy."""
         config['MassiveNuLinRespOn'] = 1
         numass = _get_neutrino_masses(self.m_nu, self.hierarchy)
         config['MNue'] = numass[2]
@@ -124,6 +124,25 @@ class NeutrinoSemiLinearICs(NeutrinoPartICs):
         config['NU_PartMass_in_ev'] = self.m_nu
         #Degenerate neutrinos
         config['Hierarchy'] = self.hierarchy
+        return config
+
+    def _camb_neutrinos(self, config):
+        """Config options so CAMB can use massive neutrinos.
+        We want a neutrino mass hierarchy."""
+        config['massless_neutrinos'] = 0.046
+        config['massive_neutrinos'] = [1, 1, 1]
+        numass = _get_neutrino_masses(self.m_nu, self.hierarchy)
+        config['nu_mass_fractions'] = list(numass/self.m_nu)
+        config['nu_mass_eigenstates'] = 3
+        #Each neutrino has the same temperature
+        config['share_delta_neff'] = 'T'
+        #Actually does nothing if share_delta_neff = T,q
+        #but we set it to avoid the library setting it to "" which CAMB's parser rejects.
+        config['nu_mass_degeneracies'] = 0
+        #Set the neutrino density and subtract it from omega0
+        omeganuh2 = self.m_nu/93.14
+        config['omnuh2'] = omeganuh2
+        config['omch2'] = (self.omega0 - self.omegab)*self.hubble**2- omeganuh2
         return config
 
 class NeutrinoHybridSim(NeutrinoSemiLinearSim):
