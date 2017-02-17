@@ -39,7 +39,7 @@ def test_neutrino_semilinear():
     """Create a full simulation with semi-linear neutrinos.
     The important thing here is to test that OmegaNu is correctly set."""
     test_dir = os.path.join(os.getcwd(),"test_nu_semilin/")
-    Sim = nus.NeutrinoSemiLinearICs(outdir=test_dir,box = 256,npart = 256, m_nu = 0.45, redshift = 99, separate_gas=False, code_args={'redend':0, 'do_build':False})
+    Sim = nus.NeutrinoSemiLinearICs(outdir=test_dir,box = 256,npart = 256, m_nu = 0.45, redshift = 99, separate_gas=False, hierarchy=1, code_args={'redend':0, 'do_build':False})
     Sim.make_simulation()
     assert os.path.exists(test_dir)
     #Check these files have not changed
@@ -56,12 +56,14 @@ def test_neutrino_semilinear():
     assert abs(float(config['omch2']) - 0.11316056345286662) < 1e-7
     assert abs(float(config['omnuh2']) - 0.004831436547133348) < 1e-7
     assert config['massless_neutrinos'] == "0.046"
-    assert config['massive_neutrinos'] == "3"
+    assert config['massive_neutrinos'] == ['1', '1', '1']
+    assert config['nu_mass_fractions'] == ['0.345458458664', '0.327554825864', '0.326986715472']
+    assert config['nu_mass_eigenstates'] == '3'
 
     config = configobj.ConfigObj(os.path.join(test_dir,"mpgadget.param"))
-    assert config['MNue'] == "0.15"
-    assert config['MNum'] == "0.15"
-    assert config['MNut'] == "0.15"
+    assert config['MNue'] == '0.147144021962'
+    assert config['MNum'] == '0.147399671639'
+    assert config['MNut'] == '0.155456306399'
     assert config['MassiveNuLinRespOn'] == "1"
     assert config['TimeTransfer'] == "0.01"
     assert config['OmegaBaryonCAMB'] == "0.0472"
