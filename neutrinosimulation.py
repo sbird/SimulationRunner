@@ -83,16 +83,19 @@ def _get_neutrino_masses(total_mass, hierarchy):
 class NeutrinoSemiLinearSim(mpsimulation.MPSimulation):
     """Further specialise the Simulation class for semi-linear analytic massive neutrinos.
     """
-    def __init__(self, *, m_nu=0.1, **kwargs):
+    def __init__(self, *, m_nu=0.1, hierarchy=0, **kwargs):
         self.m_nu = m_nu
+        self.hierarchy = hierarchy
         super().__init__(**kwargs)
 
     def _other_params(self, config):
         """Config options specific to kspace neutrinos. Hierarchy is off for now."""
         config['MassiveNuLinRespOn'] = 1
-        config['MNue'] = self.m_nu/3.
-        config['MNum'] = self.m_nu/3.
-        config['MNut'] = self.m_nu/3.
+        numass = _get_neutrino_masses(self.m_nu, self.hierarchy)
+        config['MNue'] = numass[2]
+        config['MNum'] = numass[1]
+        config['MNut'] = numass[0]
+        config['Hierarchy'] = self.hierarchy
         config['KspaceTransferFunction'] = "camb_linear/ics_transfer_"+str(self.redshift)+".dat"
         config['InputSpectrum_UnitLength_in_cm'] = 3.085678e24
         config['TimeTransfer'] = 1./(1+self.redshift)
@@ -103,11 +106,13 @@ class NeutrinoSemiLinearICs(NeutrinoPartICs):
     """Further specialise the NeutrinoPartICs class for semi-linear analytic massive neutrinos.
     """
     __doc__ = __doc__+NeutrinoPartICs.__doc__
-    def __init__(self, *, m_nu = 0.1, code_class=NeutrinoSemiLinearSim, code_args = None, **kwargs):
+    def __init__(self, *, m_nu = 0.1, hierarchy = 0, code_class=NeutrinoSemiLinearSim, code_args = None, **kwargs):
         if code_args is not None:
             code_args['m_nu'] = m_nu
         else:
             code_args = {'m_nu':m_nu}
+        code_args['hierarchy'] = hierarchy
+        self.hierarchy = hierarchy
         super().__init__(m_nu = m_nu, code_class=code_class, code_args=code_args, **kwargs)
 
     def _genicfile_child_options(self, config):
@@ -117,7 +122,7 @@ class NeutrinoSemiLinearICs(NeutrinoPartICs):
         config['NU_in_DM'] = 0
         config['NU_PartMass_in_ev'] = self.m_nu
         #Degenerate neutrinos
-        config['Hierarchy'] = 0
+        config['Hierarchy'] = self.hierarchy
         return config
 
 class NeutrinoHybridSim(NeutrinoSemiLinearSim):
