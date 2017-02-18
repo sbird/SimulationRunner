@@ -18,9 +18,10 @@ class ClusterClass(object):
         """Generate a sample mpi_submit file.
         The prefix argument is a string at the start of each line.
         It separates queueing system directives from normal comments"""
+        name = os.path.basename(os.path.normpath(outdir))
         with open(os.path.join(outdir, "mpi_submit"),'w') as mpis:
             mpis.write("#!/bin/bash\n")
-            mpis.write(self._queue_directive())
+            mpis.write(self._queue_directive(name))
             mpis.write(self._mpi_program())
 
     def _mpi_program(self):
@@ -28,11 +29,12 @@ class ClusterClass(object):
         qstring = "mpirun -np "+str(self.nproc)+" "+self.gadgetexe+" "+self.gadgetparam+"\n"
         return qstring
 
-    def _queue_directive(self, prefix="#PBS"):
+    def _queue_directive(self, name, prefix="#PBS"):
         """Write the part of the mpi_submit file that directs the queueing system.
         This is usually specific to a given cluster.
         The prefix argument is a string at the start of each line.
         It separates queueing system directives from normal comments"""
+        _ = name
         qstring = prefix+" -j eo\n"
         qstring += prefix+" -m bae\n"
         qstring += prefix+" -M "+self.email+"\n"
@@ -61,9 +63,9 @@ class ComaClass(ClusterClass):
         super().__init__(*args, **kwargs)
         self.memory = 1200
 
-    def _queue_directive(self, prefix="#PBS"):
+    def _queue_directive(self, name, prefix="#PBS"):
         """Generate mpi_submit with coma specific parts"""
-        qstring = super()._queue_directive(prefix)
+        qstring = super()._queue_directive(name=name, prefix=prefix)
         qstring += prefix+" -q amd\n"
         qstring += prefix+" -l nodes="+str(int(self.nproc/16))+":ppn=16\n"
         return qstring
@@ -85,9 +87,9 @@ class HipatiaClass(ClusterClass):
         super().__init__(*args, **kwargs)
         self.memory = 2500
 
-    def _queue_directive(self, prefix="#PBS"):
+    def _queue_directive(self, name, prefix="#PBS"):
         """Generate mpi_submit with coma specific parts"""
-        qstring = super()._queue_directive(prefix)
+        qstring = super()._queue_directive(name=name, prefix=prefix)
         qstring += prefix+" -l nodes="+str(int(self.nproc/16))+":ppn=16\n"
         qstring += prefix+" -l mem="+str(int(self.memory*self.nproc/1000))+"g\n"
         #Pass environment to child processes
@@ -113,9 +115,9 @@ class HHPCClass(ClusterClass):
         super().__init__(*args, nproc=nproc,timelimit=timelimit, **kwargs)
         self.memory = 3000
 
-    def _queue_directive(self, prefix="#PBS"):
+    def _queue_directive(self, name, prefix="#PBS"):
         """Generate mpi_submit with coma specific parts"""
-        qstring = super()._queue_directive(prefix)
+        qstring = super()._queue_directive(name=name, prefix=prefix)
         qstring += prefix+" -l nodes="+str(int(self.nproc/12))+":ppn=12\n"
         #Pass environment to child processes
         return qstring
@@ -140,10 +142,10 @@ class MARCCClass(ClusterClass):
         super().__init__(*args, nproc=nproc,timelimit=timelimit, **kwargs)
         self.memory = 3000
 
-    def _queue_directive(self, prefix="#SBATCH"):
+    def _queue_directive(self, name, prefix="#SBATCH"):
         """Generate mpi_submit with coma specific parts"""
         qstring = prefix+" --partition=parallel\n"
-        qstring += prefix+" --job-name=emulator\n" #Make this dynamic!
+        qstring += prefix+" --job-name="+name+"\n"
         qstring += prefix+" --time="+str(int(self.timelimit))+":00:0\n"
         qstring += prefix+" --nodes="+str(int(self.nproc/24))+"\n"
         #Number of tasks (processes) per node
@@ -187,12 +189,12 @@ class HypatiaClass(ClusterClass):
             mpis.write(self._queue_directive())
             mpis.write(self._mpi_program())
 
-    def _queue_directive(self, prefix="#PBS"):
+    def _queue_directive(self, name, prefix="#PBS"):
         """Generate Hypatia-specific mpi_submit"""
         qstring = prefix+" -m bae\n"
         qstring += prefix+" -r n\n"
         qstring += prefix+" -q smp\n"
-        qstring += prefix+" -N "+os.path.basename(self.gadgetexe)+"\n"
+        qstring += prefix+" -N "+name+"\n"
         qstring += prefix+" -M "+self.email+"\n"
         qstring += prefix+" -l nodes=1:ppn="+str(self.nproc)+"\n"
         #Pass environment to child processes
