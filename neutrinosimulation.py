@@ -32,6 +32,10 @@ class NeutrinoPartICs(simulationics.SimulationICs):
         config['massless_neutrinos'] = 0.046
         config['massive_neutrinos'] = 3
         config['nu_mass_fractions'] = 1
+        #Very light neutrinos should have only one massive species
+        if self.m_nu < 0.1:
+            config['massless_neutrinos'] = 2.046
+            config['massive_neutrinos'] = 1
         config['nu_mass_eigenstates'] = 1
         #Actually does nothing, but we set it to avoid the library setting it to ""
         config['nu_mass_degeneracies'] = 0
