@@ -121,8 +121,6 @@ class MPSimulation(simulation.Simulation):
         config['InitGasTemp'] = 2.7*(1+self.redshift)
         #This needs to be here until I fix the flux extractor to allow quintic kernels.
         config['DensityKernelType'] = 'cubic'
-        config = self._sfr_params(config)
-        config = self._feedback_params(config)
         if self.separate_gas:
             config['CoolingOn'] = 1
             config['TreeCoolFile'] = "TREECOOL"
@@ -130,6 +128,8 @@ class MPSimulation(simulation.Simulation):
             self._copy_uvb()
             #Need more memory for a feedback model
             config['PartAllocFactor'] = 4
+            config = self._sfr_params(config)
+            config = self._feedback_params(config)
         else:
             config['CoolingOn'] = 0
             config['StarformationOn'] = 0
