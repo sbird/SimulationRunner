@@ -68,7 +68,7 @@ def test_neutrino_semilinear():
     assert config['TimeTransfer'] == "0.01"
     assert config['OmegaBaryonCAMB'] == "0.0472"
     assert config['InputSpectrum_UnitLength_in_cm'] == "3.085678e+24"
-    assert config['KspaceTransferFunction'] == "camb_linear/ics_transfer_99.dat"
+    assert config['LinearTransferFunction'] == "camb_linear/ics_transfer_99.dat"
     #Check that the output has no neutrino particles
     f = bigfile.BigFile(os.path.join(test_dir, "ICS/256_256_99"),'r')
     assert f["Header"].attrs["TotNumPart"][2] == 0
