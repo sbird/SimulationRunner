@@ -119,6 +119,10 @@ class MPSimulation(simulation.Simulation):
         config['MinGasTemp'] = 100
         #In equilibrium with the CMB at early times.
         config['InitGasTemp'] = 2.7*(1+self.redshift)
+        #Set the required neutrino parameters.
+        config['MassiveNuLinRespOn'] = 0
+        config['LinearTransferFunction'] = "camb_linear/ics_transfer_"+str(self.redshift)+".dat"
+        config['TimeTransfer'] = 1./(1+self.redshift)
         #This needs to be here until I fix the flux extractor to allow quintic kernels.
         config['DensityKernelType'] = 'cubic'
         if self.separate_gas:
