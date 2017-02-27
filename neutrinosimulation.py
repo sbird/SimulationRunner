@@ -100,8 +100,7 @@ class NeutrinoSemiLinearSim(mpsimulation.MPSimulation):
         config['MNue'] = numass[2]
         config['MNum'] = numass[1]
         config['MNut'] = numass[0]
-        config['Hierarchy'] = self.hierarchy
-        config['KspaceTransferFunction'] = "camb_linear/ics_transfer_"+str(self.redshift)+".dat"
+        config['LinearTransferFunction'] = "camb_linear/ics_transfer_"+str(self.redshift)+".dat"
         config['InputSpectrum_UnitLength_in_cm'] = 3.085678e24
         config['TimeTransfer'] = 1./(1+self.redshift)
         config['OmegaBaryonCAMB'] = self.omegab
