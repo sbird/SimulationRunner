@@ -222,12 +222,13 @@ class Simulation(object):
         return config
 
     def _generate_times(self):
-        """List of output times for a simulation. Can be overridden,
-        but default is evenly spaced in a from start to end."""
+        """List of output times for a simulation. Can be overridden."""
         astart = 1./(1+self.redshift)
         aend = 1./(1+self.redend)
-        times = np.linspace(astart, aend,9)
-        return times
+        times = np.array([0.02,0.1,0.2,0.25,0.3333,0.5,0.66667,0.83333,1.0])
+        ii = np.where((times > astart)*(times < aend))
+        assert np.size(times[ii]) > 0
+        return times[ii]
 
     def _copy_uvb(self):
         """The UVB amplitude for Gadget is specified in a file named TREECOOL in the same directory as the gadget binary."""
