@@ -18,7 +18,8 @@ class LymanAlphaSim(simulation.Simulation):
         self.rescale_gamma = rescale_gamma
         self.rescale_amp = rescale_amp
         self.rescale_slope = rescale_slope
-        super().__init__(redend=redend, separate_gas=True, uvb=uvb, **kwargs)
+        assert kwargs['separate_gas']
+        super().__init__(redend=redend, uvb=uvb, **kwargs)
         self.camb_times = [9,]+[x for x in np.arange(4.2,1.9,-0.2)]
 
     def _feedback_config_options(self, config, prefix=""):
