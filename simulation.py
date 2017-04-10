@@ -255,6 +255,7 @@ class Simulation(object):
         self.gadget3params(genic_output)
         #Generate mpi_submit file
         self.generate_mpi_submit()
+        return gadget_config
 
     def do_gadget_build(self, gadget_config):
         """Make a gadget build and check it succeeded."""
