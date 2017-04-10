@@ -11,7 +11,9 @@ class NeutrinoPartSim(mpsimulation.MPSimulation):
     def _other_params(self, config):
         """Config options to make type 2 particles neutrinos."""
         config['FastParticleType'] = 2
-        config['NoTreeType'] = 2
+        #Neutrinos move quickly, so we must rebuild
+        #the tree every time step.
+        config['TreeDomainUpdateFrequency'] = 0.0
         return config
 
 class NeutrinoPartICs(simulationics.SimulationICs):
