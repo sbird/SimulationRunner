@@ -33,7 +33,7 @@ class Simulation(object):
     hubble - Hubble parameter, h, which is H0 / (100 km/s/Mpc)
     """
     icformat = 3
-    def __init__(self, *, outdir, box, npart, redshift=99, redend = 0, separate_gas=True, omega0=0.288, omegab=0.0472, hubble=0.7, uvb="hm", do_build=False, cluster_class=clusters.MARCCClass):
+    def __init__(self, *, outdir, box, npart, redshift=99, redend = 0, separate_gas=True, omega0=0.288, omegab=0.0472, hubble=0.7, uvb="hm", cluster_class=clusters.MARCCClass):
         #Check that input is reasonable and set parameters
         #In Mpc/h
         assert box < 20000
@@ -58,8 +58,6 @@ class Simulation(object):
         #UVB? Only matters if gas
         self.uvb = uvb
         assert self.uvb == "hm" or self.uvb == "fg" or self.uvb == "sh"
-        #Will we try to build gadget?
-        self.do_build = do_build
         #Number of files per snapshot
         #This is chosen to give a reasonable number and
         #a constant number of particles per file.
@@ -246,12 +244,12 @@ class Simulation(object):
         It separates queueing system directives from normal comments"""
         self._cluster.generate_mpi_submit(self.outdir)
 
-    def make_simulation(self, genic_output):
+    def make_simulation(self, genic_output, do_build=False):
         """Wrapper function to make all the simulation parameter files in turn."""
         #Generate Gadget makefile
         gadget_config = self.gadget3config()
         #Symlink the new gadget config to the source directory
-        if self.do_build:
+        if do_build:
             self.do_gadget_build(gadget_config)
         #Generate Gadget parameter file
         self.gadget3params(genic_output)

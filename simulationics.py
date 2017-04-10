@@ -293,7 +293,7 @@ class SimulationICs(object):
                 #Neutrinos get special treatment here.
                 #Because they don't really cluster, getting the initial power really right
                 #(especially on small scales) is both hard and rather futile.
-                accuracy *= 2
+                accuracy *= 4
                 ii = np.where(Pk_ic < Pk_ic[0]*1e-5)
                 if np.size(ii) > 0:
                     imax = ii[0][0]
@@ -316,7 +316,7 @@ class SimulationICs(object):
             if np.size(np.where(error > accuracy)) > 3:
                 raise RuntimeError("Pk accuracy check failed for "+sp+". Max error: "+str(np.max(error)))
 
-    def make_simulation(self, pkaccuracy=0.05):
+    def make_simulation(self, pkaccuracy=0.05, do_build=False):
         """Wrapper function to make the simulation ICs."""
         #First generate the input files for CAMB
         (camb_output, camb_param) = self.cambfile()
@@ -340,7 +340,7 @@ class SimulationICs(object):
         self.check_ic_power_spectra(camb_output, genic_output,accuracy=pkaccuracy)
         #Make the parameter files.
         ics = self.code_class_name(outdir=self.outdir, box=self.box, npart=self.npart, redshift=self.redshift, separate_gas=self.separate_gas, omega0=self.omega0, omegab=self.omegab, hubble=self.hubble, **self.code_args)
-        return ics.make_simulation(genic_output)
+        return ics.make_simulation(genic_output, do_build=do_build)
 
 def load_genpk(infile, box, minmode=1):
     """Load a power spectrum from a Gen-PK output, modifying units to agree with CAMB"""
