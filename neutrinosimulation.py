@@ -105,7 +105,6 @@ class NeutrinoSemiLinearSim(mpsimulation.MPSimulation):
         config['LinearTransferFunction'] = "camb_linear/ics_transfer_"+str(self.redshift)+".dat"
         config['InputSpectrum_UnitLength_in_cm'] = 3.085678e24
         config['TimeTransfer'] = 1./(1+self.redshift)
-        config['OmegaBaryonCAMB'] = self.omegab
         return config
 
 class NeutrinoSemiLinearICs(NeutrinoPartICs):
