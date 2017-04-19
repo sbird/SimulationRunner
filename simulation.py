@@ -223,7 +223,7 @@ class Simulation(object):
         """List of output times for a simulation. Can be overridden."""
         astart = 1./(1+self.redshift)
         aend = 1./(1+self.redend)
-        times = np.array([0.02,0.1,0.2,0.25,0.3333,0.5,0.66667,0.83333,1.0])
+        times = np.array([0.02,0.1,0.2,0.25,0.3333,0.5,0.66667,0.83333])
         ii = np.where((times > astart)*(times < aend))
         assert np.size(times[ii]) > 0
         return times[ii]

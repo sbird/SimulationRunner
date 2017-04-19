@@ -51,7 +51,7 @@ ICFormat = 3
 
 # Enable twolpt
 # Note this is only formally derived for single-fluid (CDM) simulations.
-TWOLPT = 1
+TWOLPT = 0
 #If 1, each mode will be scattered from the mean power to mimic cosmic variance
 RayleighScatter = 1
 #If true, do not include radiation (inc. massless neutrinos) 
