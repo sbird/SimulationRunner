@@ -97,8 +97,6 @@ class SimulationICs(object):
         #This is chosen to give a reasonable number and
         #a constant number of particles per file.
         self.numfiles = int(np.max([2,self.npart**3//2**24]))
-        #Extra redshifts at which to generate CAMB output, in addition to self.redshift and self.redshift/2
-        self.camb_times = [9,4,2,1,0]
         #Class with which to generate ICs.
         self.code_class_name = code_class
         #Format in which to output initial conditions: derived from Simulation class.
@@ -134,18 +132,30 @@ class SimulationICs(object):
         config['transfer_kmax'] = 2*math.pi*4*self.npart/self.box
         #At which redshifts should we produce CAMB output: we want the starting redshift of the simulation,
         #but we also want some other values for checking purposes
-        redshifts = [self.redshift, (self.redshift+1)/2-1] + self.camb_times
-        for (n,zz) in zip(range(1,len(redshifts)+1), redshifts):
-            config['transfer_redshift('+str(n)+')'] = zz
-            config['transfer_filename('+str(n)+')'] = 'transfer_'+str(zz)+'.dat'
-            config['transfer_matterpower('+str(n)+')'] = 'matterpow_'+str(zz)+'.dat'
-        config['transfer_num_redshifts'] = len(redshifts)
+        #Extra redshifts at which to generate CAMB output, in addition to self.redshift and self.redshift/2
+        code = self.code_class_name(outdir=self.outdir, box=self.box, npart=self.npart, redshift=self.redshift, separate_gas=self.separate_gas, omega0=self.omega0, omegab=self.omegab, hubble=self.hubble, **self.code_args)
+        camb_zz = np.concatenate([[self.redshift,], 1/code.generate_times()-1,[code.redend,]])
+        for (n,zz) in zip(range(1,len(camb_zz)+1), camb_zz):
+            zlong = '%.4g' % zz
+            zstr = self._camb_zstr(zz)
+            config['transfer_redshift('+str(n)+')'] = zlong
+            config['transfer_filename('+str(n)+')'] = 'transfer_'+zstr+'.dat'
+            config['transfer_matterpower('+str(n)+')'] = 'matterpow_'+zstr+'.dat'
+        config['transfer_num_redshifts'] = len(camb_zz)
         #Set up the neutrinos.
         #This has it's own function so it can be overriden by child classes
         config = self._camb_neutrinos(config)
         #Write the config file
         config.write()
         return (camb_output, config.filename)
+
+    def _camb_zstr(self,zz):
+        """Get the formatted redshift for CAMB output files."""
+        if zz > 10:
+            zstr = str(int(zz))
+        else:
+            zstr = '%.1g' % zz
+        return zstr
 
     def _camb_neutrinos(self, config):
         """Modify the CAMB config file to have massless neutrinos.
@@ -190,8 +200,9 @@ class SimulationICs(object):
         config['OmegaBaryon'] = self.omegab
         config['HubbleParam'] = self.hubble
         config['Redshift'] = self.redshift
-        config['FileWithInputSpectrum'] = camb_output + "_matterpow_"+str(self.redshift)+".dat"
-        config['FileWithTransfer'] = camb_output + "_transfer_"+str(self.redshift)+".dat"
+        zstr = self._camb_zstr(self.redshift)
+        config['FileWithInputSpectrum'] = camb_output + "_matterpow_"+zstr+".dat"
+        config['FileWithTransfer'] = camb_output + "_transfer_"+zstr+".dat"
         config['NumFiles'] = int(self.numfiles)
         assert config['InputSpectrum_UnitLength_in_cm'] == '3.085678e24'
         config['Seed'] = self.seed
@@ -205,7 +216,8 @@ class SimulationICs(object):
     def _alter_power(self, camb_output):
         """Function to hook if you want to change the CAMB output power spectrum.
         Should save the new power spectrum to camb_output + _matterpow_str(redshift).dat"""
-        camb_file = camb_output+"_matterpow_"+str(self.redshift)+".dat"
+        zstr = self._camb_zstr(self.redshift)
+        camb_file = camb_output+"_matterpow_"+zstr+".dat"
         os.stat(camb_file)
         return
 
@@ -260,8 +272,9 @@ class SimulationICs(object):
         subprocess.check_call([genpk, "-i", genicfileout, "-o", os.path.dirname(genicfileout)])
         #Now check that they match what we put into the simulation, from CAMB
         #Reload the CAMB files from disc, just in case something went wrong writing them.
-        matterpow = camb_output + "_matterpow_"+str(self.redshift)+".dat"
-        transfer = camb_output + "_transfer_"+str(self.redshift)+".dat"
+        zstr = self._camb_zstr(self.redshift)
+        matterpow = camb_output + "_matterpow_"+zstr+".dat"
+        transfer = camb_output + "_transfer_"+zstr+".dat"
         camb = cambpower.CAMBPowerSpectrum(matterpow, transfer, kmin=2*math.pi/self.box/5, kmax = self.npart*2*math.pi/self.box*10)
         #Error to tolerate on simulated power spectrum
         def gpk_out(spe):

@@ -219,7 +219,7 @@ class Simulation(object):
         """Function to override to set other config parameters"""
         return config
 
-    def _generate_times(self):
+    def generate_times(self):
         """List of output times for a simulation. Can be overridden."""
         astart = 1./(1+self.redshift)
         aend = 1./(1+self.redend)
@@ -235,7 +235,7 @@ class Simulation(object):
 
     def _print_times(self, timefile):
         """Print times to the times.txt file"""
-        times = self._generate_times()
+        times = self.generate_times()
         np.savetxt(os.path.join(self.outdir, timefile), times)
 
     def generate_mpi_submit(self):

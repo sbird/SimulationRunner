@@ -104,7 +104,7 @@ class MPSimulation(simulation.Simulation):
         config['Nmesh'] = 2*self.npart
         config['SnapshotWithFOF'] = 1
         config['FOFHaloLinkingLength'] = 0.2
-        config['OutputList'] =  ','.join([str(t) for t in self._generate_times()])
+        config['OutputList'] =  ','.join([str(t) for t in self.generate_times()])
         #This should just be larger than the simulation time limit
         config['CpuTimeBetRestartFile'] = 60*60*self._cluster.timelimit*10
         #Softening is 1/30 of the mean linear interparticle spacing

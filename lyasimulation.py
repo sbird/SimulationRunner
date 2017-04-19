@@ -41,12 +41,12 @@ class LymanAlphaSim(simulation.Simulation):
             config["ExtraHeatingExponent"] = self.rescale_slope
         return config
 
-    def _generate_times(self):
+    def generate_times(self):
         """Snapshot outputs for lyman alpha"""
         redshifts = np.concatenate([[49,9],np.arange(4.2, self.redend, -0.2)])
         return 1./(1.+redshifts)
 
-#Inherit from MPSimulation first, then get _generate_times and __init__ from LymanAlphaSim.
+#Inherit from MPSimulation first, then get generate_times and __init__ from LymanAlphaSim.
 class LymanAlphaMPSim(mpsimulation.MPSimulation, LymanAlphaSim):
     """Class that generates Lyman alpha simulation config files for MP-Gadget."""
     def _feedback_config_options(self, config, prefix=""):
