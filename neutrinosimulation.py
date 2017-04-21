@@ -14,6 +14,11 @@ class NeutrinoPartSim(mpsimulation.MPSimulation):
         #Neutrinos move quickly, so we must rebuild
         #the tree every time step.
         config['TreeDomainUpdateFrequency'] = 0.0
+        #Specify neutrino masses so that omega_nu is correct
+        numass = _get_neutrino_masses(self.m_nu, 0)
+        config['MNue'] = numass[2]
+        config['MNum'] = numass[1]
+        config['MNut'] = numass[0]
         return config
 
 class NeutrinoPartICs(simulationics.SimulationICs):
@@ -21,11 +26,10 @@ class NeutrinoPartICs(simulationics.SimulationICs):
     __doc__ = __doc__+simulationics.SimulationICs.__doc__
     def __init__(self, *, m_nu=0.1, separate_gas=False, code_class=NeutrinoPartSim, **kwargs):
         #Set neutrino mass
-        assert m_nu > 0
         #Note that omega0 does remains constant if we change m_nu.
         #This does mean that omegab/omegac will increase, but not by much.
-        self.m_nu = m_nu
-        super().__init__(separate_gas=separate_gas, code_class=code_class, **kwargs)
+        assert m_nu > 0
+        super().__init__(m_nu = m_nu, separate_gas=separate_gas, code_class=code_class, **kwargs)
         self.separate_nu = True
 
     def _camb_neutrinos(self, config):
@@ -90,8 +94,7 @@ def _get_neutrino_masses(total_mass, hierarchy):
 class NeutrinoSemiLinearSim(mpsimulation.MPSimulation):
     """Further specialise the Simulation class for semi-linear analytic massive neutrinos.
     """
-    def __init__(self, *, m_nu=0.1, hierarchy=0, **kwargs):
-        self.m_nu = m_nu
+    def __init__(self, *, hierarchy=0, **kwargs):
         self.hierarchy = hierarchy
         super().__init__(**kwargs)
 
@@ -111,14 +114,13 @@ class NeutrinoSemiLinearICs(NeutrinoPartICs):
     """Further specialise the NeutrinoPartICs class for semi-linear analytic massive neutrinos.
     """
     __doc__ = __doc__+NeutrinoPartICs.__doc__
-    def __init__(self, *, m_nu = 0.1, hierarchy = 0, code_class=NeutrinoSemiLinearSim, code_args = None, **kwargs):
+    def __init__(self, *, hierarchy = 0, code_class=NeutrinoSemiLinearSim, code_args = None, **kwargs):
         if code_args is not None:
-            code_args['m_nu'] = m_nu
+            code_args['hierarchy'] = hierarchy
         else:
-            code_args = {'m_nu':m_nu}
-        code_args['hierarchy'] = hierarchy
+            code_args = {'hierarchy': hierarchy}
         self.hierarchy = hierarchy
-        super().__init__(m_nu = m_nu, code_class=code_class, code_args=code_args, **kwargs)
+        super().__init__(code_class=code_class, code_args=code_args, **kwargs)
 
     def _genicfile_child_options(self, config):
         """Set up neutrino parameters for GenIC.

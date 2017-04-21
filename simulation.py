@@ -28,12 +28,15 @@ class Simulation(object):
     npart - Cube root of number of particles
     separate_gas - if true the ICs will contain baryonic particles. If false, just DM.
     redshift - redshift at which to generate ICs
+    redend - redshift to run simulation to
+    m_nu - neutrino mass, used by child classes.
     omegab - baryon density. Note that if we do not have gas particles, still set omegab, but set separate_gas = False
-    omegam - Matter density
+    omega0 - Total matter density
     hubble - Hubble parameter, h, which is H0 / (100 km/s/Mpc)
+    uvb - Ultra-violet background to use
     """
     icformat = 3
-    def __init__(self, *, outdir, box, npart, redshift=99, redend = 0, separate_gas=True, omega0=0.288, omegab=0.0472, hubble=0.7, uvb="hm", cluster_class=clusters.MARCCClass):
+    def __init__(self, *, outdir, box, npart, redshift=99, redend = 0, m_nu = 0, separate_gas=True, omega0=0.288, omegab=0.0472, hubble=0.7, uvb="hm", cluster_class=clusters.MARCCClass):
         #Check that input is reasonable and set parameters
         #In Mpc/h
         assert box < 20000
@@ -53,6 +56,8 @@ class Simulation(object):
         self.redend = redend
         assert hubble < 1 and hubble > 0
         self.hubble = hubble
+        #Neutrino mass: used by child classes
+        self.m_nu = m_nu
         #Baryons?
         self.separate_gas = separate_gas
         #UVB? Only matters if gas

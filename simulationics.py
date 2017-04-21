@@ -40,8 +40,9 @@ class SimulationICs(object):
     hubble - Hubble parameter, h, which is H0 / (100 km/s/Mpc)
     scalar_amp - A_s at k = 2e-3, comparable to the WMAP value.
     ns - Scalar spectral index
+    m_nu - neutrino mass
     """
-    def __init__(self, *, outdir, box, npart, seed = 9281110, redshift=99, separate_gas=True, omega0=0.288, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, rscatter = False, code_class=simulation.Simulation, code_args=None):
+    def __init__(self, *, outdir, box, npart, seed = 9281110, redshift=99, separate_gas=True, omega0=0.288, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, rscatter=False, m_nu=0, code_class=simulation.Simulation, code_args=None):
         #This lets us safely have a default dictionary argument
         self.code_args = {}
         if code_args is not None:
@@ -81,6 +82,7 @@ class SimulationICs(object):
         #If neutrinos are combined into the DM,
         #we want to use a different CAMB transfer when checking output power.
         self.separate_nu = False
+        self.m_nu = m_nu
         self.outdir = outdir
         defaultpath = os.path.dirname(__file__)
         #Default values for the CAMB parameters
@@ -133,7 +135,7 @@ class SimulationICs(object):
         #At which redshifts should we produce CAMB output: we want the starting redshift of the simulation,
         #but we also want some other values for checking purposes
         #Extra redshifts at which to generate CAMB output, in addition to self.redshift and self.redshift/2
-        code = self.code_class_name(outdir=self.outdir, box=self.box, npart=self.npart, redshift=self.redshift, separate_gas=self.separate_gas, omega0=self.omega0, omegab=self.omegab, hubble=self.hubble, **self.code_args)
+        code = self.code_class_name(outdir=self.outdir, box=self.box, npart=self.npart, redshift=self.redshift, separate_gas=self.separate_gas, omega0=self.omega0, omegab=self.omegab, hubble=self.hubble, m_nu=self.m_nu, **self.code_args)
         camb_zz = np.concatenate([[self.redshift,], 1/code.generate_times()-1,[code.redend,]])
         for (n,zz) in zip(range(1,len(camb_zz)+1), camb_zz):
             zlong = '%.4g' % zz
@@ -352,7 +354,7 @@ class SimulationICs(object):
         #Check that the ICs have the right power spectrum
         self.check_ic_power_spectra(camb_output, genic_output,accuracy=pkaccuracy)
         #Make the parameter files.
-        ics = self.code_class_name(outdir=self.outdir, box=self.box, npart=self.npart, redshift=self.redshift, separate_gas=self.separate_gas, omega0=self.omega0, omegab=self.omegab, hubble=self.hubble, **self.code_args)
+        ics = self.code_class_name(outdir=self.outdir, box=self.box, npart=self.npart, redshift=self.redshift, separate_gas=self.separate_gas, omega0=self.omega0, omegab=self.omegab, hubble=self.hubble, m_nu=self.m_nu, **self.code_args)
         return ics.make_simulation(genic_output, do_build=do_build)
 
 def load_genpk(infile, box, minmode=1):
