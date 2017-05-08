@@ -375,7 +375,7 @@ def load_genpk(infile, box, minmode=1):
         iend+=1
         if lcount >= minmode:
             p = np.sum(count[istart:iend]*Pk[istart:iend])/lcount
-            assert p > 0
+            assert p >= 0
             k = np.sum(count[istart:iend]*kk[istart:iend])/lcount
             assert k > 0
             kk_rebin.append(k)
