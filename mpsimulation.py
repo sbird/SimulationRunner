@@ -137,7 +137,6 @@ class MPSimulation(simulation.Simulation):
             config['CoolingOn'] = 0
             config['StarformationOn'] = 0
             config['PartAllocFactor'] = 2
-        config['MaxMemSizePerCore'] = self._cluster.memory
         #Add other config parameters
         config = self._other_params(config)
         config.write()

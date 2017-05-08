@@ -35,4 +35,3 @@ FOFHaloLinkingLength = 0.2
 StarformationCriterion = density
 WindModel = nowind
 PartAllocFactor = 4
-MaxMemSizePerCore = 1800
