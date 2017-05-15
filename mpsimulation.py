@@ -49,7 +49,6 @@ class MPSimulation(simulation.Simulation):
             config.write("GSL_INCL = $(shell pkg-config --cflags gsl)\nGSL_LIBS = $(shell pkg-config --libs gsl)\n")
             #We may want DENSITY_INDEPENDENT_SPH as well.
             #config.write(prefix+"DENSITY_INDEPENDENT_SPH\n")
-            config.write(prefix+"PETAPM_ORDER=1\n")
             config.write(prefix+"OPENMP_USE_SPINLOCK\n")
             config.write(prefix+"TOPNODEFACTOR=5.0\n")
             config.write(prefix+"INHOMOG_GASDISTR_HINT\n")
