@@ -110,14 +110,14 @@ class SimulationICs(object):
         #Load CAMB file using ConfigObj
         config = configobj.ConfigObj(self.cambdefault)
         config.filename = os.path.join(self.outdir, self.cambout)
-        #Set values
-        camb_outdir = os.path.join(self.outdir,"camb_linear")
+        #Set values: note we will write to camb_linear/ics_matterpow_99.dat with the below.
+        camb_output = "camb_linear/ics"
+        camb_outdir = os.path.join(self.outdir,os.path.dirname(camb_output))
         try:
             os.mkdir(camb_outdir)
         except FileExistsError:
             pass
-        camb_output = camb_outdir+"/ics"
-        config['output_root'] = camb_output
+        config['output_root'] = camb_outdir
         #Can't change this easily because the parameters then have different names
         assert config['use_physical'] == 'T'
         config['hubble'] = self.hubble * 100
@@ -178,7 +178,7 @@ class SimulationICs(object):
             os.mkdir(os.path.join(self.outdir, genicout))
         except FileExistsError:
             pass
-        config['OutputDir'] = os.path.join(self.outdir, genicout)
+        config['OutputDir'] = genicout
         #Is this enough information, or should I add a short hash?
         genicfile = str(self.box)+"_"+str(self.npart)+"_"+str(self.redshift)
         config['FileBase'] = genicfile
@@ -342,17 +342,17 @@ class SimulationICs(object):
         #But for backwards compat, use check_output
         subprocess.check_call([os.path.join(os.getcwd(), camb), camb_param], cwd=os.path.dirname(camb))
         #Change the power spectrum file on disc if we want to do that
-        self._alter_power(camb_output)
+        self._alter_power(os.path.join(self.outdir,camb_output))
         #Now generate the GenIC parameters
         (genic_output, genic_param) = self.genicfile(camb_output)
         #Run N-GenIC
         genic = utils.find_exec(self.genicexe)
         self.genic_git = utils.get_git_hash(genic)
-        subprocess.check_call([genic, genic_param])
+        subprocess.check_call([genic, genic_param],cwd=self.outdir)
         #Save a json of ourselves.
         self.txt_description()
         #Check that the ICs have the right power spectrum
-        self.check_ic_power_spectra(camb_output, genic_output,accuracy=pkaccuracy)
+        self.check_ic_power_spectra(os.path.join(self.outdir,camb_output), genic_output,accuracy=pkaccuracy)
         #Make the parameter files.
         ics = self.code_class_name(outdir=self.outdir, box=self.box, npart=self.npart, redshift=self.redshift, separate_gas=self.separate_gas, omega0=self.omega0, omegab=self.omegab, hubble=self.hubble, m_nu=self.m_nu, **self.code_args)
         return ics.make_simulation(genic_output, do_build=do_build)
