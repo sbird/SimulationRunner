@@ -100,7 +100,6 @@ class MPSimulation(simulation.Simulation):
         config['HubbleParam'] = self.hubble
         config['RadiationOn'] = 1
         config['HydroOn'] = 1
-        config['BoxSize'] = self.box * 1000
         config['Nmesh'] = 2*self.npart
         config['SnapshotWithFOF'] = 1
         config['FOFHaloLinkingLength'] = 0.2
