@@ -117,7 +117,7 @@ class SimulationICs(object):
             os.mkdir(camb_outdir)
         except FileExistsError:
             pass
-        config['output_root'] = camb_outdir
+        config['output_root'] = os.path.join(self.outdir,camb_output)
         #Can't change this easily because the parameters then have different names
         assert config['use_physical'] == 'T'
         config['hubble'] = self.hubble * 100
