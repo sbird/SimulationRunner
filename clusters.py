@@ -140,7 +140,7 @@ class MARCCClass(ClusterClass):
         #Complete nodes!
         assert nproc % 24 == 0
         super().__init__(*args, nproc=nproc,timelimit=timelimit, **kwargs)
-        self.memory = 3000
+        self.memory = 5200
 
     def _queue_directive(self, name, prefix="#SBATCH"):
         """Generate mpi_submit with coma specific parts"""
