@@ -17,7 +17,8 @@ addons:
             - python3-matplotlib
             - python3-scipy
             - python3-h5py
-            - cython3
+virtualenv:
+    system_site_packages: true
 
 install:
     - pip install -r requirements.txt
