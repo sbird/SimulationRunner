@@ -1,7 +1,7 @@
 sudo: required
 dist: trusty
 language: python
-python: 3.5
+python: 3.4
 os: linux
 compiler: gcc
 addons:
@@ -18,8 +18,6 @@ addons:
             - python3-scipy
             - python3-h5py
             - cython3
-virtualenv:
-    system_site_packages: true
 
 install:
     - pip install -r requirements.txt
