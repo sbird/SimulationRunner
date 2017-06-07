@@ -1,11 +1,13 @@
 """Module to store some utility functions."""
 import glob
+import os
 import os.path
 import subprocess
 
 def find_exec(executable):
     """Simple function to locate a binary in a nearby directory"""
-    possible = [executable,]+glob.glob("depends/*/"+executable)+ glob.glob(os.path.join(os.path.join(os.path.dirname(__file__),"../*/"), executable))
+    cwd = os.getcwd()
+    possible = [os.path.join(cwd, executable),]+glob.glob(os.path.join(cwd, "depends/*/"+executable))+ glob.glob(os.path.join(os.path.join(os.path.dirname(__file__),"../*/"), executable))
     exists = [ex for ex in possible if os.path.exists(ex) and os.path.isfile(ex) ]
     if len(exists) > 1:
         print("Warning: found multiple possibilities: ",exists)

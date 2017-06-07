@@ -340,7 +340,7 @@ class SimulationICs(object):
         self.camb_git = utils.get_git_hash(camb)
         #In python 3.5, can use subprocess.run to do this.
         #But for backwards compat, use check_output
-        subprocess.check_call([os.path.join(os.getcwd(), camb), camb_param], cwd=os.path.dirname(camb))
+        subprocess.check_call([camb, camb_param], cwd=os.path.dirname(camb))
         #Change the power spectrum file on disc if we want to do that
         self._alter_power(os.path.join(self.outdir,camb_output))
         #Now generate the GenIC parameters
