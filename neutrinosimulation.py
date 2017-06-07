@@ -87,9 +87,11 @@ def _get_neutrino_masses(total_mass, hierarchy):
     DD1 = 4 * total_mass/3. - 2/3.*np.sqrt(total_mass**2 + 3*nu_M32 + 1.5*nu_M21)
     #Last term was neglected initially. This should be very well converged.
     DD = 4 * total_mass/3. - 2/3.*np.sqrt(total_mass**2 + 3*nu_M32 + 1.5*nu_M21+0.75*nu_M21**2/DD1**2)
+    nu_masses = np.array([ total_mass - DD, 0.5*(DD + nu_M21/DD), 0.5*(DD - nu_M21/DD)])
     assert np.isfinite(DD)
-    assert np.abs(DD1/DD -1) < 1e-2
-    return np.array([ total_mass - DD, 0.5*(DD + nu_M21/DD), 0.5*(DD - nu_M21/DD)])
+    assert np.abs(DD1/DD -1) < 2e-2
+    assert np.all(nu_masses >= 0)
+    return nu_masses
 
 class NeutrinoSemiLinearSim(mpsimulation.MPSimulation):
     """Further specialise the Simulation class for semi-linear analytic massive neutrinos.
