@@ -77,7 +77,7 @@ MinGasHsmlFractional   0.25
 BufferSize   100% in MByte
 
 PartAllocFactor   4
-MaxMemSize   3000
+MaxMemSize   5000
 CritPhysDensity   0
 MaxSfrTimescale   1.5
 CritOverDensity   1000.0
