@@ -165,6 +165,8 @@ class NeutrinoHybridSim(NeutrinoSemiLinearSim):
         """Config options specific to kspace neutrinos. Hierarchy is off for now."""
         config = NeutrinoSemiLinearSim._other_params(self, config)
         config['HybridNeutrinosOn'] = 1
+        config['FastParticleType'] = 2
+        config['TreeDomainUpdateFrequency'] = 0.0
         config['Vcrit'] = self.vcrit
         config['NuPartTime'] = 1./(1+self.zz_transition)
         return config
