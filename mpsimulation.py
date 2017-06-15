@@ -50,8 +50,6 @@ class MPSimulation(simulation.Simulation):
             #We may want DENSITY_INDEPENDENT_SPH as well.
             #config.write(prefix+"DENSITY_INDEPENDENT_SPH\n")
             config.write(prefix+"OPENMP_USE_SPINLOCK\n")
-            config.write(prefix+"TOPNODEFACTOR=5.0\n")
-            config.write(prefix+"INHOMOG_GASDISTR_HINT\n")
             self._cluster.cluster_config_options(config, prefix)
             if self.separate_gas:
                 #This needs implementing
