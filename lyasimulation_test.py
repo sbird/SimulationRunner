@@ -1,7 +1,7 @@
 """Tests for the lyman alpha simulation runner."""
 import scipy.interpolate as interp
 import numpy as np
-from . import lyasimulation
+from SimulationRunner import lyasimulation
 
 def build_restrict_interp(power, lower, upper):
     """Build an interpolator for a restricted range of x values"""

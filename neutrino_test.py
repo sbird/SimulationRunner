@@ -1,11 +1,10 @@
 """Integration tests for the neutrinosimulation module"""
 
-import filecmp
 import os
 import bigfile
 import numpy as np
 import configobj
-from . import neutrinosimulation as nus
+from SimulationRunner import neutrinosimulation as nus
 
 def test_neutrino_part():
     """Create a full simulation with particle neutrinos."""

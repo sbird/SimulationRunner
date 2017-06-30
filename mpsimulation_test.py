@@ -3,8 +3,8 @@
 import os
 import re
 import configobj
-from . import simulationics
-from . import mpsimulation
+from SimulationRunner import simulationics
+from SimulationRunner import mpsimulation
 
 def test_full_integration():
     """Create a full simulation snapshot and check it corresponds to the saved results"""

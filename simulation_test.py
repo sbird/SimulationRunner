@@ -5,7 +5,7 @@ import filecmp
 import os
 import re
 import configobj
-from . import simulationics
+from SimulationRunner import simulationics
 
 def test_full_integration():
     """Create a full simulation snapshot and check it corresponds to the saved results"""
