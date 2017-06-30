@@ -1,6 +1,7 @@
 #!/bin/bash
 #Script to fetch and build dependencies for the tests, for travis.
 
+mkdir tests
 mkdir depends
 cd depends
 ##Get and make CAMB.
