@@ -80,18 +80,18 @@ def test_neutrino_mass_spec():
     M21 = 7.53e-5 #Particle data group 2016: +- 0.18e-5 eV2
     M32n = 2.44e-3 #Particle data group: +- 0.06e-3 eV2
     M32i = 2.51e-3
-    numass = nus._get_neutrino_masses(0.3, 0)
+    numass = nus.get_neutrino_masses(0.3, 0)
     assert np.all(np.abs(numass-0.1) < 1e-6)
-    numass = nus._get_neutrino_masses(0.3, 1)
+    numass = nus.get_neutrino_masses(0.3, 1)
     #Check the original inequalities are satisfied
     assert np.abs(numass[0]+numass[1]+numass[2] - 0.3) < 1e-4
     assert np.abs(numass[0]**2 - numass[1]**2 - M32n) < 1e-4
     assert np.abs(numass[1]**2 - numass[2]**2 - M21) < 1e-4
-    numass = nus._get_neutrino_masses(0.08, 1)
+    numass = nus.get_neutrino_masses(0.08, 1)
     assert np.abs(numass[0]+numass[1]+numass[2] - 0.08) < 1e-4
     assert np.abs(numass[0]**2 - numass[1]**2 - M32n) < 1e-4
     assert np.abs(numass[1]**2 - numass[2]**2 - M21) < 1e-4
-    numass = nus._get_neutrino_masses(0.11, -1)
+    numass = nus.get_neutrino_masses(0.11, -1)
     assert np.abs(numass[0]+numass[1]+numass[2] - 0.11) < 1e-4
     assert np.abs(numass[0]**2 - numass[1]**2 + M32n) < 1e-4
     assert np.abs(numass[1]**2 - numass[2]**2 - M21) < 1e-4

@@ -15,7 +15,7 @@ class NeutrinoPartSim(mpsimulation.MPSimulation):
         #the tree every time step.
         config['TreeDomainUpdateFrequency'] = 0.0
         #Specify neutrino masses so that omega_nu is correct
-        numass = _get_neutrino_masses(self.m_nu, 0)
+        numass = get_neutrino_masses(self.m_nu, 0)
         config['MNue'] = numass[2]
         config['MNum'] = numass[1]
         config['MNut'] = numass[0]
@@ -61,7 +61,7 @@ class NeutrinoPartICs(simulationics.SimulationICs):
         config['Hierarchy'] = 0
         return config
 
-def _get_neutrino_masses(total_mass, hierarchy):
+def get_neutrino_masses(total_mass, hierarchy):
     """Get the three neutrino masses, including the mass splittings.
         Hierarchy is -1 for inverted (two heavy), 1 for normal (two light) and 0 for degenerate."""
     #Neutrino mass splittings
@@ -103,7 +103,7 @@ class NeutrinoSemiLinearSim(mpsimulation.MPSimulation):
     def _other_params(self, config):
         """Config options specific to kspace neutrinos, which computes neutrino hierarchy."""
         config['MassiveNuLinRespOn'] = 1
-        numass = _get_neutrino_masses(self.m_nu, self.hierarchy)
+        numass = get_neutrino_masses(self.m_nu, self.hierarchy)
         config['MNue'] = numass[2]
         config['MNum'] = numass[1]
         config['MNut'] = numass[0]
@@ -139,7 +139,7 @@ class NeutrinoSemiLinearICs(NeutrinoPartICs):
         We want a neutrino mass hierarchy."""
         config['massless_neutrinos'] = 0.046
         config['massive_neutrinos'] = [1, 1, 1]
-        numass = _get_neutrino_masses(self.m_nu, self.hierarchy)
+        numass = get_neutrino_masses(self.m_nu, self.hierarchy)
         config['nu_mass_fractions'] = list(numass/self.m_nu)
         config['nu_mass_eigenstates'] = 3
         #Each neutrino has the same temperature
