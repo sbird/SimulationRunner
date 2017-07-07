@@ -13,10 +13,6 @@ addons:
             - libfftw3-dev
             - libgsl0-dev
             - gfortran
-            - python3-numpy
-            - python3-matplotlib
-            - python3-scipy
-            - python3-h5py
 virtualenv:
     system_site_packages: true
 

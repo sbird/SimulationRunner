@@ -1,2 +1,5 @@
+scipy
+h5py
+matplotlib
 bigfile
 configobj
