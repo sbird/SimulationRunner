@@ -22,6 +22,7 @@ virtualenv:
 
 install:
     - pip install cython
+    - pip install numpy
     - pip install -r requirements.txt
     - ./prepare_travis.sh
 script: nosetests
