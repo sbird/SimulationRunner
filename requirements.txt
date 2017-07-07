@@ -1,2 +1,3 @@
+numpy
 bigfile
 configobj
