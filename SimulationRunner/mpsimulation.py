@@ -46,7 +46,7 @@ class MPSimulation(simulation.Simulation):
             config.write("MPICC = mpicc\nMPICXX = mpic++\n")
             optimize = self._cluster.cluster_optimize()
             config.write("OPTIMIZE = "+optimize+"\n")
-            config.write("GSL_INCL = $(shell pkg-config --cflags gsl)\nGSL_LIBS = $(shell pkg-config --libs gsl)\n")
+            config.write("GSL_INCL = $(shell gsl-config --cflags)\nGSL_LIBS = $(shell gsl-config --libs)\n")
             #We may want DENSITY_INDEPENDENT_SPH as well.
             #config.write(prefix+"DENSITY_INDEPENDENT_SPH\n")
             config.write(prefix+"OPENMP_USE_SPINLOCK\n")
