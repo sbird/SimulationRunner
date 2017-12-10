@@ -8,6 +8,9 @@ cd depends
 git clone https://github.com/sbird/camb.git
 cd camb
 cd pycamb
+alias gfortran=gfortran-6
+#Maybe this works?
+cat "alias gfortran=gfortran-6" >> ~/.bashrc
 python3 setup.py install --user
 
 #Get and make N-GenIC.
