@@ -275,7 +275,7 @@ class SimulationICs(object):
                 if not self.separate_gas:
                     continue
             cat = BigFileCatalog(output, dataset=tt, header='Header')
-            mesh = cat.to_mesh(Nmesh=self.npart*2, window='cic', compensated=True, interlaced=True)
+            cat.to_mesh(Nmesh=self.npart*2, window='cic', compensated=True, interlaced=True)
             pk = FFTPower(cat, mode='1d', Nmesh=self.npart*2)
             #GenPK output is at PK-[nu,by,DM]-basename(genicfileout)
             #Load the power spectra
@@ -300,12 +300,12 @@ class SimulationICs(object):
             plt.semilogx([kk_ic[imin],kk_ic[imin]], [0,1.5], ls=":",linewidth=2)
             plt.semilogx([kk_ic[imax],kk_ic[imax]], [0,1.5], ls=":",linewidth=2)
             plt.ylim(0., 1.5)
-            plt.savefig("PK-IC-"+sp+"-diff.pdf")
+            plt.savefig(os.path.join(self.outdir,"ICS/PK-IC-"+sp+"-diff.pdf"))
             plt.clf()
             plt.loglog(kk_ic, Pk_ic,linewidth=2)
             plt.loglog(kk_ic, Pk_camb,ls="--", linewidth=2)
             plt.ylim(ymax=Pk_camb[0]*10)
-            plt.savefig("PK-IC-"+sp+"-abs.pdf")
+            plt.savefig(os.path.join(self.outdir,"ICS/PK-IC-"+sp+"-abs.pdf"))
             plt.clf()
             error = abs(Pk_ic[imin:imax]/Pk_camb[imin:imax] -1)
             #Don't worry too much about one failing mode.
