@@ -62,9 +62,7 @@ class MPSimulation(simulation.Simulation):
 
     def _feedback_config_options(self, config, prefix=""):
         """Options in the Config.sh file for a potential star-formation/feedback model"""
-        config.write(prefix+"WINDS\n")
-        config.write(prefix+"METALS\n")
-        config.write(prefix+"BLACKHOLES\n")
+        config.write(prefix+"BLACK_HOLES\n")
         return
 
     def _gadget3_child_options(self, _, __):
@@ -101,15 +99,6 @@ class MPSimulation(simulation.Simulation):
         config['SnapshotWithFOF'] = 1
         config['FOFHaloLinkingLength'] = 0.2
         config['OutputList'] =  ','.join([str(t) for t in self.generate_times()])
-        #This should just be larger than the simulation time limit
-        config['CpuTimeBetRestartFile'] = 60*60*self._cluster.timelimit*10
-        #Softening is 1/30 of the mean linear interparticle spacing
-        soften = 1000 * self.box/self.npart/30.
-        for ptype in ('Gas', 'Halo', 'Disk', 'Bulge', 'Stars', 'Bndry'):
-            config['Softening'+ptype] = soften
-            config['Softening'+ptype+'MaxPhys'] = soften
-        #This could be tuned in lower memory conditions
-        config['BufferSize'] = 100
         #These are only used for gas, but must be set anyway
         config['MinGasTemp'] = 100
         #In equilibrium with the CMB at early times.
@@ -117,22 +106,19 @@ class MPSimulation(simulation.Simulation):
         #Set the required neutrino parameters.
         config['MassiveNuLinRespOn'] = 0
         config['LinearTransferFunction'] = "camb_linear/ics_transfer_"+str(self.redshift)+".dat"
-        config['TimeTransfer'] = 1./(1+self.redshift)
         #This needs to be here until I fix the flux extractor to allow quintic kernels.
         config['DensityKernelType'] = 'cubic'
+        config['PartAllocFactor'] = 2
         if self.separate_gas:
             config['CoolingOn'] = 1
             config['TreeCoolFile'] = "TREECOOL"
             #Copy a TREECOOL file into the right place.
             self._copy_uvb()
-            #Need more memory for a feedback model
-            config['PartAllocFactor'] = 4
             config = self._sfr_params(config)
             config = self._feedback_params(config)
         else:
             config['CoolingOn'] = 0
             config['StarformationOn'] = 0
-            config['PartAllocFactor'] = 2
         #Add other config parameters
         config = self._other_params(config)
         config.write()
