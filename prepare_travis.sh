@@ -6,9 +6,10 @@ chmod +x miniconda.sh
 ./miniconda.sh -b -p $HOME/miniconda
 export PATH=$HOME/miniconda/bin:$PATH
 conda update --yes conda
-conda create --yes -n test python=3.4
+conda create --yes -n test python=3.6
 source $HOME/miniconda/bin/activate test
-conda install --yes -c gfortran_linux-64 bccp nbodykit matplotlib numpy scipy configobj bigfile nose
+conda install --yes -c nbodykit matplotlib numpy scipy configobj bigfile nose
+conda install --yes gfortran_linux-64
 
 mkdir tests
 mkdir depends
