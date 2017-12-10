@@ -30,7 +30,7 @@ def test_neutrino_part():
     mnu = f["Header"].attrs["MassTable"][2]
     #The mass ratio should be given by the ratio of omega_nu by omega_cdm
     assert np.abs(mnu/(mcdm+mnu) / ( (Sim.m_nu/93.146/Sim.hubble**2)/(Sim.omega0)) - 1) < 1e-5
-    assert np.abs(f["Header"].attrs["MassTable"][1] / 7.71739 - 1) < 1e-5
+    assert np.abs(f["Header"].attrs["MassTable"][1] / 61.7391 - 1) < 1e-5
     f.close()
     #shutil.rmtree("./test_nu/")
 
@@ -55,14 +55,13 @@ def test_neutrino_semilinear():
     assert config['MNum'] == '0.147399671639'
     assert config['MNut'] == '0.155456306399'
     assert config['MassiveNuLinRespOn'] == "1"
-    assert config['TimeTransfer'] == "0.01"
     assert config['InputSpectrum_UnitLength_in_cm'] == "3.085678e+24"
     assert config['LinearTransferFunction'] == "camb_linear/ics_transfer_99.dat"
     #Check that the output has no neutrino particles
-    f = bigfile.BigFile(os.path.join(test_dir, "ICS/256_256_99"),'r')
+    f = bigfile.BigFile(os.path.join(test_dir, "ICS/256_128_99"),'r')
     assert f["Header"].attrs["TotNumPart"][2] == 0
     #Check the mass is correct: the CDM particles should have the same mass as in the particle simulation
-    assert np.abs(f["Header"].attrs["MassTable"][1] / 7.71739 - 1) < 1e-5
+    assert np.abs(f["Header"].attrs["MassTable"][1] / 61.7391 - 1) < 1e-5
     f.close()
     #shutil.rmtree("./test_nu/")
 
@@ -78,11 +77,11 @@ def test_neutrino_mass_spec():
     assert np.abs(numass[0]+numass[1]+numass[2] - 0.3) < 1e-4
     assert np.abs(numass[0]**2 - numass[1]**2 - M32n) < 1e-4
     assert np.abs(numass[1]**2 - numass[2]**2 - M21) < 1e-4
-    numass = nus.get_neutrino_masses(0.08, 1)
+    numass = nus.get_neutrino_masses(0.08, 'normal')
     assert np.abs(numass[0]+numass[1]+numass[2] - 0.08) < 1e-4
     assert np.abs(numass[0]**2 - numass[1]**2 - M32n) < 1e-4
     assert np.abs(numass[1]**2 - numass[2]**2 - M21) < 1e-4
-    numass = nus.get_neutrino_masses(0.11, -1)
+    numass = nus.get_neutrino_masses(0.11, 'inverted')
     assert np.abs(numass[0]+numass[1]+numass[2] - 0.11) < 1e-4
     assert np.abs(numass[0]**2 - numass[1]**2 + M32n) < 1e-4
     assert np.abs(numass[1]**2 - numass[2]**2 - M21) < 1e-4

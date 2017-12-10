@@ -10,15 +10,8 @@ class NeutrinoPartSim(simulation.Simulation):
     __doc__ = __doc__+simulation.Simulation.__doc__
     def _other_params(self, config):
         """Config options to make type 2 particles neutrinos."""
-        config['FastParticleType'] = 2
-        #Neutrinos move quickly, so we must rebuild
-        #the tree every time step.
-        config['TreeDomainUpdateFrequency'] = 0.0
         #Specify neutrino masses so that omega_nu is correct
-        numass = get_neutrino_masses(self.m_nu, 0)
-        config['MNue'] = numass[2]
-        config['MNum'] = numass[1]
-        config['MNut'] = numass[0]
+        config['MassiveNuLinRespOn'] = 0
         return config
 
 class NeutrinoPartICs(simulationics.SimulationICs):
@@ -76,6 +69,10 @@ def get_neutrino_masses(total_mass, hierarchy):
 class NeutrinoSemiLinearSim(simulation.Simulation):
     """Further specialise the Simulation class for semi-linear analytic massive neutrinos.
     """
+    def __init__(self, *, nu_hierarchy='normal', **kwargs):
+        super().__init__(**kwargs)
+        self.nu_hierarchy = nu_hierarchy
+
     def _other_params(self, config):
         """Config options specific to kspace neutrinos, which computes neutrino hierarchy."""
         config['MassiveNuLinRespOn'] = 1
@@ -85,15 +82,14 @@ class NeutrinoSemiLinearSim(simulation.Simulation):
         config['MNut'] = numass[0]
         config['LinearTransferFunction'] = "camb_linear/ics_transfer_"+str(self.redshift)+".dat"
         config['InputSpectrum_UnitLength_in_cm'] = 3.085678e24
-        config['TimeTransfer'] = 1./(1+self.redshift)
         return config
 
 class NeutrinoSemiLinearICs(NeutrinoPartICs):
     """Further specialise the NeutrinoPartICs class for semi-linear analytic massive neutrinos.
     """
     __doc__ = __doc__+NeutrinoPartICs.__doc__
-    def __init__(self, *, code_class=NeutrinoSemiLinearSim, code_args = None, **kwargs):
-        super().__init__(code_class=code_class, code_args=code_args, **kwargs)
+    def __init__(self, *, code_class=NeutrinoSemiLinearSim, **kwargs):
+        super().__init__(code_class=code_class, **kwargs)
 
     def _genicfile_child_options(self, config):
         """Set up neutrino parameters for GenIC.
@@ -113,8 +109,8 @@ class NeutrinoSemiLinearICs(NeutrinoPartICs):
 class NeutrinoHybridSim(NeutrinoSemiLinearSim):
     """Further specialise to hybrid neutrino simulations, which have both analytic and particle neutrinos."""
     __doc__ = __doc__+simulation.Simulation.__doc__
-    def __init__(self, *, zz_transition=1., vcrit=500, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, *, zz_transition=1., vcrit=500, nu_hierarchy = 'degenerate', **kwargs):
+        super().__init__(nu_hierarchy=nu_hierarchy, **kwargs)
         self.vcrit = vcrit
         self.zz_transition = zz_transition
 
