@@ -4,21 +4,16 @@ os: linux
 compiler: gcc
 addons:
     apt:
-        sources:
-            - ubuntu-toolchain-r-test
         packages:
             - libboost-test-dev
-            - libhdf5-serial-dev
             - libopenmpi-dev
             - libfftw3-dev
             - libgsl0-dev
-            - gfortran-6
 virtualenv:
     system_site_packages: true
 
 install:
-    - pip install cython
-    - pip install numpy
-    - pip install -r requirements.txt
-    - ./prepare_travis.sh
+    - bash prepare_travis.sh
+    - export PATH=$HOME/miniconda/bin:$PATH
+    - source activate test
 script: nosetests
