@@ -4,13 +4,15 @@ os: linux
 compiler: gcc
 addons:
     apt:
+        sources:
+            - debian-sid
         packages:
             - libboost-test-dev
             - libhdf5-serial-dev
             - libopenmpi-dev
             - libfftw3-dev
             - libgsl0-dev
-            - gfortran-4.9
+            - gfortran-6
 virtualenv:
     system_site_packages: true
 
