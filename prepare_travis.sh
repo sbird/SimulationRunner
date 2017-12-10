@@ -25,7 +25,7 @@ cd pycamb
 python3 setup.py install --user
 
 #Get and make N-GenIC.
-cd ../
+cd ../../
 git clone https://github.com/sbird/S-GenIC.git
 cd S-GenIC
 git submodule update --init --recursive
