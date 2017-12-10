@@ -127,7 +127,7 @@ class SimulationICs(object):
 
         transfers = results.get_matter_transfer_data()
         kh, camb_zz, pk = results.get_linear_matter_power_spectrum(have_power_spectra=True)
-        cambpars = "_camb_params.ini"
+        cambpars = os.path.join(self.outdir, "_camb_params.ini")
         cfd = open(cambpars, 'w')
         #Write used parameters to a file
         print(pars, file=cfd)

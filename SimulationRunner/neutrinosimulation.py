@@ -76,9 +76,6 @@ def get_neutrino_masses(total_mass, hierarchy):
 class NeutrinoSemiLinearSim(simulation.Simulation):
     """Further specialise the Simulation class for semi-linear analytic massive neutrinos.
     """
-    def __init__(self, *, hierarchy = 0, code_class=NeutrinoSemiLinearSim, code_args = None, **kwargs):
-        super().__init__(code_class=code_class, code_args=code_args, **kwargs)
-
     def _other_params(self, config):
         """Config options specific to kspace neutrinos, which computes neutrino hierarchy."""
         config['MassiveNuLinRespOn'] = 1
