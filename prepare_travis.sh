@@ -7,7 +7,8 @@ cd depends
 ##Get and make CAMB.
 git clone https://github.com/sbird/camb.git
 cd camb
-make camb
+cd pycamb
+python3 setup.py install --user
 
 #Get and make N-GenIC.
 cd ../

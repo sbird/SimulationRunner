@@ -50,15 +50,6 @@ def test_neutrino_semilinear():
     assert config['NU_Vtherm_On'] == "0"
     assert config['NU_PartMass_in_ev'] == "0.45"
 
-    config = configobj.ConfigObj(os.path.join(test_dir,"_camb_params.ini"))
-    assert abs(float(config['ombh2']) - 0.023127999999999996) < 1e-7
-    assert abs(float(config['omch2']) - 0.11316056345286662) < 1e-7
-    assert abs(float(config['omnuh2']) - 0.004831436547133348) < 1e-7
-    assert config['massless_neutrinos'] == "0.046"
-    assert config['massive_neutrinos'] == ['1', '1', '1']
-    assert config['nu_mass_fractions'] == ['0.345458458664', '0.327554825864', '0.326986715472']
-    assert config['nu_mass_eigenstates'] == '3'
-
     config = configobj.ConfigObj(os.path.join(test_dir,"mpgadget.param"))
     assert config['MNue'] == '0.147144021962'
     assert config['MNum'] == '0.147399671639'
@@ -79,7 +70,7 @@ def test_neutrino_mass_spec():
     """Check that our solution to the neutrino hierarchy is valid"""
     M21 = 7.53e-5 #Particle data group 2016: +- 0.18e-5 eV2
     M32n = 2.44e-3 #Particle data group: +- 0.06e-3 eV2
-    M32i = 2.51e-3
+#     M32i = 2.51e-3
     numass = nus.get_neutrino_masses(0.3, 0)
     assert np.all(np.abs(numass-0.1) < 1e-6)
     numass = nus.get_neutrino_masses(0.3, 1)
