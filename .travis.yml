@@ -10,7 +10,7 @@ addons:
             - libopenmpi-dev
             - libfftw3-dev
             - libgsl0-dev
-            - gfortran-5
+            - gfortran-4.9
 virtualenv:
     system_site_packages: true
 
