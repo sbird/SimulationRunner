@@ -8,7 +8,6 @@ Different machines can be implemented as decorators.
 from __future__ import print_function
 import os
 import os.path
-import re
 import shutil
 import subprocess
 import configobj

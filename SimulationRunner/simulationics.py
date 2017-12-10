@@ -8,6 +8,8 @@ import json
 import importlib
 import numpy as np
 import configobj
+import camb
+from camb import model
 import matplotlib
 matplotlib.use("PDF")
 import matplotlib.pyplot as plt
@@ -42,7 +44,7 @@ class SimulationICs(object):
     ns - Scalar spectral index
     m_nu - neutrino mass
     """
-    def __init__(self, *, outdir, box, npart, seed = 9281110, redshift=99, separate_gas=True, omega0=0.288, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, rscatter=False, m_nu=0, code_class=simulation.Simulation, code_args=None):
+    def __init__(self, *, outdir, box, npart, seed = 9281110, redshift=99, separate_gas=True, omega0=0.288, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, rscatter=False, m_nu=0, nu_hierarchy='degenerate', code_class=simulation.Simulation, code_args=None):
         #This lets us safely have a default dictionary argument
         self.code_args = {}
         if code_args is not None:
@@ -83,17 +85,13 @@ class SimulationICs(object):
         #we want to use a different CAMB transfer when checking output power.
         self.separate_nu = False
         self.m_nu = m_nu
+        self.nu_hierarchy = nu_hierarchy
         self.outdir = outdir
         defaultpath = os.path.dirname(__file__)
-        #Default values for the CAMB parameters
-        self.cambdefault = os.path.join(defaultpath,"params.ini")
-        #Filename for new CAMB file
-        self.cambout = "_camb_params.ini"
         #Default GenIC paths
         self.genicdefault = os.path.join(defaultpath,"ngenic.param")
         self.genicout = "_genic_params.ini"
         #Executable names
-        self.cambexe = "camb"
         self.genicexe = "N-GenIC"
         #Number of files per snapshot
         #This is chosen to give a reasonable number and
@@ -106,50 +104,48 @@ class SimulationICs(object):
         assert 4 >= self.icformat >= 2
 
     def cambfile(self):
-        """Generate the CAMB parameter file from the (cosmological) simulation parameters and the default values"""
+        """Generate the IC power spectrum using pyCAMB."""
         #Load CAMB file using ConfigObj
-        config = configobj.ConfigObj(self.cambdefault)
-        config.filename = os.path.join(self.outdir, self.cambout)
-        #Set values: note we will write to camb_linear/ics_matterpow_99.dat with the below.
-        camb_output = "camb_linear/ics"
-        camb_outdir = os.path.join(self.outdir,os.path.dirname(camb_output))
-        try:
-            os.mkdir(camb_outdir)
-        except FileExistsError:
-            pass
-        config['output_root'] = os.path.join(self.outdir,camb_output)
-        #Can't change this easily because the parameters then have different names
-        assert config['use_physical'] == 'T'
-        config['hubble'] = self.hubble * 100
-        config['ombh2'] = self.omegab*self.hubble**2
-        config['omch2'] = (self.omega0 - self.omegab)*self.hubble**2
-        config['omk'] = 0.
-        #Initial power spectrum: MAKE SURE you set the pivot scale to the WMAP value!
-        config['pivot_scalar'] = 2e-3
-        config['pivot_tensor'] = 2e-3
-        config['scalar_spectral_index(1)'] = self.ns
-        config['scalar_amp(1)'] = self.scalar_amp
-        #Various numerical parameters
-        #Maximum relevant scale is 2 pi * avg. interparticle spacing * 2. Set kmax to double this.
-        config['transfer_kmax'] = 2*math.pi*4*self.npart/self.box
+        pars = camb.CAMBparams()
+        #Set the neutrino density and subtract it from omega0
+        omeganuh2 = self.m_nu/93.14
+        omch2 = (self.omega0 - self.omegab)*self.hubble**2 - omeganuh2
+        ombh2 =  self.omegab*self.hubble**2
+        pars.set_accuracy(HighAccuracyDefault=True, AccuracyBoost=3.0)
+        pars.set_cosmology(H0 = 100 * self.hubble, ombh2 = ombh2, omch2 = omch2, omk=0., mnu=self.m_nu, neutrino_hierarchy=self.nu_hierarchy, num_massive_neutrinos = 3)
+        #Initial cosmology
+        pars.InitPower.set_params(ns=self.ns, As=self.scalar_amp, pivot_scalar=2e-3, pivot_tensor=2e-3)
         #At which redshifts should we produce CAMB output: we want the starting redshift of the simulation,
         #but we also want some other values for checking purposes
         #Extra redshifts at which to generate CAMB output, in addition to self.redshift and self.redshift/2
         code = self.code_class_name(outdir=self.outdir, box=self.box, npart=self.npart, redshift=self.redshift, separate_gas=self.separate_gas, omega0=self.omega0, omegab=self.omegab, hubble=self.hubble, m_nu=self.m_nu, **self.code_args)
         camb_zz = np.concatenate([[self.redshift,], 1/code.generate_times()-1,[code.redend,]])
-        for (n,zz) in zip(range(1,len(camb_zz)+1), camb_zz):
-            zlong = '%.4g' % zz
-            zstr = self._camb_zstr(zz)
-            config['transfer_redshift('+str(n)+')'] = zlong
-            config['transfer_filename('+str(n)+')'] = 'transfer_'+zstr+'.dat'
-            config['transfer_matterpower('+str(n)+')'] = 'matterpow_'+zstr+'.dat'
-        config['transfer_num_redshifts'] = len(camb_zz)
-        #Set up the neutrinos.
-        #This has it's own function so it can be overriden by child classes
-        config = self._camb_neutrinos(config)
-        #Write the config file
-        config.write()
-        return (camb_output, config.filename)
+        pars.set_matter_power(redshifts = camb_zz, kmax = 2*math.pi*10*self.npart/self.box)
+        pars.NonLinear = model.NonLinear_none
+        #Get results
+        results = camb.get_results(pars)
+
+        transfers = results.get_matter_transfer_data()
+        kh, camb_zz, pk = results.get_linear_matter_power_spectrum(have_power_spectra=True)
+        cambpars = "_camb_params.ini"
+        cfd = open(cambpars, 'w')
+        #Write used parameters to a file
+        print(pars, file=cfd)
+        camb_output = "camb_linear/"
+        camb_outdir = os.path.join(self.outdir,camb_output)
+        try:
+            os.mkdir(camb_outdir)
+        except FileExistsError:
+            pass
+        #Set values: note we will write to camb_linear/ics_matterpow_99.dat with the below.
+        for i, zz in enumerate(camb_zz):
+            mfn = os.path.join(camb_outdir, "ics_matterpow_"+self._camb_zstr(zz)+".dat")
+            #Get the power spectra
+            matpow = np.vstack([kh, pk[i]])
+            np.savetxt(mfn, matpow.T)
+            tfn = os.path.join(camb_outdir,"ics_transfer_"+self._camb_zstr(zz)+".dat")
+            np.savetxt(tfn, transfers.transfer_data[:,:,i].T)
+        return camb_outdir
 
     def _camb_zstr(self,zz):
         """Get the formatted redshift for CAMB output files."""
@@ -158,14 +154,6 @@ class SimulationICs(object):
         else:
             zstr = '%.1g' % zz
         return zstr
-
-    def _camb_neutrinos(self, config):
-        """Modify the CAMB config file to have massless neutrinos.
-        Designed to be easily over-ridden"""
-        config['massless_neutrinos'] = 3.046
-        config['massive_neutrinos'] = 0
-        config['omnuh2'] = 0
-        return config
 
     def genicfile(self, camb_output):
         """Generate the GenIC parameter file"""
@@ -203,8 +191,8 @@ class SimulationICs(object):
         config['HubbleParam'] = self.hubble
         config['Redshift'] = self.redshift
         zstr = self._camb_zstr(self.redshift)
-        config['FileWithInputSpectrum'] = camb_output + "_matterpow_"+zstr+".dat"
-        config['FileWithTransfer'] = camb_output + "_transfer_"+zstr+".dat"
+        config['FileWithInputSpectrum'] = camb_output + "ics_matterpow_"+zstr+".dat"
+        config['FileWithTransfer'] = camb_output + "ics_transfer_"+zstr+".dat"
         config['NumFiles'] = int(self.numfiles)
         assert config['InputSpectrum_UnitLength_in_cm'] == '3.085678e24'
         config['Seed'] = self.seed
@@ -219,7 +207,7 @@ class SimulationICs(object):
         """Function to hook if you want to change the CAMB output power spectrum.
         Should save the new power spectrum to camb_output + _matterpow_str(redshift).dat"""
         zstr = self._camb_zstr(self.redshift)
-        camb_file = camb_output+"_matterpow_"+zstr+".dat"
+        camb_file = os.path.join(camb_output,"ics_matterpow_"+zstr+".dat")
         os.stat(camb_file)
         return
 
@@ -275,9 +263,9 @@ class SimulationICs(object):
         #Now check that they match what we put into the simulation, from CAMB
         #Reload the CAMB files from disc, just in case something went wrong writing them.
         zstr = self._camb_zstr(self.redshift)
-        matterpow = camb_output + "_matterpow_"+zstr+".dat"
-        transfer = camb_output + "_transfer_"+zstr+".dat"
-        camb = cambpower.CAMBPowerSpectrum(matterpow, transfer, kmin=2*math.pi/self.box/5, kmax = self.npart*2*math.pi/self.box*10)
+        matterpow = os.path.join(camb_output, "ics_matterpow_"+zstr+".dat")
+        transfer = os.path.join(camb_output, "ics_transfer_"+zstr+".dat")
+        cambpow = cambpower.CAMBPowerSpectrum(matterpow, transfer, kmin=2*math.pi/self.box/5, kmax = self.npart*2*math.pi/self.box*10)
         #Error to tolerate on simulated power spectrum
         def gpk_out(spe):
             """Get the output filename for a species"""
@@ -295,12 +283,12 @@ class SimulationICs(object):
             (kk_ic, Pk_ic) = load_genpk(go, self.box)
             #Load the power spectrum. Note that DM may incorporate other particle types.
             if not self.separate_gas and not self.separate_nu and sp =="DM":
-                Pk_camb = camb.get_camb_power(kk_ic, species="tot")
+                Pk_camb = cambpow.get_camb_power(kk_ic, species="tot")
             elif not self.separate_gas and self.separate_nu and sp == "DM":
-                Pk_camb = camb.get_camb_power(kk_ic, species="DMby")
+                Pk_camb = cambpow.get_camb_power(kk_ic, species="DMby")
             #Case with self.separate_gas true and separate_nu false is assumed to have omega_nu = 0.
             else:
-                Pk_camb = camb.get_camb_power(kk_ic, species=sp)
+                Pk_camb = cambpow.get_camb_power(kk_ic, species=sp)
             #Check that they agree between 1/4 the box and 1/4 the nyquist frequency
             imax = np.searchsorted(kk_ic, self.npart*2*math.pi/self.box/4)
             imin = np.searchsorted(kk_ic, 2*math.pi/self.box*4)
@@ -334,13 +322,9 @@ class SimulationICs(object):
     def make_simulation(self, pkaccuracy=0.05, do_build=False):
         """Wrapper function to make the simulation ICs."""
         #First generate the input files for CAMB
-        (camb_output, camb_param) = self.cambfile()
+        camb_output = self.cambfile()
         #Then run CAMB
-        camb = utils.find_exec(self.cambexe)
-        self.camb_git = utils.get_git_hash(camb)
-        #In python 3.5, can use subprocess.run to do this.
-        #But for backwards compat, use check_output
-        subprocess.check_call([camb, camb_param], cwd=os.path.dirname(camb))
+        self.camb_git = camb.__version__
         #Change the power spectrum file on disc if we want to do that
         self._alter_power(os.path.join(self.outdir,camb_output))
         #Now generate the GenIC parameters

@@ -32,26 +32,6 @@ class NeutrinoPartICs(simulationics.SimulationICs):
         super().__init__(m_nu = m_nu, separate_gas=separate_gas, code_class=code_class, **kwargs)
         self.separate_nu = True
 
-    def _camb_neutrinos(self, config):
-        """Config options so CAMB can use massive neutrinos.
-        For particle neutrinos we want degenerate neutrinos."""
-        config['massless_neutrinos'] = 0.046
-        config['massive_neutrinos'] = 3
-        config['nu_mass_fractions'] = 1
-        #Very light neutrinos should have only one massive species
-        if self.m_nu < 0.1:
-            config['massless_neutrinos'] = 2.046
-            config['massive_neutrinos'] = 1
-        config['nu_mass_eigenstates'] = 1
-        #Actually does nothing, but we set it to avoid the library setting it to ""
-        config['nu_mass_degeneracies'] = 0
-        config['share_delta_neff'] = 'T'
-        #Set the neutrino density and subtract it from omega0
-        omeganuh2 = self.m_nu/93.14
-        config['omnuh2'] = omeganuh2
-        config['omch2'] = (self.omega0 - self.omegab)*self.hubble**2- omeganuh2
-        return config
-
     def _genicfile_child_options(self, config):
         """Set up particle neutrino parameters for GenIC"""
         config['NU_Vtherm_On'] = 1
@@ -63,19 +43,19 @@ class NeutrinoPartICs(simulationics.SimulationICs):
 
 def get_neutrino_masses(total_mass, hierarchy):
     """Get the three neutrino masses, including the mass splittings.
-        Hierarchy is -1 for inverted (two heavy), 1 for normal (two light) and 0 for degenerate."""
+        Hierarchy is 'inverted' (two heavy), 'normal' (two light) or degenerate."""
     #Neutrino mass splittings
     nu_M21 = 7.53e-5 #Particle data group 2016: +- 0.18e-5 eV2
     nu_M32n = 2.44e-3 #Particle data group: +- 0.06e-3 eV2
     nu_M32i = 2.51e-3 #Particle data group: +- 0.06e-3 eV2
 
-    if hierarchy > 0:
+    if hierarchy == 'normal':
         nu_M32 = nu_M32n
         #If the total mass is below that allowed by the hierarchy,
         #assign one active neutrino.
         if total_mass < np.sqrt(nu_M32n) + np.sqrt(nu_M21):
             return np.array([total_mass, 0, 0])
-    elif hierarchy < 0:
+    elif hierarchy == 'inverted':
         nu_M32 = -nu_M32i
         if total_mass < 2*np.sqrt(nu_M32i) - np.sqrt(nu_M21):
             return np.array([total_mass/2., total_mass/2., 0])
@@ -96,14 +76,13 @@ def get_neutrino_masses(total_mass, hierarchy):
 class NeutrinoSemiLinearSim(simulation.Simulation):
     """Further specialise the Simulation class for semi-linear analytic massive neutrinos.
     """
-    def __init__(self, *, hierarchy=0, **kwargs):
-        self.hierarchy = hierarchy
-        super().__init__(**kwargs)
+    def __init__(self, *, hierarchy = 0, code_class=NeutrinoSemiLinearSim, code_args = None, **kwargs):
+        super().__init__(code_class=code_class, code_args=code_args, **kwargs)
 
     def _other_params(self, config):
         """Config options specific to kspace neutrinos, which computes neutrino hierarchy."""
         config['MassiveNuLinRespOn'] = 1
-        numass = get_neutrino_masses(self.m_nu, self.hierarchy)
+        numass = get_neutrino_masses(self.m_nu, self.nu_hierarchy)
         config['MNue'] = numass[2]
         config['MNum'] = numass[1]
         config['MNut'] = numass[0]
@@ -116,12 +95,7 @@ class NeutrinoSemiLinearICs(NeutrinoPartICs):
     """Further specialise the NeutrinoPartICs class for semi-linear analytic massive neutrinos.
     """
     __doc__ = __doc__+NeutrinoPartICs.__doc__
-    def __init__(self, *, hierarchy = 0, code_class=NeutrinoSemiLinearSim, code_args = None, **kwargs):
-        if code_args is not None:
-            code_args['hierarchy'] = hierarchy
-        else:
-            code_args = {'hierarchy': hierarchy}
-        self.hierarchy = hierarchy
+    def __init__(self, *, code_class=NeutrinoSemiLinearSim, code_args = None, **kwargs):
         super().__init__(code_class=code_class, code_args=code_args, **kwargs)
 
     def _genicfile_child_options(self, config):
@@ -131,26 +105,12 @@ class NeutrinoSemiLinearICs(NeutrinoPartICs):
         config['NU_in_DM'] = 0
         config['NU_PartMass_in_ev'] = self.m_nu
         #Degenerate neutrinos
-        config['Hierarchy'] = self.hierarchy
-        return config
-
-    def _camb_neutrinos(self, config):
-        """Config options so CAMB can use massive neutrinos.
-        We want a neutrino mass hierarchy."""
-        config['massless_neutrinos'] = 0.046
-        config['massive_neutrinos'] = [1, 1, 1]
-        numass = get_neutrino_masses(self.m_nu, self.hierarchy)
-        config['nu_mass_fractions'] = list(numass/self.m_nu)
-        config['nu_mass_eigenstates'] = 3
-        #Each neutrino has the same temperature
-        config['share_delta_neff'] = 'T'
-        #Actually does nothing if share_delta_neff = T,q
-        #but we set it to avoid the library setting it to "" which CAMB's parser rejects.
-        config['nu_mass_degeneracies'] = 0
-        #Set the neutrino density and subtract it from omega0
-        omeganuh2 = self.m_nu/93.14
-        config['omnuh2'] = omeganuh2
-        config['omch2'] = (self.omega0 - self.omegab)*self.hubble**2- omeganuh2
+        if self.nu_hierarchy == 'normal':
+            config['Hierarchy'] = 1
+        elif self.nu_hierarchy == 'inverted':
+            config['Hierarchy'] = -1
+        else:
+            config['Hierarchy'] = 0
         return config
 
 class NeutrinoHybridSim(NeutrinoSemiLinearSim):
