@@ -14,9 +14,6 @@ cd $HOME/miniconda/envs/test/bin/
 #Set up a symlink to gfortran
 ln -s x86_64-conda_cos6-linux-gnu-gfortran gfortran
 cd -
-echo `which gfortran`
-ls $HOME/miniconda/envs/test/bin
-ls $HOME/miniconda/bin
 #Clone stuff.
 mkdir tests
 mkdir depends
