@@ -4,7 +4,6 @@ import os
 import numpy as np
 import scipy.interpolate as interp
 from . import simulation
-from . import mpsimulation
 from . import simulationics
 
 class LymanAlphaSim(simulation.Simulation):
@@ -51,7 +50,7 @@ class LymanAlphaKnotICs(simulationics.SimulationICs):
     """Specialise the generation of initial conditions to change the power spectrum via knots.
     knot_val is a multiplicative factor applied to the power spectrum at knot_pos
     knot_pos is in units of the k bins for the power spectrum output by CAMB, by default h/Mpc."""
-    def __init__(self, *, knot_pos= (0.15,0.475,0.75,1.19), knot_val = (1.,1.,1.,1.), code_class=LymanAlphaMPSim, code_args=None, **kwargs):
+    def __init__(self, *, knot_pos= (0.15,0.475,0.75,1.19), knot_val = (1.,1.,1.,1.), code_class=LymanAlphaSim, code_args=None, **kwargs):
         lcode_args = {'rescale_gamma': False, 'rescale_amp' : 1., 'rescale_slope': -0.7}
         if code_args is not None:
             code_args.update(lcode_args)

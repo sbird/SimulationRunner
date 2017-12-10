@@ -9,21 +9,21 @@ from SimulationRunner import neutrinosimulation as nus
 def test_neutrino_part():
     """Create a full simulation with particle neutrinos."""
     test_dir = os.path.join(os.getcwd(),"tests/test_nu/")
-    Sim = nus.NeutrinoPartICs(outdir=test_dir,box = 256,npart = 256, m_nu = 0.45, redshift = 99, separate_gas=False, code_args={'redend':0})
+    Sim = nus.NeutrinoPartICs(outdir=test_dir,box = 256,npart = 128, m_nu = 0.45, redshift = 99, separate_gas=False, code_args={'redend':0})
     Sim.make_simulation()
     assert os.path.exists(test_dir)
     #Check these we are writing reasonable values.
     config = configobj.ConfigObj(os.path.join(test_dir,"_genic_params.ini"))
     assert config['Omega'] == "0.288"
     assert config['OmegaLambda'] == "0.712"
-    assert config['NNeutrino'] == "256"
+    assert config['NNeutrino'] == "128"
     assert config['NBaryon'] == "0"
     assert config['NU_in_DM'] == "0"
     assert config['NU_Vtherm_On'] == "1"
     assert config['NU_PartMass_in_ev'] == "0.45"
     #Check that the output has neutrino particles
-    f = bigfile.BigFile(os.path.join(test_dir,"ICS/256_256_99"),'r')
-    assert f["Header"].attrs["TotNumPart"][2] == 256**3
+    f = bigfile.BigFile(os.path.join(test_dir,"ICS/256_128_99"),'r')
+    assert f["Header"].attrs["TotNumPart"][2] == 128**3
     #Clean the test directory if test was successful
     #Check the mass is correct
     mcdm = f["Header"].attrs["MassTable"][1]
@@ -38,7 +38,7 @@ def test_neutrino_semilinear():
     """Create a full simulation with semi-linear neutrinos.
     The important thing here is to test that OmegaNu is correctly set."""
     test_dir = os.path.join(os.getcwd(),"tests/test_nu_semilin/")
-    Sim = nus.NeutrinoSemiLinearICs(outdir=test_dir,box = 256,npart = 256, m_nu = 0.45, redshift = 99, separate_gas=False, hierarchy=1, code_args={'redend':0})
+    Sim = nus.NeutrinoSemiLinearICs(outdir=test_dir,box = 256,npart = 128, m_nu = 0.45, redshift = 99, separate_gas=False, nu_hierarchy='normal', code_args={'redend':0})
     Sim.make_simulation()
     assert os.path.exists(test_dir)
     #Check these files have not changed
@@ -71,9 +71,9 @@ def test_neutrino_mass_spec():
     M21 = 7.53e-5 #Particle data group 2016: +- 0.18e-5 eV2
     M32n = 2.44e-3 #Particle data group: +- 0.06e-3 eV2
 #     M32i = 2.51e-3
-    numass = nus.get_neutrino_masses(0.3, 0)
+    numass = nus.get_neutrino_masses(0.3, 'degenerate')
     assert np.all(np.abs(numass-0.1) < 1e-6)
-    numass = nus.get_neutrino_masses(0.3, 1)
+    numass = nus.get_neutrino_masses(0.3, 'normal')
     #Check the original inequalities are satisfied
     assert np.abs(numass[0]+numass[1]+numass[2] - 0.3) < 1e-4
     assert np.abs(numass[0]**2 - numass[1]**2 - M32n) < 1e-4
