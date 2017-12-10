@@ -13,6 +13,7 @@ from camb import model
 import matplotlib
 matplotlib.use("PDF")
 import matplotlib.pyplot as plt
+from nbodykit.lab import BigFileCatalog,FFTPower
 from . import simulation
 from . import cambpower
 from . import utils
@@ -257,9 +258,7 @@ class SimulationICs(object):
         """Generate the power spectrum for each particle type from the generated simulation files, using GenPK,
         and check that it matches the input. This is a consistency test on each simulation output."""
         #Generate power spectra
-        genpk = utils.find_exec("gen-pk")
-        genicfileout = os.path.join(self.outdir, genicfileout)
-        subprocess.check_call([genpk, "-i", genicfileout, "-o", os.path.dirname(genicfileout)])
+        output = os.path.join(self.outdir, genicfileout)
         #Now check that they match what we put into the simulation, from CAMB
         #Reload the CAMB files from disc, just in case something went wrong writing them.
         zstr = self._camb_zstr(self.redshift)
@@ -267,20 +266,22 @@ class SimulationICs(object):
         transfer = os.path.join(camb_output, "ics_transfer_"+zstr+".dat")
         cambpow = cambpower.CAMBPowerSpectrum(matterpow, transfer, kmin=2*math.pi/self.box/5, kmax = self.npart*2*math.pi/self.box*10)
         #Error to tolerate on simulated power spectrum
-        def gpk_out(spe):
-            """Get the output filename for a species"""
-            gpkout = "PK-"+spe+"-"+os.path.basename(genicfileout)
-            return os.path.join(os.path.dirname(genicfileout), gpkout)
         #Check whether we output neutrinos
-        for sp in ["DM","by", "nu"]:
+        for sp in ["DM","by"]:
             #GenPK output is at PK-[nu,by,DM]-basename(genicfileout)
-            go = gpk_out(sp)
-            if sp == "DM" or (self.separate_gas and sp == "by"):
-                assert os.path.exists(go)
-            elif not os.path.exists(go):
-                continue
+            tt = '1/'
+            if sp == "by":
+                tt = '0/'
+                if not self.separate_gas:
+                    continue
+            cat = BigFileCatalog(output, dataset=tt, header='Header')
+            mesh = cat.to_mesh(Nmesh=self.npart*2, window='cic', compensated=True, interlaced=True)
+            pk = FFTPower(cat, mode='1d', Nmesh=self.npart*2)
+            #GenPK output is at PK-[nu,by,DM]-basename(genicfileout)
             #Load the power spectra
-            (kk_ic, Pk_ic) = load_genpk(go, self.box)
+            #Convert units from kpc/h to Mpc/h
+            kk_ic = pk.power['k'][1:]*1e3
+            Pk_ic = pk.power['power'][1:].real/1e9
             #Load the power spectrum. Note that DM may incorporate other particle types.
             if not self.separate_gas and not self.separate_nu and sp =="DM":
                 Pk_camb = cambpow.get_camb_power(kk_ic, species="tot")
@@ -292,14 +293,6 @@ class SimulationICs(object):
             #Check that they agree between 1/4 the box and 1/4 the nyquist frequency
             imax = np.searchsorted(kk_ic, self.npart*2*math.pi/self.box/4)
             imin = np.searchsorted(kk_ic, 2*math.pi/self.box*4)
-            if sp == "nu":
-                #Neutrinos get special treatment here.
-                #Because they don't really cluster, getting the initial power really right
-                #(especially on small scales) is both hard and rather futile.
-                accuracy *= 4
-                ii = np.where(Pk_ic < Pk_ic[0]*1e-5)
-                if np.size(ii) > 0:
-                    imax = ii[0][0]
             #Make some useful figures
             plt.semilogx(kk_ic, Pk_ic/Pk_camb,linewidth=2)
             plt.semilogx([kk_ic[0]*0.9,kk_ic[-1]*1.1], [0.95,0.95], ls="--",linewidth=2)
@@ -307,12 +300,12 @@ class SimulationICs(object):
             plt.semilogx([kk_ic[imin],kk_ic[imin]], [0,1.5], ls=":",linewidth=2)
             plt.semilogx([kk_ic[imax],kk_ic[imax]], [0,1.5], ls=":",linewidth=2)
             plt.ylim(0., 1.5)
-            plt.savefig(go+"-diff.pdf")
+            plt.savefig("PK-IC-"+sp+"-diff.pdf")
             plt.clf()
             plt.loglog(kk_ic, Pk_ic,linewidth=2)
             plt.loglog(kk_ic, Pk_camb,ls="--", linewidth=2)
             plt.ylim(ymax=Pk_camb[0]*10)
-            plt.savefig(go+"-abs.pdf")
+            plt.savefig("PK-IC-"+sp+"-abs.pdf")
             plt.clf()
             error = abs(Pk_ic[imin:imax]/Pk_camb[imin:imax] -1)
             #Don't worry too much about one failing mode.
@@ -340,30 +333,3 @@ class SimulationICs(object):
         #Make the parameter files.
         ics = self.code_class_name(outdir=self.outdir, box=self.box, npart=self.npart, redshift=self.redshift, separate_gas=self.separate_gas, omega0=self.omega0, omegab=self.omegab, hubble=self.hubble, m_nu=self.m_nu, **self.code_args)
         return ics.make_simulation(genic_output, do_build=do_build)
-
-def load_genpk(infile, box, minmode=1):
-    """Load a power spectrum from a Gen-PK output, modifying units to agree with CAMB"""
-    matpow = np.loadtxt(infile)
-    scale = 2*math.pi/box
-    kk = matpow[:,0]*scale
-    Pk = matpow[:,1]/scale**3*(2*math.pi)**3
-    count = matpow[:,2]
-    #Rebin so that there are at least n modes per bin
-    Pk_rebin = []
-    kk_rebin = []
-    lcount = 0
-    istart = 0
-    iend = 0
-    while iend < np.size(kk):
-        lcount+=count[iend]
-        iend+=1
-        if lcount >= minmode:
-            p = np.sum(count[istart:iend]*Pk[istart:iend])/lcount
-            assert p >= 0
-            k = np.sum(count[istart:iend]*kk[istart:iend])/lcount
-            assert k > 0
-            kk_rebin.append(k)
-            Pk_rebin.append(p)
-            istart=iend
-            lcount=0
-    return (np.array(kk_rebin), np.array(Pk_rebin))

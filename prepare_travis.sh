@@ -30,10 +30,3 @@ git clone https://github.com/sbird/S-GenIC.git
 cd S-GenIC
 git submodule update --init --recursive
 make
-
-#Get and make GenPK.
-cd ../
-git clone https://github.com/sbird/GenPK.git
-cd GenPK
-git submodule update --init --recursive
-make
