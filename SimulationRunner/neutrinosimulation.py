@@ -1,13 +1,13 @@
 """Specialization of the Simulation class to Lyman-alpha forest simulations."""
 
 import numpy as np
-from . import mpsimulation
+from . import simulation
 from . import simulationics
 
-class NeutrinoPartSim(mpsimulation.MPSimulation):
+class NeutrinoPartSim(simulation.Simulation):
     """Further specialise the Simulation class for particle based massive neutrinos.
     """
-    __doc__ = __doc__+mpsimulation.MPSimulation.__doc__
+    __doc__ = __doc__+simulation.Simulation.__doc__
     def _other_params(self, config):
         """Config options to make type 2 particles neutrinos."""
         config['FastParticleType'] = 2
@@ -93,7 +93,7 @@ def get_neutrino_masses(total_mass, hierarchy):
     assert np.all(nu_masses >= 0)
     return nu_masses
 
-class NeutrinoSemiLinearSim(mpsimulation.MPSimulation):
+class NeutrinoSemiLinearSim(simulation.Simulation):
     """Further specialise the Simulation class for semi-linear analytic massive neutrinos.
     """
     def __init__(self, *, hierarchy=0, **kwargs):
@@ -155,7 +155,7 @@ class NeutrinoSemiLinearICs(NeutrinoPartICs):
 
 class NeutrinoHybridSim(NeutrinoSemiLinearSim):
     """Further specialise to hybrid neutrino simulations, which have both analytic and particle neutrinos."""
-    __doc__ = __doc__+mpsimulation.MPSimulation.__doc__
+    __doc__ = __doc__+simulation.Simulation.__doc__
     def __init__(self, *, zz_transition=1., vcrit=500, **kwargs):
         super().__init__(**kwargs)
         self.vcrit = vcrit

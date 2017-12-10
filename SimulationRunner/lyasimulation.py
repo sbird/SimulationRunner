@@ -24,33 +24,6 @@ class LymanAlphaSim(simulation.Simulation):
 
     def _feedback_config_options(self, config, prefix=""):
         """Config options specific to the Lyman alpha forest star formation criterion"""
-        config.write(prefix+"SFR\n")
-        config.write(prefix+"QUICK_LYALPHA\n")
-        if self.rescale_gamma:
-            config.write(prefix+"RESCALE_EEOS\n")
-        return
-
-    def _feedback_params(self, config):
-        """Config options specific to the lyman alpha forest"""
-        #Quick star formation threshold from 1605.03462
-        config["CritOverDensity"] = 1000.
-        #These are parameters for the model to rescale the temperature-density relation
-        if self.rescale_gamma:
-            config["ExtraHeatingThresh"] = 10.0
-            config["ExtraHeatingAmp"]  = self.rescale_amp
-            config["ExtraHeatingExponent"] = self.rescale_slope
-        return config
-
-    def generate_times(self):
-        """Snapshot outputs for lyman alpha"""
-        redshifts = np.concatenate([[49,9],np.arange(4.2, self.redend, -0.2)])
-        return 1./(1.+redshifts)
-
-#Inherit from MPSimulation first, then get generate_times and __init__ from LymanAlphaSim.
-class LymanAlphaMPSim(mpsimulation.MPSimulation, LymanAlphaSim):
-    """Class that generates Lyman alpha simulation config files for MP-Gadget."""
-    def _feedback_config_options(self, config, prefix=""):
-        """Config options specific to the Lyman alpha forest star formation criterion"""
         #No feedback!
         return
 
@@ -68,6 +41,11 @@ class LymanAlphaMPSim(mpsimulation.MPSimulation, LymanAlphaSim):
             config["HeliumHeatAmp"]  = self.rescale_amp
             config["HeliumHeatExp"] = self.rescale_slope
         return config
+
+    def generate_times(self):
+        """Snapshot outputs for lyman alpha"""
+        redshifts = np.concatenate([[49,9],np.arange(4.2, self.redend, -0.2)])
+        return 1./(1.+redshifts)
 
 class LymanAlphaKnotICs(simulationics.SimulationICs):
     """Specialise the generation of initial conditions to change the power spectrum via knots.
