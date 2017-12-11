@@ -159,6 +159,8 @@ class Simulation(object):
         config['DensityKernelType'] = 'cubic'
         config['PartAllocFactor'] = 2
         config['WindOn'] = 0
+        config['WindModel'] = 'nowind'
+        config['BlackHoleOn'] = 0
         if self.separate_gas:
             config['CoolingOn'] = 1
             config['TreeCoolFile'] = "TREECOOL"
@@ -182,7 +184,6 @@ class Simulation(object):
 
     def _feedback_params(self, config):
         """Config parameters for the feedback models"""
-        config['WindModel'] = 'nowind'
         return config
 
     def _other_params(self, config):
