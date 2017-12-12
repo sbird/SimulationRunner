@@ -1,6 +1,5 @@
 InitCondFile = ICS/256_128_99
 OutputDir = output
-SnapshotFileBase = snap
 TimeLimitCPU = 30882
 TimeMax = 1.0
 Omega0 = 0.288
