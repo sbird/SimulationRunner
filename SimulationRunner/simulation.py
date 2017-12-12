@@ -134,7 +134,6 @@ class Simulation(object):
             os.mkdir(os.path.join(self.outdir, "output"))
         except FileExistsError:
             pass
-        config['SnapshotFileBase'] = "snap"
         config['TimeLimitCPU'] = int(60*60*self._cluster.timelimit*20/17.-3000)
         config['TimeMax'] = 1./(1+self.redend)
         config['Omega0'] = self.omega0
