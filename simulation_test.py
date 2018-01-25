@@ -12,17 +12,8 @@ def test_full_integration():
     Sim.make_simulation()
     #Check the following files were created
     assert os.path.exists(defaultpath)
-    for ff in ("_camb_params.ini", "TREECOOL", "mpi_submit", "camb_linear", "ICS", "output", "camb_linear/ics_matterpow_99.dat", "SimulationICs.json"):
+    for ff in ("_camb_params.ini", "TREECOOL", "mpi_submit", "camb_linear", "ICS", "output", "camb_linear/ics_matterpow_99.dat", "SimulationICs.json", "mpgadget.param", "_genic_params.ini"):
         assert os.path.exists(os.path.join(defaultpath, ff))
-    #Check these files have not changed
-    testdatadir = os.path.join(os.path.dirname(__file__),"testdata/test1/")
-    for f in ("_genic_params.ini", "mpgadget.param"):
-        config_new = configobj.ConfigObj(os.path.join(defaultpath,f))
-        config_old = configobj.ConfigObj(os.path.join(testdatadir,f))
-        for key in config_old.keys():
-            if re.match("/home/spb",config_old[key]):
-                continue
-            assert config_old[key] == config_new[key]
     #Clean the test directory if test was successful
     #shutil.rmtree(defaultpath)
 
