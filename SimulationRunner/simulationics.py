@@ -391,8 +391,8 @@ class SimulationICs(object):
         #Now check that they match what we put into the simulation, from CAMB
         #Reload the CAMB files from disc, just in case something went wrong writing them.
         zstr = self._camb_zstr(self.redshift)
-        matterpow = os.path.join(camb_output, "ics_matterpow_"+zstr+".dat")
-        transfer = os.path.join(camb_output, "ics_transfer_"+zstr+".dat")
+        matterpow = "camb_linear/ics_matterpow_"+zstr+".dat"
+        transfer = "camb_linear/ics_transfer_"+zstr+".dat"
         cambpow = cambpower.CAMBPowerSpectrum(matterpow, transfer, kmin=2*math.pi/self.box/5, kmax = self.npart*2*math.pi/self.box*10)
         #Error to tolerate on simulated power spectrum
         #Check whether we output neutrinos
