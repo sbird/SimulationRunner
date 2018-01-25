@@ -3,14 +3,13 @@
 import os
 import numpy as np
 import scipy.interpolate as interp
-from . import simulation
 from . import simulationics
 
-class LymanAlphaSim(simulation.Simulation):
+class LymanAlphaSim(simulationics.SimulationICs):
     """Specialise the Simulation class for the Lyman alpha forest.
        This uses the QuickLya star formation module with sigma_8 and n_s.
     """
-    __doc__ = __doc__+simulation.Simulation.__doc__
+    __doc__ = __doc__+simulationics.SimulationICs.__doc__
     def __init__(self, *, rescale_gamma = False, rescale_amp = 1., rescale_slope = -0.7, redend = 2, uvb="sh", **kwargs):
         #Parameters of the heating rate rescaling to account for helium reionisation
         #Default parameters do nothing
@@ -46,7 +45,7 @@ class LymanAlphaSim(simulation.Simulation):
         redshifts = np.concatenate([[49,9],np.arange(4.2, self.redend, -0.2)])
         return 1./(1.+redshifts)
 
-class LymanAlphaKnotICs(simulationics.SimulationICs):
+class LymanAlphaKnotICs(LymanAlphaSim):
     """Specialise the generation of initial conditions to change the power spectrum via knots.
     knot_val is a multiplicative factor applied to the power spectrum at knot_pos
     knot_pos is in units of the k bins for the power spectrum output by CAMB, by default h/Mpc."""
