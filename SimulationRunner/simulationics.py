@@ -24,8 +24,8 @@ class SimulationICs(object):
     There are a few things this class needs to do:
 
     - Generate CAMB input files
-    - Generate N-GenIC input files (to use CAMB output)
-    - Run CAMB and N-GenIC to generate ICs
+    - Generate MP-GenIC input files (to use CAMB output)
+    - Run CAMB and MP-GenIC to generate ICs
 
     The class will store the parameters of the simulation.
     We also save a copy of the input and enough information to reproduce the resutls exactly in SimulationICs.json.
@@ -90,10 +90,12 @@ class SimulationICs(object):
         self.outdir = outdir
         defaultpath = os.path.dirname(__file__)
         #Default GenIC paths
-        self.genicdefault = os.path.join(defaultpath,"ngenic.param")
+        self.genicdefault = os.path.join(defaultpath,"mpgenic.ini")
         self.genicout = "_genic_params.ini"
+        self.gadget_dir = os.path.expanduser("~/codes/MP-Gadget/")
+        self.gadget_binary_dir = os.path.join(self.gadget_dir,"build")
         #Executable names
-        self.genicexe = "N-GenIC"
+        self.genicexe = "MP-GenIC"
         #Number of files per snapshot
         #This is chosen to give a reasonable number and
         #a constant number of particles per file.
@@ -160,8 +162,7 @@ class SimulationICs(object):
         """Generate the GenIC parameter file"""
         config = configobj.ConfigObj(self.genicdefault)
         config.filename = os.path.join(self.outdir, self.genicout)
-        config['Box'] = self.box*1000
-        config['Nmesh'] = self.npart * 2
+        config['BoxSize'] = self.box*1000
         genicout = "ICS"
         try:
             os.mkdir(os.path.join(self.outdir, genicout))
@@ -171,35 +172,30 @@ class SimulationICs(object):
         #Is this enough information, or should I add a short hash?
         genicfile = str(self.box)+"_"+str(self.npart)+"_"+str(self.redshift)
         config['FileBase'] = genicfile
-        config['NCDM'] = self.npart
-        config['NNeutrino'] = 0
-        config['ICFormat'] = self.icformat
-        if self.separate_gas:
-            config['NBaryon'] = self.npart
-            #The 2LPT correction is computed for one fluid. It is not clear
-            #what to do with a second particle species, so turn it off.
-            #Even for CDM alone there are corrections from radiation:
-            #order: Omega_r / omega_m ~ 3 z/100 and it is likely
-            #that the baryon 2LPT term is dominated by the CDM potential
-            #(YAH, private communication)
-            config['TWOLPT'] = 0
-        else:
-            config['NBaryon'] = 0
+        config['Ngrid'] = self.npart
+        config['NgridNu'] = 0
+        config['ProduceGas'] = int(self.separate_gas)
+        #The 2LPT correction is computed for one fluid. It is not clear
+        #what to do with a second particle species, so turn it off.
+        #Even for CDM alone there are corrections from radiation:
+        #order: Omega_r / omega_m ~ 3 z/100 and it is likely
+        #that the baryon 2LPT term is dominated by the CDM potential
+        #(YAH, private communication)
         #Total matter density, not CDM matter density.
-        config['Omega'] = self.omega0
+        config['Omega0'] = self.omega0
         config['OmegaLambda'] = 1- self.omega0
         config['OmegaBaryon'] = self.omegab
         config['HubbleParam'] = self.hubble
         config['Redshift'] = self.redshift
         zstr = self._camb_zstr(self.redshift)
         config['FileWithInputSpectrum'] = camb_output + "ics_matterpow_"+zstr+".dat"
-        config['FileWithTransfer'] = camb_output + "ics_transfer_"+zstr+".dat"
-        config['NumFiles'] = int(self.numfiles)
+        config['FileWithTransferFunction'] = camb_output + "ics_transfer_"+zstr+".dat"
+        assert config['WhichSpectrum'] == '2'
+        assert config['RadiationOn'] == '1'
+        assert config['DifferentTransferFunctions'] == '1'
+        assert config['InputPowerRedshift'] == '-1'
         assert config['InputSpectrum_UnitLength_in_cm'] == '3.085678e24'
         config['Seed'] = self.seed
-        config['NU_Vtherm_On'] = 0
-        config['NNeutrino'] = 0
-        config['RayleighScatter'] = int(self.rscatter)
         config = self._genicfile_child_options(config)
         config.write()
         return (os.path.join(genicout, genicfile), config.filename)
@@ -323,9 +319,7 @@ class SimulationICs(object):
         #Now generate the GenIC parameters
         (genic_output, genic_param) = self.genicfile(camb_output)
         #Run N-GenIC
-        genic = utils.find_exec(self.genicexe)
-        self.genic_git = utils.get_git_hash(genic)
-        subprocess.check_call([genic, genic_param],cwd=self.outdir)
+        subprocess.check_call([os.path.join(self.gadget_binary_dir,self.genicexe), genic_param],cwd=self.outdir)
         #Save a json of ourselves.
         self.txt_description()
         #Check that the ICs have the right power spectrum

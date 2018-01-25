@@ -14,13 +14,10 @@ def test_neutrino_part():
     assert os.path.exists(test_dir)
     #Check these we are writing reasonable values.
     config = configobj.ConfigObj(os.path.join(test_dir,"_genic_params.ini"))
-    assert config['Omega'] == "0.288"
+    assert config['Omega0'] == "0.288"
     assert config['OmegaLambda'] == "0.712"
-    assert config['NNeutrino'] == "128"
-    assert config['NBaryon'] == "0"
-    assert config['NU_in_DM'] == "0"
-    assert config['NU_Vtherm_On'] == "1"
-    assert config['NU_PartMass_in_ev'] == "0.45"
+    assert config['NgridNu'] == "128"
+    assert (float(config['MNue'])- 0.133333) < 0.001
     #Check that the output has neutrino particles
     f = bigfile.BigFile(os.path.join(test_dir,"ICS/256_128_99"),'r')
     assert f["Header"].attrs["TotNumPart"][2] == 128**3
@@ -43,12 +40,12 @@ def test_neutrino_semilinear():
     assert os.path.exists(test_dir)
     #Check these files have not changed
     config = configobj.ConfigObj(os.path.join(test_dir,"_genic_params.ini"))
-    assert config['Omega'] == "0.288"
+    assert config['Omega0'] == "0.288"
     assert config['OmegaLambda'] == "0.712"
-    assert config['NNeutrino'] == "0"
-    assert config['NU_in_DM'] == "0"
-    assert config['NU_Vtherm_On'] == "0"
-    assert config['NU_PartMass_in_ev'] == "0.45"
+    assert config['NgridNu'] == "0"
+    assert config['MNue'] == '0.147144021962'
+    assert config['MNum'] == '0.147399671639'
+    assert config['MNut'] == '0.155456306399'
 
     config = configobj.ConfigObj(os.path.join(test_dir,"mpgadget.param"))
     assert config['MNue'] == '0.147144021962'

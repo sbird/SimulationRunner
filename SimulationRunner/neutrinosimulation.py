@@ -27,11 +27,11 @@ class NeutrinoPartICs(simulationics.SimulationICs):
 
     def _genicfile_child_options(self, config):
         """Set up particle neutrino parameters for GenIC"""
-        config['NU_Vtherm_On'] = 1
-        config['NNeutrino'] = self.npart
-        config['NU_PartMass_in_ev'] = self.m_nu
+        config['NgridNu'] = self.npart
+        config['MNue'] = self.m_nu/3.
+        config['MNum'] = self.m_nu/3.
+        config['MNut'] = self.m_nu/3.
         #Degenerate neutrinos
-        config['Hierarchy'] = 0
         return config
 
 def get_neutrino_masses(total_mass, hierarchy):
@@ -94,16 +94,12 @@ class NeutrinoSemiLinearICs(NeutrinoPartICs):
     def _genicfile_child_options(self, config):
         """Set up neutrino parameters for GenIC.
         This just includes a change in OmegaNu, but no actual particles."""
-        config['NNeutrino'] = 0
-        config['NU_in_DM'] = 0
-        config['NU_PartMass_in_ev'] = self.m_nu
+        config['NgridNu'] = 0
+        numass = get_neutrino_masses(self.m_nu, self.nu_hierarchy)
+        config['MNue'] = numass[2]
+        config['MNum'] = numass[1]
+        config['MNut'] = numass[0]
         #Degenerate neutrinos
-        if self.nu_hierarchy == 'normal':
-            config['Hierarchy'] = 1
-        elif self.nu_hierarchy == 'inverted':
-            config['Hierarchy'] = -1
-        else:
-            config['Hierarchy'] = 0
         return config
 
 class NeutrinoHybridSim(NeutrinoSemiLinearSim):
@@ -138,8 +134,11 @@ class NeutrinoHybridICs(NeutrinoPartICs):
     def _genicfile_child_options(self, config):
         """Set up hybrid neutrino parameters for GenIC."""
         config['NU_Vtherm_On'] = 1
-        config['NNeutrino'] = int(self.npart*self.npartnufac)
-        config['NU_PartMass_in_ev'] = self.m_nu
-        config['NU_in_DM'] = 0
+        numass = get_neutrino_masses(self.m_nu, self.nu_hierarchy)
+        config['MNue'] = numass[2]
+        config['MNum'] = numass[1]
+        config['MNut'] = numass[0]
+        #Degenerate neutrinos
+        config['NgridNu'] = int(self.npart*self.npartnufac)
         config['Max_nuvel'] = self.vcrit
         return config
