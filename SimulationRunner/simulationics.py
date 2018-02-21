@@ -127,7 +127,7 @@ class SimulationICs(object):
         #At which redshifts should we produce CAMB output: we want the starting redshift of the simulation,
         #but we also want some other values for checking purposes
         #Extra redshifts at which to generate CAMB output, in addition to self.redshift and self.redshift/2
-        camb_zz = np.concatenate([[self.redshift,], 1/self.generate_times()-1,[self.redend,]])
+        camb_zz = np.concatenate([[self.redshift, self.redshift-0.01], 1/self.generate_times()-1,[self.redend,]])
         pars.set_matter_power(redshifts = camb_zz, kmax = 2*math.pi*10*self.npart/self.box)
         pars.NonLinear = model.NonLinear_none
         #Get results
@@ -195,6 +195,10 @@ class SimulationICs(object):
         zstr = self._camb_zstr(self.redshift)
         config['FileWithInputSpectrum'] = camb_output + "ics_matterpow_"+zstr+".dat"
         config['FileWithTransferFunction'] = camb_output + "ics_transfer_"+zstr+".dat"
+        futureredshift = self.redshift - 0.01
+        config['InputFutureRedshift'] = futureredshift
+        fzstr = self._camb_zstr(futureredshift)
+        config['FileWithFutureTransferFunction'] = camb_output + "ics_transfer_"+fzstr+".dat"
         assert config['WhichSpectrum'] == '2'
         assert config['RadiationOn'] == '1'
         assert config['DifferentTransferFunctions'] == '1'
