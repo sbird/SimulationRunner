@@ -37,7 +37,7 @@ def test_neutrino_semilinear():
     """Create a full simulation with semi-linear neutrinos.
     The important thing here is to test that OmegaNu is correctly set."""
     test_dir = os.path.join(os.getcwd(),"tests/test_nu_semilin/")
-    Sim = nus.NeutrinoSemiLinearICs(outdir=test_dir,box = 256,npart = 128, m_nu = 0.45, redshift = 99, separate_gas=False, nu_hierarchy='normal', redend=0)
+    Sim = simulationics.SimulationICs(outdir=test_dir,box = 256,npart = 128, m_nu = 0.45, redshift = 99, separate_gas=False, nu_hierarchy='normal', redend=0)
     Sim.make_simulation()
     assert os.path.exists(test_dir)
     #Check these files have not changed

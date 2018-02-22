@@ -9,16 +9,16 @@ import shutil
 import importlib
 import numpy as np
 import configobj
-import camb
-from camb import model
+import classylss
+import classylss.binding as CLASS
 import matplotlib
 matplotlib.use("PDF")
 import matplotlib.pyplot as plt
 from nbodykit.lab import BigFileCatalog,FFTPower
-from . import cambpower
 from . import utils
 from . import clusters
 from . import read_uvb_tab
+from . import cambpower
 
 class SimulationICs(object):
     """
@@ -114,47 +114,59 @@ class SimulationICs(object):
 
     def cambfile(self):
         """Generate the IC power spectrum using pyCAMB."""
-        #Load CAMB file using ConfigObj
-        pars = camb.CAMBparams()
+        #Load high precision defaults
+        pre_params = classylss.load_precision('pk_ref.pre')
         #Set the neutrino density and subtract it from omega0
-        omeganuh2 = self.m_nu/93.14
-        omch2 = (self.omega0 - self.omegab)*self.hubble**2 - omeganuh2
-        ombh2 =  self.omegab*self.hubble**2
-        pars.set_accuracy(HighAccuracyDefault=True, AccuracyBoost=3.0)
-        pars.set_cosmology(H0 = 100 * self.hubble, ombh2 = ombh2, omch2 = omch2, omk=0., mnu=self.m_nu, neutrino_hierarchy=self.nu_hierarchy, num_massive_neutrinos = 3)
+        omeganu = self.m_nu/93.14/self.hubble**2
+        omcdm = (self.omega0 - self.omegab) - omeganu
+        gparams = {'h':self.hubble, 'omega_cdm':omcdm,'omega_b': self.omegab, 'omega_k':0, 'n_s': self.ns, 'A_s': self.scalar_amp, 'k_pivot': 2e-3}
+        gparams['Omega_Lambda'] = 1 - self.omega0
+        (mnu1, mnu2, mnu3) = get_neutrino_masses(self.m_nu, self.nu_hierarchy)
+        #Set up massive neutrinos
+        if self.m_nu > 0:
+            gparams['m_ncdm'] = '%.2f,%.2f,%.2f' % mnu1, mnu2, mnu3
+            gparams['N_ncdm'] = 3
         #Initial cosmology
-        pars.InitPower.set_params(ns=self.ns, As=self.scalar_amp, pivot_scalar=2e-3, pivot_tensor=2e-3)
+        pre_params.update(gparams)
+        maxk = 2*math.pi/self.box*self.npart*4
+        powerparams = {'output': 'dTk mPk', 'P_k_max_h/Mpc' : maxk, "z_pk": self.redend, "z_max_pk" : self.redshift}
+        pre_params.update(powerparams)
+
+        mink = 2*math.pi/self.box/100
         #At which redshifts should we produce CAMB output: we want the starting redshift of the simulation,
         #but we also want some other values for checking purposes
         #Extra redshifts at which to generate CAMB output, in addition to self.redshift and self.redshift/2
-        camb_zz = np.concatenate([[self.redshift, self.redshift-1], 1/self.generate_times()-1,[self.redend,]])
-        pars.set_matter_power(redshifts = camb_zz, kmax = 2*math.pi*10*self.npart/self.box)
-        print(camb_zz)
-        pars.NonLinear = model.NonLinear_none
-        #Get results
-        results = camb.get_results(pars)
+        camb_zz = np.concatenate([[self.redshift, self.redshift-0.01], 1/self.generate_times()-1,[self.redend,]])
+        kk = np.logspace(np.log10(mink), np.log10(maxk), max(self.npart*2,300))
 
-        transfers = results.get_matter_transfer_data()
-        kh, camb_zz, pk = results.get_linear_matter_power_spectrum(have_power_spectra=True)
-        cambpars = os.path.join(self.outdir, "_camb_params.ini")
-        cfd = open(cambpars, 'w')
-        #Write used parameters to a file
-        print(pars, file=cfd)
+        cambpars = os.path.join(self.outdir, "_class_params.ini")
+        classconf = configobj.ConfigObj()
+        classconf.filename = cambpars
+        classconf[''] = pre_params
+        classconf['output_redshifts'] = camb_zz
+        classconf.write()
+
+        engine = CLASS.ClassEngine(pre_params)
+        powspec = CLASS.Spectra(engine)
+        bg = CLASS.Background(engine)
+        #Save directory
         camb_output = "camb_linear/"
         camb_outdir = os.path.join(self.outdir,camb_output)
         try:
             os.mkdir(camb_outdir)
         except FileExistsError:
             pass
-        #Set values: note we will write to camb_linear/ics_matterpow_99.dat with the below.
-        for i, zz in enumerate(camb_zz):
-            mfn = os.path.join(camb_outdir, "ics_matterpow_"+self._camb_zstr(zz)+".dat")
-            #Get the power spectra
-            matpow = np.vstack([kh, pk[i]])
-            np.savetxt(mfn, matpow.T)
-            tfn = os.path.join(camb_outdir,"ics_transfer_"+self._camb_zstr(zz)+".dat")
-            np.savetxt(tfn, transfers.transfer_data[:,:,i].T)
-        return camb_outdir
+        #Save directory
+        #Get and save the transfer functions
+        for zz in camb_zz:
+            trans = powspec.get_transfer(z=zz)
+            transferfile = os.path.join(camb_outdir, "ics_transfer_"+self._camb_zstr(zz)+".dat")
+            save_transfer(trans, transferfile, bg, zz)
+            pk_lin = powspec.get_pklin(k=kk, z=zz)
+            pkfile = os.path.join(camb_outdir, "ics_matterpow_"+self._camb_zstr(zz))
+            np.savetxt(pkfile, np.vstack([kk, pk_lin]).T)
+
+        return camb_output
 
     def _camb_zstr(self,zz):
         """Get the formatted redshift for CAMB output files."""
@@ -196,10 +208,14 @@ class SimulationICs(object):
         zstr = self._camb_zstr(self.redshift)
         config['FileWithInputSpectrum'] = camb_output + "ics_matterpow_"+zstr+".dat"
         config['FileWithTransferFunction'] = camb_output + "ics_transfer_"+zstr+".dat"
-        futureredshift = self.redshift - 1
+        futureredshift = self.redshift - 0.01
         config['InputFutureRedshift'] = futureredshift
         fzstr = self._camb_zstr(futureredshift)
         config['FileWithFutureTransferFunction'] = camb_output + "ics_transfer_"+fzstr+".dat"
+        numass = get_neutrino_masses(self.m_nu, self.nu_hierarchy)
+        config['MNue'] = numass[2]
+        config['MNum'] = numass[1]
+        config['MNut'] = numass[0]
         assert config['WhichSpectrum'] == '2'
         assert config['RadiationOn'] == '1'
         assert config['DifferentTransferFunctions'] == '1'
@@ -324,6 +340,18 @@ class SimulationICs(object):
         config['RadiationOn'] = 1
         config['HydroOn'] = 1
         config['Nmesh'] = 2*self.npart
+        #Neutrinos
+        if self.m_nu > 0:
+            config['MassiveNuLinRespOn'] = 1
+        else:
+            config['MassiveNuLinRespOn'] = 0
+        numass = get_neutrino_masses(self.m_nu, self.nu_hierarchy)
+        config['MNue'] = numass[2]
+        config['MNum'] = numass[1]
+        config['MNut'] = numass[0]
+        config['LinearTransferFunction'] = "camb_linear/ics_transfer_"+self._camb_zstr(self.redshift)+".dat"
+        config['InputSpectrum_UnitLength_in_cm'] = 3.085678e24
+        #FOF
         config['SnapshotWithFOF'] = 1
         config['FOFHaloLinkingLength'] = 0.2
         config['OutputList'] =  ','.join([str(t) for t in self.generate_times()])
@@ -388,7 +416,7 @@ class SimulationICs(object):
         times = self.generate_times()
         np.savetxt(os.path.join(self.outdir, timefile), times)
 
-    def check_ic_power_spectra(self, camb_output, genicfileout,accuracy=0.05):
+    def check_ic_power_spectra(self, genicfileout,accuracy=0.05):
         """Generate the power spectrum for each particle type from the generated simulation files, using GenPK,
         and check that it matches the input. This is a consistency test on each simulation output."""
         #Generate power spectra
@@ -481,7 +509,7 @@ class SimulationICs(object):
         #First generate the input files for CAMB
         camb_output = self.cambfile()
         #Then run CAMB
-        self.camb_git = camb.__version__
+        self.camb_git = classylss.__version__
         #Change the power spectrum file on disc if we want to do that
         self._alter_power(os.path.join(self.outdir,camb_output))
         #Now generate the GenIC parameters
@@ -491,7 +519,7 @@ class SimulationICs(object):
         #Save a json of ourselves.
         self.txt_description()
         #Check that the ICs have the right power spectrum
-        self.check_ic_power_spectra(os.path.join(self.outdir,camb_output), genic_output,accuracy=pkaccuracy)
+        self.check_ic_power_spectra(genic_output,accuracy=pkaccuracy)
         #Generate Gadget makefile
         gadget_config = self.gadget3config()
         #Symlink the new gadget config to the source directory
@@ -502,3 +530,68 @@ class SimulationICs(object):
         #Generate mpi_submit file
         self.generate_mpi_submit()
         return gadget_config
+
+def save_transfer(transfer, transferfile, bg, redshift):
+    """Save a transfer function. Note we save the CAMB FORMATTED transfer functions.
+    These can be generated from CLASS by passing the 'format = camb' on the command line.
+    The transfer functions differ by:
+        T_CAMB(k) = -T_CLASS(k)/k^2 """
+    #This format matches the default output by CAMB and CLASS command lines.
+    #Some entries may be zero sometimes
+    kk = transfer['k']
+    ftrans = np.zeros((np.size(transfer['k']), 9))
+    ftrans[:,0] = kk
+    ftrans[:,1] = -1*transfer['d_cdm']/kk**2
+    ftrans[:,2] = -1*transfer['d_b']/kk**2
+    ftrans[:,3] = -1*transfer['d_g']/kk**2
+    ftrans[:,4] = -1*transfer['d_ur']/kk**2
+    #This will fail if there are no massive neutrinos present
+    try:
+        #We use the most massive neutrino species, since these
+        #are used for initialising the particle neutrinos.
+        ftrans[:,5] = -1*transfer['d_ncdm[2]']/kk**2
+    except ValueError:
+        pass
+    omegacdm = bg.Omega_cdm(redshift)
+    omegab = bg.Omega_b(redshift)
+    omeganu = bg.Omega_ncdm(redshift)
+    #Note that the CLASS total transfer function apparently includes radiation!
+    #We do not want this for the matter power: we want CDM + b + massive-neutrino.
+    ftrans[:,6] = -1*(omegacdm *transfer['d_cdm'] + omegab * transfer['d_b'] + omeganu * ftrans[:,5])/(omeganu + omegacdm + omegab)/kk**2
+    #The CDM+baryon weighted density.
+    ftrans[:,7] = -1*(omegacdm *transfer['d_cdm'] + omegab * transfer['d_b'])/(omegacdm + omegab)/kk**2
+    ftrans[:,8] = -1*transfer['d_tot']/kk**2
+
+    np.savetxt(transferfile, ftrans)
+
+def get_neutrino_masses(total_mass, hierarchy):
+    """Get the three neutrino masses, including the mass splittings.
+        Hierarchy is 'inverted' (two heavy), 'normal' (two light) or degenerate."""
+    #Neutrino mass splittings
+    nu_M21 = 7.53e-5 #Particle data group 2016: +- 0.18e-5 eV2
+    nu_M32n = 2.44e-3 #Particle data group: +- 0.06e-3 eV2
+    nu_M32i = 2.51e-3 #Particle data group: +- 0.06e-3 eV2
+
+    if hierarchy == 'normal':
+        nu_M32 = nu_M32n
+        #If the total mass is below that allowed by the hierarchy,
+        #assign one active neutrino.
+        if total_mass < np.sqrt(nu_M32n) + np.sqrt(nu_M21):
+            return np.array([total_mass, 0, 0])
+    elif hierarchy == 'inverted':
+        nu_M32 = -nu_M32i
+        if total_mass < 2*np.sqrt(nu_M32i) - np.sqrt(nu_M21):
+            return np.array([total_mass/2., total_mass/2., 0])
+    #Hierarchy == 0 is 3 degenerate neutrinos
+    else:
+        return np.ones(3)*total_mass/3.
+
+    #DD is the summed masses of the two closest neutrinos
+    DD1 = 4 * total_mass/3. - 2/3.*np.sqrt(total_mass**2 + 3*nu_M32 + 1.5*nu_M21)
+    #Last term was neglected initially. This should be very well converged.
+    DD = 4 * total_mass/3. - 2/3.*np.sqrt(total_mass**2 + 3*nu_M32 + 1.5*nu_M21+0.75*nu_M21**2/DD1**2)
+    nu_masses = np.array([ total_mass - DD, 0.5*(DD + nu_M21/DD), 0.5*(DD - nu_M21/DD)])
+    assert np.isfinite(DD)
+    assert np.abs(DD1/DD -1) < 2e-2
+    assert np.all(nu_masses >= 0)
+    return nu_masses
