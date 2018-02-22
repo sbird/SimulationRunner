@@ -207,7 +207,7 @@ class SimulationICs(object):
         config['HubbleParam'] = self.hubble
         config['Redshift'] = self.redshift
         mem = psutil.virtual_memory()
-        config['MaxMemSizePerNode'] = 0.8*mem.total
+        config['MaxMemSizePerNode'] = 0.8*mem.total/1024/1024
         zstr = self._camb_zstr(self.redshift)
         config['FileWithInputSpectrum'] = camb_output + "ics_matterpow_"+zstr+".dat"
         config['FileWithTransferFunction'] = camb_output + "ics_transfer_"+zstr+".dat"
@@ -414,11 +414,6 @@ class SimulationICs(object):
         fuvb = read_uvb_tab.get_uvb_filename(self.uvb)
         shutil.copy(fuvb, os.path.join(self.outdir,"TREECOOL"))
 
-    def _print_times(self, timefile):
-        """Print times to the times.txt file"""
-        times = self.generate_times()
-        np.savetxt(os.path.join(self.outdir, timefile), times)
-
     def check_ic_power_spectra(self, genicfileout,accuracy=0.05):
         """Generate the power spectrum for each particle type from the generated simulation files, using GenPK,
         and check that it matches the input. This is a consistency test on each simulation output."""
@@ -427,8 +422,8 @@ class SimulationICs(object):
         #Now check that they match what we put into the simulation, from CAMB
         #Reload the CAMB files from disc, just in case something went wrong writing them.
         zstr = self._camb_zstr(self.redshift)
-        matterpow = "camb_linear/ics_matterpow_"+zstr+".dat"
-        transfer = "camb_linear/ics_transfer_"+zstr+".dat"
+        matterpow = os.path.join(self.outdir,"camb_linear/ics_matterpow_"+zstr+".dat")
+        transfer = os.path.join(self.outdir, "camb_linear/ics_transfer_"+zstr+".dat")
         cambpow = cambpower.CAMBPowerSpectrum(matterpow, transfer, kmin=2*math.pi/self.box/5, kmax = self.npart*2*math.pi/self.box*10)
         #Error to tolerate on simulated power spectrum
         #Check whether we output neutrinos
