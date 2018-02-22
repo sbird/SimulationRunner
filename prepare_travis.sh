@@ -16,17 +16,3 @@ ln -s x86_64-conda_cos6-linux-gnu-gfortran gfortran
 cd -
 #Clone stuff.
 mkdir tests
-mkdir depends
-cd depends
-##Get and make CAMB.
-git clone https://github.com/sbird/camb.git
-cd camb
-cd pycamb
-python3 setup.py install --user
-
-#Get and make N-GenIC.
-cd ../../
-git clone https://github.com/sbird/S-GenIC.git
-cd S-GenIC
-git submodule update --init --recursive
-make
