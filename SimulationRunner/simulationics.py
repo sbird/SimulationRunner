@@ -164,7 +164,7 @@ class SimulationICs(object):
             transferfile = os.path.join(camb_outdir, "ics_transfer_"+self._camb_zstr(zz)+".dat")
             save_transfer(trans, transferfile, bg, zz)
             pk_lin = powspec.get_pklin(k=kk, z=zz)
-            pkfile = os.path.join(camb_outdir, "ics_matterpow_"+self._camb_zstr(zz))
+            pkfile = os.path.join(camb_outdir, "ics_matterpow_"+self._camb_zstr(zz)+".dat")
             np.savetxt(pkfile, np.vstack([kk, pk_lin]).T)
 
         return camb_output
