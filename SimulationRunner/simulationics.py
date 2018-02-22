@@ -122,10 +122,10 @@ class SimulationICs(object):
         omcdm = (self.omega0 - self.omegab) - omeganu
         gparams = {'h':self.hubble, 'Omega_cdm':omcdm,'Omega_b': self.omegab, 'Omega_k':0, 'n_s': self.ns, 'A_s': self.scalar_amp, 'k_pivot': 2e-3}
         gparams['Omega_Lambda'] = 1 - self.omega0
-        (mnu1, mnu2, mnu3) = get_neutrino_masses(self.m_nu, self.nu_hierarchy)
+        numass = get_neutrino_masses(self.m_nu, self.nu_hierarchy)
         #Set up massive neutrinos
         if self.m_nu > 0:
-            gparams['m_ncdm'] = '%.2f,%.2f,%.2f' % mnu1, mnu2, mnu3
+            gparams['m_ncdm'] = '%.2f,%.2f,%.2f' % numass[2], numass[1], numass[0]
             gparams['N_ncdm'] = 3
         #Initial cosmology
         pre_params.update(gparams)
