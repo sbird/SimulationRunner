@@ -22,5 +22,6 @@ git clone https://github.com/sbird/MP-Gadget
 cd -
 cd $HOME/codes/MP-Gadget
 ./bootstrap.sh
+cp Options.mk.example Options.mk
 make -j
 cd -
