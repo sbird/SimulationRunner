@@ -14,6 +14,7 @@ import classylss.binding as CLASS
 import matplotlib
 matplotlib.use("PDF")
 import matplotlib.pyplot as plt
+import psutil
 from nbodykit.lab import BigFileCatalog,FFTPower
 from . import utils
 from . import clusters
@@ -205,6 +206,8 @@ class SimulationICs(object):
         config['OmegaBaryon'] = self.omegab
         config['HubbleParam'] = self.hubble
         config['Redshift'] = self.redshift
+        mem = psutil.virtual_memory()
+        config['MaxMemSizePerNode'] = 0.8*mem.total
         zstr = self._camb_zstr(self.redshift)
         config['FileWithInputSpectrum'] = camb_output + "ics_matterpow_"+zstr+".dat"
         config['FileWithTransferFunction'] = camb_output + "ics_transfer_"+zstr+".dat"
