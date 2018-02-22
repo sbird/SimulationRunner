@@ -16,3 +16,13 @@ ln -s x86_64-conda_cos6-linux-gnu-gfortran gfortran
 cd -
 #Clone stuff.
 mkdir tests
+
+mkdir $HOME/codes/
+cd $HOME/codes/
+#Get and make Gadget.
+git clone https://github.com/sbird/MP-Gadget
+cd -
+cd $HOME/codes/MP-Gadget
+./bootstrap.sh
+make -j
+cd -
