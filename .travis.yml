@@ -15,6 +15,4 @@ install:
     - bash prepare_travis.sh
     - export PATH=$HOME/miniconda/bin:$PATH
     - source activate test
-    - conda install --yes gsl
-    - conda install --yes gcc_linux-64 # use the linux64 compiler which supports OpenMP 3.1+
 script: nosetests

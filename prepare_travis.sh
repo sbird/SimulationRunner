@@ -10,6 +10,7 @@ conda create --yes -n test python=3.6
 source $HOME/miniconda/bin/activate test
 conda install --yes -c bccp nbodykit matplotlib numpy bigfile
 conda install --yes nose configobj scipy
+conda install --yes gsl gcc_linux-64
 cd $HOME/miniconda/envs/test/bin/
 cd -
 #Clone stuff.
