@@ -48,7 +48,7 @@ class SimulationICs(object):
     ns - Scalar spectral index
     m_nu - neutrino mass
     """
-    def __init__(self, *, outdir, box, npart, seed = 9281110, redshift=99, redend=0, separate_gas=True, omega0=0.288, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, rscatter=False, m_nu=0, nu_hierarchy='degenerate', uvb="hm", cluster_class=clusters.MARCCClass):
+    def __init__(self, *, outdir, box, npart, seed = 9281110, redshift=99, redend=0, separate_gas=True, omega0=0.288, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, rscatter=False, m_nu=0, nu_hierarchy='degenerate', uvb="hm", cluster_class=clusters.MARCCClass, nu_acc=1e-5):
         #Check that input is reasonable and set parameters
         #In Mpc/h
         assert box < 20000
@@ -71,6 +71,8 @@ class SimulationICs(object):
         self.scalar_amp = scalar_amp
         assert ns > 0 and ns < 2
         self.ns = ns
+        #Neutrino accuracy for CLASS
+        self.nu_acc = nu_acc
         #UVB? Only matters if gas
         self.uvb = uvb
         assert self.uvb == "hm" or self.uvb == "fg" or self.uvb == "sh"
@@ -132,8 +134,8 @@ class SimulationICs(object):
             #tol_ncdm_* = 1e-8 takes 20 minutes and is machine-accurate.
             #Default parameters are fast but off by 2%.
             #I chose 1e-5, which takes 6 minutes and is accurate to 1e-5
-            gparams['tol_ncdm_newtonian'] = 1e-5
-            gparams['tol_ncdm_synchronous'] = 1e-5
+            gparams['tol_ncdm_newtonian'] = min(self.nu_acc,1e-5)
+            gparams['tol_ncdm_synchronous'] = self.nu_acc
             gparams['tol_ncdm_bg'] = 1e-10
             gparams['l_max_ncdm'] = 50
         #Initial cosmology

@@ -10,7 +10,7 @@ from SimulationRunner import neutrinosimulation as nus
 def test_neutrino_part():
     """Create a full simulation with particle neutrinos."""
     test_dir = os.path.join(os.getcwd(),"tests/test_nu/")
-    Sim = nus.NeutrinoPartICs(outdir=test_dir,box = 256,npart = 128, m_nu = 0.45, redshift = 99, separate_gas=False, redend=0)
+    Sim = nus.NeutrinoPartICs(outdir=test_dir,box = 256,npart = 128, m_nu = 0.45, redshift = 99, separate_gas=False, redend=0, nu_acc=1e-3)
     Sim.make_simulation()
     assert os.path.exists(test_dir)
     #Check these we are writing reasonable values.
@@ -38,7 +38,7 @@ def test_neutrino_semilinear():
     """Create a full simulation with semi-linear neutrinos.
     The important thing here is to test that OmegaNu is correctly set."""
     test_dir = os.path.join(os.getcwd(),"tests/test_nu_semilin/")
-    Sim = simulationics.SimulationICs(outdir=test_dir,box = 256,npart = 128, m_nu = 0.45, redshift = 99, separate_gas=False, nu_hierarchy='normal', redend=0)
+    Sim = simulationics.SimulationICs(outdir=test_dir,box = 256,npart = 128, m_nu = 0.45, redshift = 99, separate_gas=False, nu_hierarchy='normal', redend=0, nu_acc=1e-3)
     Sim.make_simulation()
     assert os.path.exists(test_dir)
     #Check these files have not changed
