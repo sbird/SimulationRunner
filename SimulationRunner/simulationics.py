@@ -523,21 +523,21 @@ class SimulationICs(object):
         self._alter_power(os.path.join(self.outdir,camb_output))
         #Now generate the GenIC parameters
         (genic_output, genic_param) = self.genicfile(camb_output)
-        #Run MP-GenIC
-        subprocess.check_call([os.path.join(os.path.join(self.gadget_dir, "genic"),self.genicexe), genic_param],cwd=self.outdir)
         #Save a json of ourselves.
         self.txt_description()
         #Check that the ICs have the right power spectrum
-        self.check_ic_power_spectra(genic_output,accuracy=pkaccuracy)
         #Generate Gadget makefile
         gadget_config = self.gadget3config()
         #Symlink the new gadget config to the source directory
-        if do_build:
-            self.do_gadget_build(gadget_config)
         #Generate Gadget parameter file
         self.gadget3params(genic_output)
         #Generate mpi_submit file
         self.generate_mpi_submit()
+        #Run MP-GenIC
+        if do_build:
+            subprocess.check_call([os.path.join(os.path.join(self.gadget_dir, "genic"),self.genicexe), genic_param],cwd=self.outdir)
+            self.check_ic_power_spectra(genic_output,accuracy=pkaccuracy)
+            self.do_gadget_build(gadget_config)
         return gadget_config
 
 def save_transfer(transfer, transferfile, bg, redshift):
