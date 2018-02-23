@@ -201,6 +201,8 @@ class SimulationICs(object):
         genicfile = str(self.box)+"_"+str(self.npart)+"_"+str(self.redshift)
         config['FileBase'] = genicfile
         config['Ngrid'] = self.npart
+        if self.npart > 256:
+            config['Nmesh'] = 3*self.npart//2
         config['NgridNu'] = 0
         config['ProduceGas'] = int(self.separate_gas)
         #The 2LPT correction is computed for one fluid. It is not clear
