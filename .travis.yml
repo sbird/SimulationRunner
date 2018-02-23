@@ -15,4 +15,4 @@ install:
     - bash prepare_travis.sh
     - export PATH=$HOME/miniconda/bin:$PATH
     - source activate test
-script: nosetests
+script: travis_wait nosetests
