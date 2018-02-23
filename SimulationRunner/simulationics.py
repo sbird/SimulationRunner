@@ -113,7 +113,6 @@ class SimulationICs(object):
         self.genicdefault = os.path.join(defaultpath,"mpgenic.ini")
         self.gadgetconfig = "Options.mk"
         self.gadget_dir = os.path.expanduser("~/codes/MP-Gadget/")
-        self.gadget_binary_dir = os.path.join(self.gadget_dir,"build")
 
     def cambfile(self):
         """Generate the IC power spectrum using pyCAMB."""
@@ -303,7 +302,6 @@ class SimulationICs(object):
         Many of the Gadget options are always on, and there is a new PM gravity solver."""
         g_config_filename = os.path.join(self.outdir, self.gadgetconfig)
         with open(g_config_filename,'w') as config:
-            config.write("# off-tree build into $(DESTDIR)\nDESTDIR = build\n")
             config.write("MPICC = mpicc\nMPICXX = mpic++\n")
             optimize = self._cluster.cluster_optimize()
             config.write("OPTIMIZE = "+optimize+"\n")
@@ -494,7 +492,7 @@ class SimulationICs(object):
             os.rename(conffile, conffile+".backup")
         os.symlink(gadget_config, conffile)
         #Build gadget
-        gadget_binary = os.path.join(self.gadget_binary_dir, self.gadgetexe)
+        gadget_binary = os.path.join(os.path.join(self.gadget_dir, "gadget"), self.gadgetexe)
         try:
             g_mtime = os.stat(gadget_binary).st_mtime
         except FileNotFoundError:
@@ -525,8 +523,8 @@ class SimulationICs(object):
         self._alter_power(os.path.join(self.outdir,camb_output))
         #Now generate the GenIC parameters
         (genic_output, genic_param) = self.genicfile(camb_output)
-        #Run N-GenIC
-        subprocess.check_call([os.path.join(self.gadget_binary_dir,self.genicexe), genic_param],cwd=self.outdir)
+        #Run MP-GenIC
+        subprocess.check_call([os.path.join(os.path.join(self.gadget_dir, "genic"),self.genicexe), genic_param],cwd=self.outdir)
         #Save a json of ourselves.
         self.txt_description()
         #Check that the ICs have the right power spectrum
