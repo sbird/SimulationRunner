@@ -116,7 +116,7 @@ class SimulationICs(object):
     def cambfile(self):
         """Generate the IC power spectrum using pyCAMB."""
         #Load high precision defaults
-        pre_params = classylss.load_precision('pk_ref.pre')
+        pre_params = {'tol_background_integration': 1e-9, 'tol_perturb_integration' : 1.e-7, 'tol_thermo_integration':1.e-5, 'k_per_decade_for_pk': 20,'k_per_decade_for_bao':  200, 'neglect_CMB_sources_below_visibility' : 1.e-30, 'transfer_neglect_late_source': 3000., 'l_max_g' : 50, 'l_max_ur':150}
         #Set the neutrino density and subtract it from omega0
         omeganu = self.m_nu/93.14/self.hubble**2
         omcdm = (self.omega0 - self.omegab) - omeganu
@@ -127,6 +127,15 @@ class SimulationICs(object):
         if self.m_nu > 0:
             gparams['m_ncdm'] = '%.2f,%.2f,%.2f' % (numass[2], numass[1], numass[0])
             gparams['N_ncdm'] = 3
+            #Neutrino accuracy: Default pk_ref.pre has tol_ncdm_* = 1e-10,
+            #which takes 45 minutes (!) on my laptop.
+            #tol_ncdm_* = 1e-8 takes 20 minutes and is machine-accurate.
+            #Default parameters are fast but off by 2%.
+            #I chose 1e-5, which takes 6 minutes and is accurate to 1e-5
+            gparams['tol_ncdm_newtonian'] = 1e-5
+            gparams['tol_ncdm_synchronous'] = 1e-5
+            gparams['tol_ncdm_bg'] = 1e-10
+            gparams['l_max_ncdm'] = 50
         #Initial cosmology
         pre_params.update(gparams)
         maxk = 2*math.pi/self.box*self.npart*4
