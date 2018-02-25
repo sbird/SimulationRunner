@@ -143,12 +143,10 @@ class SimulationICs(object):
         powerparams = {'output': 'dTk mPk', 'P_k_max_h/Mpc' : maxk, "z_max_pk" : self.redshift+1}
         pre_params.update(powerparams)
 
-        mink = 2*math.pi/self.box/100
         #At which redshifts should we produce CAMB output: we want the starting redshift of the simulation,
         #but we also want some other values for checking purposes
         #Extra redshifts at which to generate CAMB output, in addition to self.redshift and self.redshift/2
         camb_zz = np.concatenate([[self.redshift, self.redshift-0.01], 1/self.generate_times()-1,[self.redend,]])
-        kk = np.logspace(np.log10(mink), np.log10(maxk), max(self.npart*2,300))
 
         cambpars = os.path.join(self.outdir, "_class_params.ini")
         classconf = configobj.ConfigObj()
@@ -173,9 +171,9 @@ class SimulationICs(object):
             trans = powspec.get_transfer(z=zz)
             transferfile = os.path.join(camb_outdir, "ics_transfer_"+self._camb_zstr(zz)+".dat")
             save_transfer(trans, transferfile, bg, zz)
-            pk_lin = powspec.get_pklin(k=kk, z=zz)
+            pk_lin = powspec.get_pklin(k=trans['k'], z=zz)
             pkfile = os.path.join(camb_outdir, "ics_matterpow_"+self._camb_zstr(zz)+".dat")
-            np.savetxt(pkfile, np.vstack([kk, pk_lin]).T)
+            np.savetxt(pkfile, np.vstack([trans['k'], pk_lin]).T)
 
         return camb_output
 
