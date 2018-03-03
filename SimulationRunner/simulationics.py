@@ -122,7 +122,8 @@ class SimulationICs(object):
         omeganu = self.m_nu/93.14/self.hubble**2
         omcdm = (self.omega0 - self.omegab) - omeganu
         gparams = {'h':self.hubble, 'Omega_cdm':omcdm,'Omega_b': self.omegab, 'Omega_k':0, 'n_s': self.ns, 'A_s': self.scalar_amp, 'k_pivot': 2e-3}
-        gparams['Omega_Lambda'] = 1 - self.omega0
+        #Lambda is computed self-consistently
+        gparams['Omega_fld'] = 0
         numass = get_neutrino_masses(self.m_nu, self.nu_hierarchy)
         #Set up massive neutrinos
         if self.m_nu > 0:
