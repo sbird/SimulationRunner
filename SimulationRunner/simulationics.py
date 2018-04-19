@@ -138,10 +138,11 @@ class SimulationICs(object):
             gparams['tol_ncdm_synchronous'] = self.nu_acc
             gparams['tol_ncdm_bg'] = 1e-10
             gparams['l_max_ncdm'] = 50
+            gparams['extra metric transfer functions'] = 'y'
         #Initial cosmology
         pre_params.update(gparams)
         maxk = 2*math.pi/self.box*self.npart*4
-        powerparams = {'output': 'dTk mPk', 'P_k_max_h/Mpc' : maxk, "z_max_pk" : self.redshift+1}
+        powerparams = {'output': 'dTk vTk mPk', 'P_k_max_h/Mpc' : maxk, "z_max_pk" : self.redshift+1}
         pre_params.update(powerparams)
 
         #At which redshifts should we produce CAMB output: we want the starting redshift of the simulation,
@@ -171,7 +172,7 @@ class SimulationICs(object):
         for zz in camb_zz:
             trans = powspec.get_transfer(z=zz)
             transferfile = os.path.join(camb_outdir, "ics_transfer_"+self._camb_zstr(zz)+".dat")
-            save_transfer(trans, transferfile, bg, zz)
+            save_transfer(trans, transferfile)
             pk_lin = powspec.get_pklin(k=trans['k'], z=zz)
             pkfile = os.path.join(camb_outdir, "ics_matterpow_"+self._camb_zstr(zz)+".dat")
             np.savetxt(pkfile, np.vstack([trans['k'], pk_lin]).T)
@@ -222,10 +223,6 @@ class SimulationICs(object):
         zstr = self._camb_zstr(self.redshift)
         config['FileWithInputSpectrum'] = camb_output + "ics_matterpow_"+zstr+".dat"
         config['FileWithTransferFunction'] = camb_output + "ics_transfer_"+zstr+".dat"
-        futureredshift = self.redshift - 0.01
-        config['InputFutureRedshift'] = futureredshift
-        fzstr = self._camb_zstr(futureredshift)
-        config['FileWithFutureTransferFunction'] = camb_output + "ics_transfer_"+fzstr+".dat"
         numass = get_neutrino_masses(self.m_nu, self.nu_hierarchy)
         config['MNue'] = numass[2]
         config['MNum'] = numass[1]
@@ -539,38 +536,22 @@ class SimulationICs(object):
             self.do_gadget_build(gadget_config)
         return gadget_config
 
-def save_transfer(transfer, transferfile, bg, redshift):
-    """Save a transfer function. Note we save the CAMB FORMATTED transfer functions.
-    These can be generated from CLASS by passing the 'format = camb' on the command line.
-    The transfer functions differ by:
+def save_transfer(transfer, transferfile):
+    """Save a transfer function. Note we save the CLASS FORMATTED transfer functions.
+    The transfer functions differ from CAMB by:
         T_CAMB(k) = -T_CLASS(k)/k^2 """
-    #This format matches the default output by CAMB and CLASS command lines.
-    #Some entries may be zero sometimes
-    kk = transfer['k']
-    ftrans = np.zeros((np.size(transfer['k']), 9))
-    ftrans[:,0] = kk
-    ftrans[:,1] = -1*transfer['d_cdm']/kk**2
-    ftrans[:,2] = -1*transfer['d_b']/kk**2
-    ftrans[:,3] = -1*transfer['d_g']/kk**2
-    ftrans[:,4] = -1*transfer['d_ur']/kk**2
-    #This will fail if there are no massive neutrinos present
-    try:
-        #We use the most massive neutrino species, since these
-        #are used for initialising the particle neutrinos.
-        ftrans[:,5] = -1*transfer['d_ncdm[2]']/kk**2
-    except ValueError:
-        pass
-    omegacdm = bg.Omega_cdm(redshift)
-    omegab = bg.Omega_b(redshift)
-    omeganu = bg.Omega_ncdm(redshift)
-    #Note that the CLASS total transfer function apparently includes radiation!
-    #We do not want this for the matter power: we want CDM + b + massive-neutrino.
-    ftrans[:,6] = -1*(omegacdm *transfer['d_cdm'] + omegab * transfer['d_b'] + omeganu * ftrans[:,5])/(omeganu + omegacdm + omegab)/kk**2
-    #The CDM+baryon weighted density.
-    ftrans[:,7] = -1*(omegacdm *transfer['d_cdm'] + omegab * transfer['d_b'])/(omegacdm + omegab)/kk**2
-    ftrans[:,8] = -1*transfer['d_tot']/kk**2
-
-    np.savetxt(transferfile, ftrans)
+    if os.path.exists(transferfile):
+        raise IOError("Refusing to write to existing file: ",transferfile)
+    header="""Transfer functions T_i(k) for adiabatic (AD) mode (normalized to initial curvature=1)
+d_i   stands for (delta rho_i/rho_i)(k,z) with above normalization
+d_tot stands for (delta rho_tot/rho_tot)(k,z) with rho_Lambda NOT included in rho_tot
+(note that this differs from the transfer function output from CAMB/CMBFAST, which gives the same
+ quantities divided by -k^2 with k in Mpc^-1; use format=camb to match CAMB)
+t_i   stands for theta_i(k,z) with above normalization
+t_tot stands for (sum_i [rho_i+p_i] theta_i)/(sum_i [rho_i+p_i]))(k,z)
+1:k (h/Mpc)              2:d_g                    3:d_b                    4:d_cdm                  5:d_ur        6:d_ncdm[0]              7:d_ncdm[1]              8:d_ncdm[2]              9:d_tot                 10:phi     11:psi                   12:h                     13:h_prime               14:eta                   15:eta_prime     16:t_g                   17:t_b                   18:t_ur        19:t_ncdm[0]             20:t_ncdm[1]             21:t_ncdm[2]             22:t_tot"""
+    #This format matches the default output by CLASS command line.
+    np.savetxt(transferfile, transfer, header=header)
 
 def get_neutrino_masses(total_mass, hierarchy):
     """Get the three neutrino masses, including the mass splittings.
