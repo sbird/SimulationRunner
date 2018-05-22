@@ -7,7 +7,7 @@ class ClusterClass(object):
         """CPU parameters (walltime, number of cpus, etc):
         these are specified to a default here, but should be over-ridden in a machine-specific decorator."""
         self.nproc = nproc
-        self.email = "sbird4@jhu.edu"
+        self.email = "sbird@ucr.edu"
         self.timelimit = timelimit
         #Maximum memory available for an MPI task
         self.memory = 1800
