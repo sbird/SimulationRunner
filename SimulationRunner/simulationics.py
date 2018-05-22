@@ -337,7 +337,7 @@ class SimulationICs(object):
             os.mkdir(os.path.join(self.outdir, "output"))
         except FileExistsError:
             pass
-        config['TimeLimitCPU'] = int(60*60*self._cluster.timelimit*20/17.-3000)
+        config['TimeLimitCPU'] = int(60*60*self._cluster.timelimit-300)
         config['TimeMax'] = 1./(1+self.redend)
         config['Omega0'] = self.omega0
         config['OmegaLambda'] = 1- self.omega0
