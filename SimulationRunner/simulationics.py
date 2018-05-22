@@ -201,8 +201,6 @@ class SimulationICs(object):
         genicfile = str(self.box)+"_"+str(self.npart)+"_"+str(self.redshift)
         config['FileBase'] = genicfile
         config['Ngrid'] = self.npart
-        if self.npart > 256:
-            config['Nmesh'] = 3*self.npart//2
         config['NgridNu'] = 0
         config['ProduceGas'] = int(self.separate_gas)
         #The 2LPT correction is computed for one fluid. It is not clear
@@ -217,8 +215,7 @@ class SimulationICs(object):
         config['OmegaBaryon'] = self.omegab
         config['HubbleParam'] = self.hubble
         config['Redshift'] = self.redshift
-        mem = psutil.virtual_memory()
-        config['MaxMemSizePerNode'] = 0.8*mem.total/1024/1024
+        config['MaxMemSizePerNode'] = 0.8
         zstr = self._camb_zstr(self.redshift)
         config['FileWithInputSpectrum'] = camb_output + "ics_matterpow_"+zstr+".dat"
         config['FileWithTransferFunction'] = camb_output + "ics_transfer_"+zstr+".dat"
@@ -539,8 +536,6 @@ def save_transfer(transfer, transferfile):
     """Save a transfer function. Note we save the CLASS FORMATTED transfer functions.
     The transfer functions differ from CAMB by:
         T_CAMB(k) = -T_CLASS(k)/k^2 """
-    if os.path.exists(transferfile):
-        raise IOError("Refusing to write to existing file: ",transferfile)
     header="""Transfer functions T_i(k) for adiabatic (AD) mode (normalized to initial curvature=1)
 d_i   stands for (delta rho_i/rho_i)(k,z) with above normalization
 d_tot stands for (delta rho_tot/rho_tot)(k,z) with rho_Lambda NOT included in rho_tot
