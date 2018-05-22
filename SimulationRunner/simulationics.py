@@ -202,6 +202,7 @@ class SimulationICs(object):
         config['FileBase'] = genicfile
         config['Ngrid'] = self.npart
         config['NgridNu'] = 0
+        config['MaxMemSizePerNode'] = 0.8
         config['ProduceGas'] = int(self.separate_gas)
         #The 2LPT correction is computed for one fluid. It is not clear
         #what to do with a second particle species, so turn it off.
@@ -215,7 +216,6 @@ class SimulationICs(object):
         config['OmegaBaryon'] = self.omegab
         config['HubbleParam'] = self.hubble
         config['Redshift'] = self.redshift
-        config['MaxMemSizePerNode'] = 0.8
         zstr = self._camb_zstr(self.redshift)
         config['FileWithInputSpectrum'] = camb_output + "ics_matterpow_"+zstr+".dat"
         config['FileWithTransferFunction'] = camb_output + "ics_transfer_"+zstr+".dat"
@@ -230,6 +230,7 @@ class SimulationICs(object):
         assert config['InputSpectrum_UnitLength_in_cm'] == '3.085678e24'
         config['Seed'] = self.seed
         config = self._genicfile_child_options(config)
+        config.update(self.cluster_class.cluster_runtime())
         config.write()
         return (os.path.join(genicout, genicfile), config.filename)
 
@@ -386,6 +387,7 @@ class SimulationICs(object):
             config['StarformationOn'] = 0
         #Add other config parameters
         config = self._other_params(config)
+        config.update(self.cluster_class.cluster_runtime())
         config.write()
         return
 
