@@ -117,7 +117,7 @@ class SimulationICs(object):
     def cambfile(self):
         """Generate the IC power spectrum using pyCAMB."""
         #Load high precision defaults
-        pre_params = {'tol_background_integration': 1e-9, 'tol_perturb_integration' : 1.e-7, 'tol_thermo_integration':1.e-5, 'k_per_decade_for_pk': 20,'k_per_decade_for_bao':  200, 'neglect_CMB_sources_below_visibility' : 1.e-30, 'transfer_neglect_late_source': 3000., 'l_max_g' : 50, 'l_max_ur':150}
+        pre_params = {'tol_background_integration': 1e-9, 'tol_perturb_integration' : 1.e-7, 'tol_thermo_integration':1.e-5, 'k_per_decade_for_pk': 20,'k_per_decade_for_bao':  200, 'neglect_CMB_sources_below_visibility' : 1.e-30, 'transfer_neglect_late_source': 3000., 'l_max_g' : 50, 'l_max_ur':150, 'extra metric transfer functions': 'y'}
         #Set the neutrino density and subtract it from omega0
         omeganu = self.m_nu/93.14/self.hubble**2
         omcdm = (self.omega0 - self.omegab) - omeganu
@@ -138,7 +138,6 @@ class SimulationICs(object):
             gparams['tol_ncdm_synchronous'] = self.nu_acc
             gparams['tol_ncdm_bg'] = 1e-10
             gparams['l_max_ncdm'] = 50
-            gparams['extra metric transfer functions'] = 'y'
         #Initial cosmology
         pre_params.update(gparams)
         maxk = 2*math.pi/self.box*self.npart*4
