@@ -230,7 +230,7 @@ class SimulationICs(object):
         assert config['InputSpectrum_UnitLength_in_cm'] == '3.085678e24'
         config['Seed'] = self.seed
         config = self._genicfile_child_options(config)
-        config.update(self.cluster_class.cluster_runtime())
+        config.update(self._cluster.cluster_runtime())
         config.write()
         return (os.path.join(genicout, genicfile), config.filename)
 
@@ -387,7 +387,7 @@ class SimulationICs(object):
             config['StarformationOn'] = 0
         #Add other config parameters
         config = self._other_params(config)
-        config.update(self.cluster_class.cluster_runtime())
+        config.update(self._cluster.cluster_runtime())
         config.write()
         return
 

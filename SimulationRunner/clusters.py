@@ -42,7 +42,7 @@ class ClusterClass(object):
         return qstring
 
     def cluster_runtime(self):
-        """Runtime options for cluster. Here memory."""
+        """Runtime options for cluster. Applied to both MP-GenIC and MP-Gadget."""
         return {}
 
     def cluster_config_options(self,config, prefix=""):
