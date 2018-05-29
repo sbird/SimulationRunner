@@ -233,7 +233,6 @@ class SimulationICs(object):
         assert config['RadiationOn'] == '1'
         assert config['DifferentTransferFunctions'] == '1'
         assert config['InputPowerRedshift'] == '-1'
-        assert config['InputSpectrum_UnitLength_in_cm'] == '3.085678e24'
         config['Seed'] = self.seed
         config = self._genicfile_child_options(config)
         config.write()
@@ -361,8 +360,6 @@ class SimulationICs(object):
         config['MNue'] = numass[2]
         config['MNum'] = numass[1]
         config['MNut'] = numass[0]
-        config['LinearTransferFunction'] = "camb_linear/ics_transfer_"+self._camb_zstr(self.redshift)+".dat"
-        config['InputSpectrum_UnitLength_in_cm'] = 3.085678e24
         #FOF
         config['SnapshotWithFOF'] = 1
         config['FOFHaloLinkingLength'] = 0.2
@@ -373,7 +370,6 @@ class SimulationICs(object):
         config['InitGasTemp'] = 2.7*(1+self.redshift)
         #Set the required neutrino parameters.
         config['MassiveNuLinRespOn'] = 0
-        config['LinearTransferFunction'] = "camb_linear/ics_transfer_"+str(self.redshift)+".dat"
         #This needs to be here until I fix the flux extractor to allow quintic kernels.
         config['DensityKernelType'] = 'cubic'
         config['PartAllocFactor'] = 2
