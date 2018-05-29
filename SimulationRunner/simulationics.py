@@ -204,9 +204,8 @@ class SimulationICs(object):
         genicfile = str(self.box)+"_"+str(self.npart)+"_"+str(self.redshift)
         config['FileBase'] = genicfile
         config['Ngrid'] = self.npart
-        if self.npart > 256:
-            config['Nmesh'] = 3*self.npart//2
         config['NgridNu'] = 0
+        config['MaxMemSizePerNode'] = 0.8
         config['ProduceGas'] = int(self.separate_gas)
         #The 2LPT correction is computed for one fluid. It is not clear
         #what to do with a second particle species, so turn it off.
@@ -220,8 +219,6 @@ class SimulationICs(object):
         config['OmegaBaryon'] = self.omegab
         config['HubbleParam'] = self.hubble
         config['Redshift'] = self.redshift
-        mem = psutil.virtual_memory()
-        config['MaxMemSizePerNode'] = 0.8*mem.total/1024/1024
         zstr = self._camb_zstr(self.redshift)
         config['FileWithInputSpectrum'] = camb_output + "ics_matterpow_"+zstr+".dat"
         config['FileWithTransferFunction'] = camb_output + "ics_transfer_"+zstr+".dat"
@@ -235,6 +232,7 @@ class SimulationICs(object):
         assert config['InputPowerRedshift'] == '-1'
         config['Seed'] = self.seed
         config = self._genicfile_child_options(config)
+        config.update(self._cluster.cluster_runtime())
         config.write()
         return (os.path.join(genicout, genicfile), config.filename)
 
@@ -341,7 +339,7 @@ class SimulationICs(object):
             os.mkdir(os.path.join(self.outdir, "output"))
         except FileExistsError:
             pass
-        config['TimeLimitCPU'] = int(60*60*self._cluster.timelimit*20/17.-3000)
+        config['TimeLimitCPU'] = int(60*60*self._cluster.timelimit-300)
         config['TimeMax'] = 1./(1+self.redend)
         config['Omega0'] = self.omega0
         config['OmegaLambda'] = 1- self.omega0
@@ -368,8 +366,6 @@ class SimulationICs(object):
         config['MinGasTemp'] = 100
         #In equilibrium with the CMB at early times.
         config['InitGasTemp'] = 2.7*(1+self.redshift)
-        #Set the required neutrino parameters.
-        config['MassiveNuLinRespOn'] = 0
         #This needs to be here until I fix the flux extractor to allow quintic kernels.
         config['DensityKernelType'] = 'cubic'
         config['PartAllocFactor'] = 2
@@ -388,6 +384,7 @@ class SimulationICs(object):
             config['StarformationOn'] = 0
         #Add other config parameters
         config = self._other_params(config)
+        config.update(self._cluster.cluster_runtime())
         config.write()
         return
 
@@ -538,8 +535,6 @@ def save_transfer(transfer, transferfile):
     """Save a transfer function. Note we save the CLASS FORMATTED transfer functions.
     The transfer functions differ from CAMB by:
         T_CAMB(k) = -T_CLASS(k)/k^2 """
-    if os.path.exists(transferfile):
-        raise IOError("Refusing to write to existing file: ",transferfile)
     header="""Transfer functions T_i(k) for adiabatic (AD) mode (normalized to initial curvature=1)
 d_i   stands for (delta rho_i/rho_i)(k,z) with above normalization
 d_tot stands for (delta rho_tot/rho_tot)(k,z) with rho_Lambda NOT included in rho_tot
