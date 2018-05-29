@@ -129,6 +129,7 @@ class SimulationICs(object):
         if self.m_nu > 0:
             gparams['m_ncdm'] = '%.2f,%.2f,%.2f' % (numass[2], numass[1], numass[0])
             gparams['N_ncdm'] = 3
+            gparams['N_ur'] = 0.00641
             #Neutrino accuracy: Default pk_ref.pre has tol_ncdm_* = 1e-10,
             #which takes 45 minutes (!) on my laptop.
             #tol_ncdm_* = 1e-8 takes 20 minutes and is machine-accurate.
@@ -138,6 +139,8 @@ class SimulationICs(object):
             gparams['tol_ncdm_synchronous'] = self.nu_acc
             gparams['tol_ncdm_bg'] = 1e-10
             gparams['l_max_ncdm'] = 50
+        else:
+            gparams['N_ur'] = 3.046
         #Initial cosmology
         pre_params.update(gparams)
         maxk = 2*math.pi/self.box*self.npart*4
@@ -152,8 +155,8 @@ class SimulationICs(object):
         cambpars = os.path.join(self.outdir, "_class_params.ini")
         classconf = configobj.ConfigObj()
         classconf.filename = cambpars
-        classconf[''] = pre_params
-        classconf['output_redshifts'] = camb_zz
+        classconf.update(pre_params)
+        classconf['z_pk'] = camb_zz
         classconf.write()
 
         engine = CLASS.ClassEngine(pre_params)
