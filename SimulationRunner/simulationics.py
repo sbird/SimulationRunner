@@ -143,7 +143,7 @@ class SimulationICs(object):
             gparams['N_ur'] = 3.046
         #Initial cosmology
         pre_params.update(gparams)
-        maxk = 2*math.pi/self.box*self.npart*4
+        maxk = 2*math.pi/self.box*self.npart*8
         powerparams = {'output': 'dTk vTk mPk', 'P_k_max_h/Mpc' : maxk, "z_max_pk" : self.redshift+1}
         pre_params.update(powerparams)
 
