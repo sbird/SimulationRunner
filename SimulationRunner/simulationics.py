@@ -139,6 +139,9 @@ class SimulationICs(object):
             gparams['tol_ncdm_synchronous'] = self.nu_acc
             gparams['tol_ncdm_bg'] = 1e-10
             gparams['l_max_ncdm'] = 50
+            #This disables the fluid approximations, which make P_nu not match camb on small scales.
+            #We need accurate P_nu to initialise our neutrino code.
+            gparams['ncdm_fluid_approximation'] = 3
         else:
             gparams['N_ur'] = 3.046
         #Initial cosmology
