@@ -141,7 +141,9 @@ class SimulationICs(object):
             gparams['l_max_ncdm'] = 50
             #This disables the fluid approximations, which make P_nu not match camb on small scales.
             #We need accurate P_nu to initialise our neutrino code.
-            gparams['ncdm_fluid_approximation'] = 3
+            gparams['ncdm_fluid_approximation'] = 2
+            #Does nothing unless ncdm_fluid_approximation = 2
+            gparams['ncdm_fluid_trigger_tau_over_tau_k'] = 30000.
         else:
             gparams['N_ur'] = 3.046
         #Initial cosmology
@@ -150,10 +152,9 @@ class SimulationICs(object):
         powerparams = {'output': 'dTk vTk mPk', 'P_k_max_h/Mpc' : maxk, "z_max_pk" : self.redshift+1}
         pre_params.update(powerparams)
 
-        #At which redshifts should we produce CAMB output: we want the starting redshift of the simulation,
+        #At which redshifts should we produce CAMB output: we want the start and end redshifts of the simulation,
         #but we also want some other values for checking purposes
-        #Extra redshifts at which to generate CAMB output, in addition to self.redshift and self.redshift/2
-        camb_zz = np.concatenate([[self.redshift, self.redshift-0.01], 1/self.generate_times()-1,[self.redend,]])
+        camb_zz = np.concatenate([[self.redshift,], 1/self.generate_times()-1,[self.redend,]])
 
         cambpars = os.path.join(self.outdir, "_class_params.ini")
         classconf = configobj.ConfigObj()
