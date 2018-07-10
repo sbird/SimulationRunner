@@ -74,6 +74,12 @@ def get_sherwood_filename():
         to match the temperature measurements."""
     return os.path.join(os.path.dirname(__file__),"TREECOOL_hm_2012_sherwood")
 
+def get_puchwein_filename():
+    """File where the UVB table from Puchwein et al 2018 is stored.
+    This is adjusted to match the UVB temperature and mean flux.
+    This is the pre-referee (arxiv v1) version."""
+    return os.path.join(os.path.dirname(__file__),"TREECOOL_ep_2018p")
+
 def get_uvb_filename(uvb):
     """Get the filename for a UVB table (in gadget format)"""
     if uvb == "fg":
@@ -82,6 +88,8 @@ def get_uvb_filename(uvb):
         fuvb = get_hm12_filename()
     elif uvb == "sh":
         fuvb = get_sherwood_filename()
+    elif uvb == "pu":
+        fuvb = get_puchwein_filename()
     else:
         raise ValueError("Unsupported UVB table")
     return fuvb
