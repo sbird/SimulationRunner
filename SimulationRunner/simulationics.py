@@ -307,11 +307,10 @@ class SimulationICs(object):
             config.write("GSL_INCL = $(shell gsl-config --cflags)\nGSL_LIBS = $(shell gsl-config --libs)\n")
             #We may want DENSITY_INDEPENDENT_SPH as well.
             #config.write(prefix+"DENSITY_INDEPENDENT_SPH\n")
-            config.write(prefix+"OPENMP_USE_SPINLOCK\n")
             self._cluster.cluster_config_options(config, prefix)
             if self.separate_gas:
-                #This needs implementing
                 config.write(prefix+"SFR\n")
+                #This needs implementing
                 #config.write(prefix+"UVB_SELF_SHIELDING")
                 #Optional feedback model options
                 self._feedback_config_options(config, prefix)
