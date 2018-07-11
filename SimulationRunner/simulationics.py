@@ -44,7 +44,7 @@ class SimulationICs(object):
     omegab - baryon density. Note that if we do not have gas particles, still set omegab, but set separate_gas = False
     omega0 - Total matter density at z=0 (includes massive neutrinos and baryons)
     hubble - Hubble parameter, h, which is H0 / (100 km/s/Mpc)
-    scalar_amp - A_s at k = 2e-3, comparable to the WMAP value.
+    scalar_amp - A_s at k = 0.05, comparable to the Planck value.
     ns - Scalar spectral index
     m_nu - neutrino mass
     """
