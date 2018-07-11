@@ -49,14 +49,11 @@ class LymanAlphaKnotICs(LymanAlphaSim):
     """Specialise the generation of initial conditions to change the power spectrum via knots.
     knot_val is a multiplicative factor applied to the power spectrum at knot_pos
     knot_pos is in units of the k bins for the power spectrum output by CAMB, by default h/Mpc."""
-    def __init__(self, *, knot_pos= (0.15,0.475,0.75,1.19), knot_val = (1.,1.,1.,1.), code_class=LymanAlphaSim, code_args=None, **kwargs):
-        lcode_args = {'rescale_gamma': True, 'rescale_amp' : 1., 'rescale_slope': 0.0}
-        if code_args is not None:
-            code_args.update(lcode_args)
+    def __init__(self, *, knot_pos= (0.15,0.475,0.75,1.19), knot_val = (1.,1.,1.,1.), **kwargs):
         #Set up the knot parameters
         self.knot_pos = knot_pos
         self.knot_val = knot_val
-        super().__init__(code_args=code_args, code_class=code_class, **kwargs)
+        super().__init__(**kwargs)
 
     def _alter_power(self, camb_output):
         """Generate a new CAMB power spectrum multiplied by the knot values."""
