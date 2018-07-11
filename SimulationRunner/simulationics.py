@@ -177,6 +177,8 @@ class SimulationICs(object):
         #Get and save the transfer functions
         for zz in camb_zz:
             trans = powspec.get_transfer(z=zz)
+            #fp-roundoff
+            trans['k'][-1] *= 0.9999
             transferfile = os.path.join(camb_outdir, "ics_transfer_"+self._camb_zstr(zz)+".dat")
             save_transfer(trans, transferfile)
             pk_lin = powspec.get_pklin(k=trans['k'], z=zz)
