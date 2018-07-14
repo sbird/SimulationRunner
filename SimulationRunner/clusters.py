@@ -47,7 +47,7 @@ class ClusterClass(object):
         """Convert a fractional timelimit into a string"""
         hr = int(timelimit)
         minute = int((timelimit - hr)*60)
-        assert 0 <= min < 60
+        assert 0 <= minute < 60
         timestring = str(hr)+":"+str(minute)+":00"
         return timestring
 
