@@ -55,7 +55,6 @@ def test_neutrino_semilinear():
     assert config['MNum'] == '0.147399671639'
     assert config['MNut'] == '0.155456306399'
     assert config['MassiveNuLinRespOn'] == "1"
-    assert config['InputSpectrum_UnitLength_in_cm'] == "3.085678e+24"
     assert config['LinearTransferFunction'] == "camb_linear/ics_transfer_99.dat"
     #Check that the output has no neutrino particles
     f = bigfile.BigFile(os.path.join(test_dir, "ICS/256_128_99"),'r')
