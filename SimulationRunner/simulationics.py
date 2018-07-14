@@ -439,11 +439,21 @@ class SimulationICs(object):
         assert g_mtime != os.stat(gadget_binary).st_mtime
         shutil.copy(gadget_binary, os.path.join(os.path.dirname(gadget_config),self.gadgetexe))
 
-    def generate_mpi_submit(self):
+    def generate_mpi_submit(self, genicout):
         """Generate a sample mpi_submit file.
         The prefix argument is a string at the start of each line.
         It separates queueing system directives from normal comments"""
         self._cluster.generate_mpi_submit(self.outdir)
+        #Generate an mpi_submit for genic
+        zstr = self._camb_zstr(self.redshift)
+        check_ics = "python cambpower.py "+genicout+" --czstr "+zstr+" --npart "+str(int(self.npart))
+        if self.separate_nu:
+            check_ics += " --nu"
+        if self.separate_gas:
+            check_ics += " --gas"
+        self._cluster.generate_mpi_submit_genic(self.outdir, extracommand=check_ics)
+        #Copy the power spectrum routine
+        shutil.copy("cambpower.py", os.path.join(self.outdir,"cambpower.py"))
 
     def make_simulation(self, pkaccuracy=0.05, do_build=False):
         """Wrapper function to make the simulation ICs."""
@@ -464,7 +474,7 @@ class SimulationICs(object):
         #Generate Gadget parameter file
         self.gadget3params(genic_output)
         #Generate mpi_submit file
-        self.generate_mpi_submit()
+        self.generate_mpi_submit(genic_output)
         #Run MP-GenIC
         if do_build:
             subprocess.check_call([os.path.join(os.path.join(self.gadget_dir, "genic"),self.genicexe), genic_param],cwd=self.outdir)
