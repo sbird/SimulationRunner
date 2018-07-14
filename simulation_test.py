@@ -12,7 +12,7 @@ def test_full_integration():
     Sim.make_simulation(pkaccuracy=0.07)
     #Check the following files were created
     assert os.path.exists(defaultpath)
-    for ff in ("_class_params.ini", "TREECOOL", "mpi_submit", "camb_linear", "ICS", "output", "camb_linear/ics_matterpow_99.dat", "SimulationICs.json", "mpgadget.param", "_genic_params.ini"):
+    for ff in ("_class_params.ini", "TREECOOL", "mpi_submit", "mpi_submit_genic", "cambpower.py", "camb_linear", "ICS", "output", "camb_linear/ics_matterpow_99.dat", "SimulationICs.json", "mpgadget.param", "_genic_params.ini"):
         assert os.path.exists(os.path.join(defaultpath, ff))
     #Clean the test directory if test was successful
     #shutil.rmtree(defaultpath)
