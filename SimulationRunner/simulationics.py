@@ -453,7 +453,7 @@ class SimulationICs(object):
             check_ics += " --gas"
         self._cluster.generate_mpi_submit_genic(self.outdir, extracommand=check_ics)
         #Copy the power spectrum routine
-        shutil.copy("cambpower.py", os.path.join(self.outdir,"cambpower.py"))
+        shutil.copy(os.path.join(os.path.dirname(__file__),"cambpower.py"), os.path.join(self.outdir,"cambpower.py"))
 
     def make_simulation(self, pkaccuracy=0.05, do_build=False):
         """Wrapper function to make the simulation ICs."""
