@@ -15,7 +15,7 @@ import distutils.spawn
 def rebuild_MP(rundir, codedir, config_file="Options.mk", binary="gadget/MP-Gadget"):
     """rebuild, but with defaults appropriate for MP-Gadget."""
     configs = rebuild(rundir, codedir,config_file=config_file, binary=binary)
-    shutil.copy2(path.join(codedir, "genic/MP-GenIC"), path.join(directory, "MP-GenIC"))
+    shutil.copy2(path.join(codedir, "genic/MP-GenIC"), path.join(rundir, "MP-GenIC"))
     return configs
 
 def rebuild(rundir, codedir, config_file="Config.sh", binary="P-Gadget3"):
