@@ -77,30 +77,6 @@ class ClusterClass(object):
         Only MP-Gadget pays attention to this."""
         return "-fopenmp -O3 -g -Wall -ffast-math -march=native"
 
-class ComaClass(ClusterClass):
-    """Subclassed for specific properties of the Coma cluster at CMU.
-    __init__ and _queue_directive are changed."""
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.memory = 1200
-
-    def _queue_directive(self, name, timelimit, prefix="#PBS"):
-        """Generate mpi_submit with coma specific parts"""
-        qstring = super()._queue_directive(name=name, prefix=prefix, timelimit=timelimit)
-        qstring += prefix+" -q amd\n"
-        qstring += prefix+" -l nodes="+str(int(self.nproc/16))+":ppn=16\n"
-        return qstring
-
-    def cluster_config_options(self,config, prefix=""):
-        """Config options that might be specific to a particular cluster"""
-        _ = prefix
-        #isend/irecv is quite slow on some clusters because of the extra memory allocations.
-        #Maybe test this on your specific system and see if it helps.
-        config.write("NO_ISEND_IRECV_IN_DOMAIN\n")
-        config.write("NO_ISEND_IRECV_IN_PM\n")
-        #config.write("NOTYPEPREFIX_FFTW\n")
-        return
-
 class HipatiaClass(ClusterClass):
     """Subclassed for specific properties of the Hipatia cluster in Barcelona.
     __init__ and _queue_directive are changed."""
@@ -124,32 +100,6 @@ class HipatiaClass(ClusterClass):
         #Don't ask me why this works, but it is necessary.
         qstring += "unset PBS_JOBID\n"
         qstring += "mpirun -np "+str(self.nproc)+" "+command+"\n"
-        return qstring
-
-class HHPCClass(ClusterClass):
-    """Subclassed for specific properties of the HHPCv2 cluster at JHU.
-    This has 12 cores per node, and 4GB per core.
-    You must use full nodes, preferrably more than 1 hour per job,
-    and pass PBS_NODEFILE to mpirun.
-    __init__ and _queue_directive are changed."""
-    def __init__(self, *args, nproc=252,timelimit=8,**kwargs):
-        super().__init__(*args, nproc=nproc,timelimit=timelimit, **kwargs)
-        self.memory = 3000
-
-    def _queue_directive(self, name, timelimit, prefix="#PBS"):
-        """Generate mpi_submit with coma specific parts"""
-        qstring = super()._queue_directive(name=name, prefix=prefix, timelimit=timelimit)
-        qstring += prefix+" -l nodes="+str(int(self.nproc/12))+":ppn=12\n"
-        #Pass environment to child processes
-        return qstring
-
-    def _mpi_program(self, command):
-        """String for MPI program to execute. PBS_NODEFILE needs to be passed to mpirun for HHPC."""
-        #Change to current directory
-        qstring = "cd $PBS_O_WORKDIR\n"
-        #Required.
-        qstring += "export MPI_NPROCS=`wc -l $PBS_NODEFILE`\n"
-        qstring += "mpirun -machinefile $PBS_NODEFILE "+command+"\n"
         return qstring
 
 class MARCCClass(ClusterClass):
