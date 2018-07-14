@@ -12,13 +12,11 @@ import os
 import os.path as path
 import distutils.spawn
 
-def rebuild_MP(rundir, codedir, config_file="Options.mk", binary="gadget/MP-Gadget"):
+def rebuild_MP(rundir, codedir, config_file="Options.mk", binary=["gadget/MP-Gadget", "genic/MP-GenIC"]):
     """rebuild, but with defaults appropriate for MP-Gadget."""
-    configs = rebuild(rundir, codedir,config_file=config_file, binary=binary)
-    shutil.copy2(path.expanduser(path.join(codedir, "genic/MP-GenIC")), path.expanduser(path.join(rundir, "MP-GenIC")))
-    return configs
+    return rebuild(rundir, codedir,config_file=config_file, binary=binary)
 
-def rebuild(rundir, codedir, config_file="Config.sh", binary="P-Gadget3"):
+def rebuild(rundir, codedir, config_file="Config.sh", binary=["P-Gadget3",]):
     """Rebuild all Gadget binaries in subdirectories of rundir.
     Arguments:
     rundir: Parent of simulation directories
@@ -54,7 +52,8 @@ def rebuild(rundir, codedir, config_file="Config.sh", binary="P-Gadget3"):
             first = False
         #Note that if dst is a symlink, this will overwrite the contents
         #of the symlink instead of breaking it.
-        shutil.copy2(path.join(codedir, binary), path.join(directory, os.path.basename(binary)))
+        for bi in binary:
+            shutil.copy2(path.join(codedir, bi), path.join(directory, os.path.basename(bi)))
     return configs
 
 def detect_submit():
