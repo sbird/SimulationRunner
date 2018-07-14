@@ -36,7 +36,7 @@ class ClusterClass(object):
             mpis.write(self._queue_directive(name, timelimit=0.5))
             mpis.write(self._mpi_program(command=self.genicexe+" "+self.genicparam))
             if extracommand is not None:
-                mpis.write(extracommand)
+                mpis.write(extracommand+"\n")
 
     def _mpi_program(self, command):
         """String for MPI program to execute"""
