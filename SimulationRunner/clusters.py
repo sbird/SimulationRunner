@@ -43,6 +43,14 @@ class ClusterClass(object):
         qstring = "mpirun -np "+str(self.nproc)+" "+command+"\n"
         return qstring
 
+    def timestring(self, timelimit):
+        """Convert a fractional timelimit into a string"""
+        hr = int(timelimit)
+        minute = int((timelimit - hr)*60)
+        assert 0 <= min < 60
+        timestring = str(hr)+":"+str(minute)+":00"
+        return timestring
+
     def _queue_directive(self, name, timelimit, prefix="#PBS"):
         """Write the part of the mpi_submit file that directs the queueing system.
         This is usually specific to a given cluster.
@@ -52,10 +60,7 @@ class ClusterClass(object):
         qstring = prefix+" -j eo\n"
         qstring += prefix+" -m bae\n"
         qstring += prefix+" -M "+self.email+"\n"
-        hr = int(timelimit)
-        minute = int((timelimit - hr)*60)
-        assert 0 <= min < 60
-        qstring += prefix+" -l walltime="+str(hr)+":"+str(minute)+":00\n"
+        qstring += prefix+" -l walltime="+self.timestring(timelimit)+"\n"
         return qstring
 
     def cluster_runtime(self):
@@ -118,7 +123,7 @@ class MARCCClass(ClusterClass):
         _ = timelimit
         qstring = prefix+" --partition=parallel\n"
         qstring += prefix+" --job-name="+name+"\n"
-        qstring += prefix+" --time="+str(int(timelimit))+":00:0\n"
+        qstring += prefix+" --time="+self.timestring(timelimit)+"\n"
         qstring += prefix+" --nodes="+str(int(self.nproc/24))+"\n"
         #Number of tasks (processes) per node
         qstring += prefix+" --ntasks-per-node=24\n"
@@ -163,7 +168,7 @@ class BIOClass(ClusterClass):
         _ = timelimit
         qstring = prefix+" --partition=short\n"
         qstring += prefix+" --job-name="+name+"\n"
-        qstring += prefix+" --time="+str(int(timelimit))+":00:0\n"
+        qstring += prefix+" --time="+self.timestring(timelimit)+"\n"
         qstring += prefix+" --nodes="+str(int(self.nproc/32))+"\n"
         #Number of tasks (processes) per node
         qstring += prefix+" --ntasks-per-node=32\n"
