@@ -446,11 +446,7 @@ class SimulationICs(object):
         self._cluster.generate_mpi_submit(self.outdir)
         #Generate an mpi_submit for genic
         zstr = self._camb_zstr(self.redshift)
-        check_ics = "python cambpower.py "+genicout+" --czstr "+zstr+" --npart "+str(int(self.npart))
-        if self.separate_nu:
-            check_ics += " --nu"
-        if self.separate_gas:
-            check_ics += " --gas"
+        check_ics = "python cambpower.py "+genicout+" --czstr "+zstr
         self._cluster.generate_mpi_submit_genic(self.outdir, extracommand=check_ics)
         #Copy the power spectrum routine
         shutil.copy(os.path.join(os.path.dirname(__file__),"cambpower.py"), os.path.join(self.outdir,"cambpower.py"))
