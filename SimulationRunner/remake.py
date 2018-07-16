@@ -220,3 +220,25 @@ def resub_not_complete(rundir, output_file="output", endz=2, script_file="mpi_su
             subprocess.call([resub_command, script_file_resub], cwd=odir)
         else:
             print("ERROR: no change, not re-submitting: ",path.join(odir, script_file_resub))
+
+def check_status_ics(rundir, icdir="ICS"):
+    """Get IC generation status for every directory in the suite."""
+    rundir = path.expanduser(rundir)
+    odirs = glob.glob(path.join(rundir, "*"+os.path.sep))
+    if not odirs:
+        raise IOError(rundir +" is empty.")
+    icex = lambda odir: bool(glob.glob(path.join(path.join(odir, icdir),"*/Header/attr-v2")))
+    exists = [icex(cc) for cc in odirs]
+    return odirs, exists
+
+def resub_not_complete_genic(rundir, icdir="ICS", script_file="mpi_submit_genic", resub_command=None):
+    """Resubmit failed IC generations to the queue."""
+    if resub_command is None:
+        resub_command = detect_submit()
+    outputs, completes = check_status_ics(rundir, icdir)
+    #Pathnames for incomplete simulations
+    for odir,cc in zip(outputs,completes):
+        if cc:
+            continue
+        print("Re-submitting: ",path.join(odir, script_file))
+        subprocess.call([resub_command, script_file], cwd=odir)
