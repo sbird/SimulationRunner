@@ -82,7 +82,7 @@ def plot_ic_power(kk_ic, Pk_ic, Pk_camb, npart, sp=1, outdir="."):
     error = Pk_ic[imin:imax]/Pk_camb[imin:imax] -1
     return error
 
-def check_ic_power_spectra(genicfileout, camb_zstr, outdir=".", accuracy=0.07):
+def check_ic_power_spectra(genicfileout, camb_zstr, outdir=".", accuracy=0.07, m_nu=0):
     """Generate the power spectrum for each particle type from the generated simulation files
     and check that it matches the input. This is a consistency test on each simulation output."""
     #Generate power spectra
@@ -99,9 +99,10 @@ def check_ic_power_spectra(genicfileout, camb_zstr, outdir=".", accuracy=0.07):
         pass
     omegab = cats[1].attrs['OmegaBaryon']
     omega0 = cats[1].attrs['Omega0']
+    hubble = cats[1].attrs['HubbleParam']
     npart = int(np.round(np.cbrt(cats[1].attrs['TotNumPart'][1])))
     assert npart > 0
-    cambpow = CLASSPowerSpectrum(matterpow, transfer,omega0=omega0, omegab=omegab)
+    cambpow = CLASSPowerSpectrum(matterpow, transfer,omega0=omega0, omegab=omegab, omeganu=m_nu/93.14/hubble**2)
     for sp in cats.keys():
         #GenPK output is at PK-[nu,by,DM]-basename(genicfileout)
         cats[sp].to_mesh(Nmesh=npart*2, window='cic', compensated=True, interlaced=True)
@@ -130,7 +131,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('genicfile', type=str, help='File with generated ICs')
     parser.add_argument('--czstr', type=str, help='Redshift string used in class files',required=True)
-    parser.add_argument('--npart', type=int,help='Number of particles in ICs',required=False)
-    parser.add_argument('--gas', action='store_true', help='If true, assume separate gas is used',required=False)
+    parser.add_argument('--mnu', default=0, type=float,help='Sum of neutrino masses',required=False)
     args = parser.parse_args()
-    check_ic_power_spectra(args.genicfile, camb_zstr = args.czstr)
+    check_ic_power_spectra(args.genicfile, camb_zstr = args.czstr, m_nu=args.mnu)
