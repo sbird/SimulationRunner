@@ -138,7 +138,8 @@ class SimulationICs(object):
             #We need accurate P_nu to initialise our neutrino code.
             gparams['ncdm_fluid_approximation'] = 2
             #Does nothing unless ncdm_fluid_approximation = 2
-            gparams['ncdm_fluid_trigger_tau_over_tau_k'] = 30000.
+            #Spend less time on neutrino power for smaller neutrino mass
+            gparams['ncdm_fluid_trigger_tau_over_tau_k'] = 30000.* (self.m_nu / 0.4)
         else:
             gparams['N_ur'] = 3.046
         #Initial cosmology
