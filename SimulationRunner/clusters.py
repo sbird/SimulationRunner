@@ -157,7 +157,7 @@ class BIOClass(ClusterClass):
     This has 32 cores per node, shared memory of 128GB per node.
     Ask for complete nodes.
     Uses SLURM."""
-    def __init__(self, *args, nproc=128,timelimit=2,**kwargs):
+    def __init__(self, *args, nproc=256,timelimit=2,**kwargs):
         #Complete nodes!
         assert nproc % 32 == 0
         super().__init__(*args, nproc=nproc,timelimit=timelimit, **kwargs)
