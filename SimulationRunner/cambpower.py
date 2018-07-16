@@ -45,13 +45,16 @@ class CLASSPowerSpectrum(object):
         # Build interpolators for various species of transfer functions.
         tk_camb = np.loadtxt(camb_transfer)
         self.dtk = {}
-        ttot = (omegab * tk_camb[:,2] + (omega0 - omegab) * tk_camb[:,3])
+        tdmby = (omegab * tk_camb[:,2] + (omega0 - omegab) * tk_camb[:,3])
+        ttot = np.array(tdmby)
         if omeganu > 0:
             ttot += omeganu * tk_camb[:,6]
         ttot /= omega0
         self.dtk[1] = interp.interp1d(tk_camb[:,0], pk_camb[:,1] * (tk_camb[:, 3]/ttot)**2, kind='cubic')
         #Baryons
         self.dtk[0] = interp.interp1d(tk_camb[:,0], pk_camb[:,1] * (tk_camb[:, 2]/ttot)**2, kind='cubic')
+        #DM + baryon
+        self.dtk[3] = interp.interp1d(tk_camb[:,0], pk_camb[:,1] * (tdmby/ttot)**2, kind='cubic')
 
     def get_class_power(self, species=-1):
         """Get a matter power spectrum for DM, baryons from CAMB."""
@@ -120,6 +123,8 @@ def check_ic_power_spectra(genicfileout, camb_zstr, outdir=".", accuracy=0.07, m
         ccsp = sp
         if len(cats) == 1:
             ccsp = -1
+            if m_nu > 0:
+                ccsp = 3
         Pk_camb = cambpow.get_class_power(species=ccsp)
         (kk_ic, Pk_ic) = modecount_rebin(kk_ic, Pk_ic, modes_ic[ii], Pk_camb, ndesired=npart//2)
         error = plot_ic_power(kk_ic, Pk_ic, Pk_camb(kk_ic), sp=sp, npart=npart, outdir=outdir)
