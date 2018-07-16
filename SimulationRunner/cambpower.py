@@ -116,7 +116,7 @@ def check_ic_power_spectra(genicfileout, camb_zstr, outdir=".", accuracy=0.05):
         Pk_ic = Pk_ic[ii]
         #Load the power spectrum. Note that DM may be total.
         ccsp = sp
-        if len(cats) > 1:
+        if len(cats) == 1:
             ccsp = -1
         Pk_camb = cambpow.get_class_power(species=ccsp)
         (kk_ic, Pk_ic) = modecount_rebin(kk_ic, Pk_ic, modes_ic[ii], Pk_camb)
