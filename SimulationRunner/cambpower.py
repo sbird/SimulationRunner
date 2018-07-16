@@ -9,7 +9,7 @@ matplotlib.use("PDF")
 import matplotlib.pyplot as plt
 from nbodykit.lab import BigFileCatalog,FFTPower
 
-def modecount_rebin(kk, pk, modes, pkc, minmodes=20, ndesired=200):
+def modecount_rebin(kk, pk, modes, pkc, minmodes=250, ndesired=200):
     """Rebins a power spectrum so that there are sufficient modes in each bin"""
     assert np.all(kk) > 0
     logkk=np.log10(kk)
@@ -66,7 +66,6 @@ def plot_ic_power(kk_ic, Pk_ic, Pk_camb, npart, sp=1, outdir="."):
     mink = np.min(kk_ic)
     imax = np.searchsorted(kk_ic, npart*mink/4)
     imin = np.searchsorted(kk_ic, mink*4)
-    error = abs(Pk_ic[imin:imax]/Pk_camb[imin:imax] -1)
     plt.semilogx(kk_ic, Pk_ic/Pk_camb,linewidth=2)
     plt.semilogx([kk_ic[0]*0.9,kk_ic[-1]*1.1], [0.95,0.95], ls="--",linewidth=2)
     plt.semilogx([kk_ic[0]*0.9,kk_ic[-1]*1.1], [1.05,1.05], ls="--",linewidth=2)
@@ -80,9 +79,10 @@ def plot_ic_power(kk_ic, Pk_ic, Pk_camb, npart, sp=1, outdir="."):
     plt.ylim(ymax=Pk_camb[0]*10)
     plt.savefig(os.path.join(outdir,"ICS/PK-IC-"+str(sp)+"-abs.pdf"))
     plt.clf()
+    error = Pk_ic[imin:imax]/Pk_camb[imin:imax] -1
     return error
 
-def check_ic_power_spectra(genicfileout, camb_zstr, outdir=".", accuracy=0.05):
+def check_ic_power_spectra(genicfileout, camb_zstr, outdir=".", accuracy=0.07):
     """Generate the power spectrum for each particle type from the generated simulation files
     and check that it matches the input. This is a consistency test on each simulation output."""
     #Generate power spectra
@@ -119,7 +119,7 @@ def check_ic_power_spectra(genicfileout, camb_zstr, outdir=".", accuracy=0.05):
         if len(cats) == 1:
             ccsp = -1
         Pk_camb = cambpow.get_class_power(species=ccsp)
-        (kk_ic, Pk_ic) = modecount_rebin(kk_ic, Pk_ic, modes_ic[ii], Pk_camb)
+        (kk_ic, Pk_ic) = modecount_rebin(kk_ic, Pk_ic, modes_ic[ii], Pk_camb, ndesired=npart//2)
         error = plot_ic_power(kk_ic, Pk_ic, Pk_camb(kk_ic), sp=sp, npart=npart, outdir=outdir)
         #Don't worry too much about one failing mode.
         if np.size(np.where(error > accuracy)) > 3:
