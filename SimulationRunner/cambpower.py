@@ -77,7 +77,7 @@ def plot_ic_power(kk_ic, Pk_ic, Pk_camb, npart, sp=1, outdir="."):
     plt.semilogx([kk_ic[0]*0.9,kk_ic[-1]*1.1], [1.05,1.05], ls="--",linewidth=2)
     plt.semilogx([kk_ic[imin],kk_ic[imin]], [0,1.5], ls=":",linewidth=2)
     plt.semilogx([kk_ic[imax],kk_ic[imax]], [0,1.5], ls=":",linewidth=2)
-    plt.ylim(0., 1.5)
+    plt.ylim(0.7, 1.3)
     plt.savefig(os.path.join(outdir,"ICS/PK-IC-"+str(sp)+"-diff.pdf"))
     plt.clf()
     plt.loglog(kk_ic, Pk_ic,linewidth=2)
