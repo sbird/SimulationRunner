@@ -131,7 +131,7 @@ def _get_redshift_snapshot(snapshot):
 def _find_snap(outputs,output_file, snap="PART_"):
     """Find the last written snapshot"""
     written = glob.glob(path.join(path.join(outputs, output_file),snap+"[0-9][0-9][0-9]"))
-    if len(written) == 0:
+    if not written:
         raise IOError("No snapshots for",outputs)
     matches = [re.search(snap+"([0-9][0-9][0-9])",wr) for wr in written]
     snapnums = [int(mm.group(1)) for mm in matches]
@@ -143,10 +143,10 @@ def _get_regex(odir, output_file):
     output = glob.glob(path.join(odir,output_txt))
     regex = r"Redshift: ([0-9]{1,3}\.?[0-9]*)"
     #If no info.txt, probably we are MP-Gadget and need cpu.txt instead
-    if len(output) == 0:
+    if not output:
         output_txt = path.join(output_file, "cpu.tx*")
         output = glob.glob(path.join(odir,output_txt))
-        if len(output) == 0:
+        if not output:
             return "", regex
         return output_txt, r"Step [0-9]*, Time: ([0-9]{1,3}\.?[0-9]*)"
     return output_txt, regex
@@ -157,7 +157,7 @@ def check_status(rundir, output_file="output", endz=2, use_file=True, snap="PART
     was an error or just a timeout."""
     rundir = path.expanduser(rundir)
     odirs = glob.glob(path.join(rundir, "*"+os.path.sep))
-    if len(odirs) == 0:
+    if not odirs:
         raise IOError(rundir +" is empty.")
     if use_file:
         redshifts = [_check_single_status_snap(cc,output_file=output_file,snap=snap) for cc in odirs]
@@ -165,11 +165,11 @@ def check_status(rundir, output_file="output", endz=2, use_file=True, snap="PART
         #Check for info.txt or cpu.txt:
         output_txt, regex = _get_regex(odirs[0], output_file)
         #If we are handed a single directory rather than a set.
-        if len(output_txt) == 0:
+        if not output_txt:
             odirs = glob.glob(path.join(rundir, "out*"))
             output_txt, regex = _get_regex(odirs[0], output_file="")
         #If the simulation didn't start yet
-        if len(output_txt) == 0:
+        if not output_txt:
             return odirs, [False for _ in odirs], [1100. for _ in odirs]
         redshifts = [_check_single_status(path.join(cc,output_txt), regex) for cc in odirs]
     return odirs, [zz <= endz for zz in redshifts], redshifts
