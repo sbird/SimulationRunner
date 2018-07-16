@@ -85,12 +85,15 @@ def check_ic_power_spectra(genicfileout, camb_zstr, outdir=".", accuracy=0.05):
     for sp in cats.keys():
         #GenPK output is at PK-[nu,by,DM]-basename(genicfileout)
         cats[sp].to_mesh(Nmesh=npart*2, window='cic', compensated=True, interlaced=True)
-        pk = FFTPower(cats[sp], mode='1d', Nmesh=npart*2)
+        pk = FFTPower(cats[sp], mode='1d', Nmesh=npart*2, dk=5.0e-6)
         #GenPK output is at PK-[nu,by,DM]-basename(genicfileout)
         #Load the power spectra
         #Convert units from kpc/h to Mpc/h
         kk_ic = pk.power['k'][1:]*1e3
         Pk_ic = pk.power['power'][1:].real/1e9
+        ii = np.isfinite(kk_ic)
+        kk_ic = kk_ic[ii]
+        Pk_ic = Pk_ic[ii]
         #Load the power spectrum. Note that DM may be total.
         ccsp = sp
         if len(cats) > 1:
