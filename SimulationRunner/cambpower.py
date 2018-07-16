@@ -99,7 +99,8 @@ def check_ic_power_spectra(genicfileout, camb_zstr, outdir=".", accuracy=0.07):
         pass
     omegab = cats[1].attrs['OmegaBaryon']
     omega0 = cats[1].attrs['Omega0']
-    npart = int(np.round(np.cbrt(cats[1].attrs['TotNumPart'][0])))
+    npart = int(np.round(np.cbrt(cats[1].attrs['TotNumPart'][1])))
+    assert npart > 0
     cambpow = CLASSPowerSpectrum(matterpow, transfer,omega0=omega0, omegab=omegab)
     for sp in cats.keys():
         #GenPK output is at PK-[nu,by,DM]-basename(genicfileout)
