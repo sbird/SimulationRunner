@@ -122,7 +122,7 @@ class SimulationICs(object):
         numass = get_neutrino_masses(self.m_nu, self.nu_hierarchy)
         #Set up massive neutrinos
         if self.m_nu > 0:
-            gparams['m_ncdm'] = '%.2f,%.2f,%.2f' % (numass[2], numass[1], numass[0])
+            gparams['m_ncdm'] = '%.8f,%.8f,%.8f' % (numass[2], numass[1], numass[0])
             gparams['N_ncdm'] = 3
             gparams['N_ur'] = 0.00641
             #Neutrino accuracy: Default pk_ref.pre has tol_ncdm_* = 1e-10,
