@@ -45,11 +45,14 @@ class CLASSPowerSpectrum(object):
         # Build interpolators for various species of transfer functions.
         tk_camb = np.loadtxt(camb_transfer)
         self.dtk = {}
-        tdmby = (omegab * tk_camb[:,2] + (omega0 - omegab) * tk_camb[:,3])
+        omegacdm = omega0 - omegab - omeganu
+        tdmby = (omegab * tk_camb[:,2] + omegacdm * tk_camb[:,3])
         ttot = np.array(tdmby)
         if omeganu > 0:
             ttot += omeganu * tk_camb[:,6]
         ttot /= omega0
+        tdmby /= (omegab + omegacdm)
+
         self.dtk[1] = interp.interp1d(tk_camb[:,0], pk_camb[:,1] * (tk_camb[:, 3]/ttot)**2, kind='cubic')
         #Baryons
         self.dtk[0] = interp.interp1d(tk_camb[:,0], pk_camb[:,1] * (tk_camb[:, 2]/ttot)**2, kind='cubic')
