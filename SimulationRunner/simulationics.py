@@ -208,6 +208,8 @@ class SimulationICs(object):
         config['NgridNu'] = 0
         config['MaxMemSizePerNode'] = 0.8
         config['ProduceGas'] = int(self.separate_gas)
+        #Suppress Gaussian mode scattering
+        config['UnitaryAmplitude'] = 1
         #The 2LPT correction is computed for one fluid. It is not clear
         #what to do with a second particle species, so turn it off.
         #Even for CDM alone there are corrections from radiation:
