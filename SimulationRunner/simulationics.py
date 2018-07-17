@@ -110,9 +110,9 @@ class SimulationICs(object):
         self.gadget_dir = os.path.expanduser("~/codes/MP-Gadget/")
 
     def cambfile(self):
-        """Generate the IC power spectrum using pyCAMB."""
+        """Generate the IC power spectrum using classylss."""
         #Load high precision defaults
-        pre_params = {'tol_background_integration': 1e-9, 'tol_perturb_integration' : 1.e-7, 'tol_thermo_integration':1.e-5, 'k_per_decade_for_pk': 20,'k_per_decade_for_bao':  200, 'neglect_CMB_sources_below_visibility' : 1.e-30, 'transfer_neglect_late_source': 3000., 'l_max_g' : 50, 'l_max_ur':150, 'extra metric transfer functions': 'y'}
+        pre_params = {'tol_background_integration': 1e-9, 'tol_perturb_integration' : 1.e-7, 'tol_thermo_integration':1.e-5, 'k_per_decade_for_pk': 50,'k_bao_width': 8, 'k_per_decade_for_bao':  200, 'neglect_CMB_sources_below_visibility' : 1.e-30, 'transfer_neglect_late_source': 3000., 'l_max_g' : 50, 'l_max_ur':150, 'extra metric transfer functions': 'y'}
         #Set the neutrino density and subtract it from omega0
         omeganu = self.m_nu/93.14/self.hubble**2
         omcdm = (self.omega0 - self.omegab) - omeganu
