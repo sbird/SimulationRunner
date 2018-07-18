@@ -29,6 +29,8 @@ class LymanAlphaSim(simulationics.SimulationICs):
         """Config options specific to the lyman alpha forest"""
         #These are parameters for the Quick Lyman alpha star formation.
         config["QuickLymanAlphaProbability"] = 1.0
+        #No FOF for lya.
+        config['SnapshotWithFOF'] = 0
         #Quick star formation threshold from 1605.03462
         config["CritOverDensity"] = 1000.
         config['WindModel'] = 'nowind'

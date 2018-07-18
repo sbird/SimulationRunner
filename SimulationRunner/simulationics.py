@@ -374,6 +374,7 @@ class SimulationICs(object):
         config['WindOn'] = 0
         config['WindModel'] = 'nowind'
         config['BlackHoleOn'] = 0
+        config['OutputPotential'] = 0
         if self.separate_gas:
             config['CoolingOn'] = 1
             config['TreeCoolFile'] = "TREECOOL"
