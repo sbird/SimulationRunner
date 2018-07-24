@@ -44,7 +44,7 @@ class LymanAlphaSim(simulationics.SimulationICs):
 
     def generate_times(self):
         """Snapshot outputs for lyman alpha"""
-        redshifts = np.concatenate([[49,9],np.arange(4.2, self.redend, -0.2)])
+        redshifts = np.arange(4.2, self.redend, -0.2)
         return 1./(1.+redshifts)
 
 class LymanAlphaKnotICs(LymanAlphaSim):
