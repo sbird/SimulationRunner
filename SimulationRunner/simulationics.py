@@ -42,8 +42,9 @@ class SimulationICs(object):
     scalar_amp - A_s at k = 0.05, comparable to the Planck value.
     ns - Scalar spectral index
     m_nu - neutrino mass
+    unitary - if true, do not scatter modes, but use a unitary gaussian amplitude.
     """
-    def __init__(self, *, outdir, box, npart, seed = 9281110, redshift=99, redend=0, separate_gas=True, omega0=0.288, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, rscatter=False, m_nu=0, nu_hierarchy='degenerate', uvb="pu", cluster_class=clusters.MARCCClass, nu_acc=1e-5):
+    def __init__(self, *, outdir, box, npart, seed = 9281110, redshift=99, redend=0, separate_gas=True, omega0=0.288, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, rscatter=False, m_nu=0, nu_hierarchy='degenerate', uvb="pu", cluster_class=clusters.MARCCClass, nu_acc=1e-5, unitary=True):
         #Check that input is reasonable and set parameters
         #In Mpc/h
         assert box < 20000
@@ -66,6 +67,7 @@ class SimulationICs(object):
         self.scalar_amp = scalar_amp
         assert ns > 0 and ns < 2
         self.ns = ns
+        self.unitary = unitary
         #Neutrino accuracy for CLASS
         self.nu_acc = nu_acc
         #UVB? Only matters if gas
@@ -209,7 +211,7 @@ class SimulationICs(object):
         config['MaxMemSizePerNode'] = 0.8
         config['ProduceGas'] = int(self.separate_gas)
         #Suppress Gaussian mode scattering
-        config['UnitaryAmplitude'] = 1
+        config['UnitaryAmplitude'] = int(self.unitary)
         #The 2LPT correction is computed for one fluid. It is not clear
         #what to do with a second particle species, so turn it off.
         #Even for CDM alone there are corrections from radiation:
