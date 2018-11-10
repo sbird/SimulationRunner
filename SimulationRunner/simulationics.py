@@ -310,7 +310,6 @@ class SimulationICs(object):
             #config.write(prefix+"DENSITY_INDEPENDENT_SPH\n")
             self._cluster.cluster_config_options(config, prefix)
             if self.separate_gas:
-                config.write(prefix+"SFR\n")
                 #This needs implementing
                 #config.write(prefix+"UVB_SELF_SHIELDING")
                 #Optional feedback model options
