@@ -1,7 +1,7 @@
 """Specialised module to contain functions to specialise the simulation run to different clusters"""
 import os.path
 
-class ClusterClass(object):
+class ClusterClass:
     """Generic class implementing some general defaults for cluster submissions."""
     def __init__(self, gadget="MP-Gadget", genic="MP-GenIC", param="mpgadget.param", genicparam="_genic_params.ini", nproc=256, timelimit=24):
         """CPU parameters (walltime, number of cpus, etc):
@@ -75,7 +75,6 @@ class ClusterClass(object):
         #config.write(prefix+"NO_ISEND_IRECV_IN_DOMAIN\n")
         #config.write(prefix+"NO_ISEND_IRECV_IN_PM\n")
         #config.write(prefix+"NOTYPEPREFIX_FFTW\n")
-        return
 
     def cluster_optimize(self):
         """Compiler optimisation options for a specific cluster.
@@ -200,6 +199,45 @@ class BIOClass(ClusterClass):
         """Compiler optimisation options for a specific cluster.
         Only MP-Gadget pays attention to this."""
         return "-fopenmp -O3 -g -Wall -ffast-math -march=corei7"
+
+class StampedeClass(ClusterClass):
+    """Subclassed for Stampede2's Skylake nodes.
+    This has 48 cores (96 threads) per node, each with two sockets, shared memory of 192GB per node, 96 GB per socket.
+    Charged in node-hours, uses SLURM and icc."""
+    def __init__(self, *args, nproc=2,timelimit=6,**kwargs):
+        super().__init__(*args, nproc=nproc,timelimit=timelimit, **kwargs)
+
+    def _queue_directive(self, name, timelimit, prefix="#SBATCH"):
+        """Generate mpi_submit with stampede specific parts"""
+        _ = timelimit
+        qstring = prefix+" --partition=skx-normal\n"
+        qstring += prefix+" --job-name="+name+"\n"
+        qstring += prefix+" --time="+self.timestring(timelimit)+"\n"
+        qstring += prefix+" --nodes="+str(int(self.nproc))+"\n"
+        #Number of tasks (processes) per node:
+        #currently optimal is 2 processes per socket.
+        qstring += prefix+" --ntasks-per-node=4\n"
+        qstring += prefix+" --mail-type=end\n"
+        qstring += prefix+" --mail-user="+self.email+"\n"
+        return qstring
+
+    def _mpi_program(self, command):
+        """String for MPI program to execute."""
+        #Should be 96/ntasks-per-node. This uses the hyperthreading,
+        #which is perhaps an extra 10% performance.
+        qstring = "export OMP_NUM_THREADS=24\n"
+        qstring += "ibrun "+command+"\n"
+        return qstring
+
+    def cluster_runtime(self):
+        """Runtime options for cluster. None."""
+        return {}
+
+    def cluster_optimize(self):
+        """Compiler optimisation options for stampede.
+        Only MP-Gadget pays attention to this."""
+        #TACC_VEC_FLAGS generates one binary for knl, one for skx.
+        return "-fopenmp -O3 -g -Wall ${TACC_VEC_FLAGS} -fp-model fast=1 -simd"
 
 class HypatiaClass(ClusterClass):
     """Subclass for Hypatia cluster in UCL"""
