@@ -44,7 +44,7 @@ class SimulationICs(object):
     m_nu - neutrino mass
     unitary - if true, do not scatter modes, but use a unitary gaussian amplitude.
     """
-    def __init__(self, *, outdir, box, npart, seed = 9281110, redshift=99, redend=0, separate_gas=True, omega0=0.288, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, rscatter=False, m_nu=0, nu_hierarchy='degenerate', uvb="pu", cluster_class=clusters.MARCCClass, nu_acc=1e-5, unitary=True):
+    def __init__(self, *, outdir, box, npart, seed = 9281110, redshift=99, redend=0, separate_gas=True, omega0=0.288, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, rscatter=False, m_nu=0, nu_hierarchy='degenerate', uvb="pu", cluster_class=clusters.StampedeClass, nu_acc=1e-5, unitary=True):
         #Check that input is reasonable and set parameters
         #In Mpc/h
         assert box < 20000
