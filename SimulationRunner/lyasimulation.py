@@ -18,7 +18,6 @@ class LymanAlphaSim(simulationics.SimulationICs):
         self.rescale_slope = rescale_slope
         super().__init__(redend=redend, uvb=uvb, **kwargs)
         assert self.separate_gas
-        self.camb_times = [9,]+[x for x in np.arange(4.2,1.9,-0.2)]
 
     def _feedback_config_options(self, config, prefix=""):
         """Config options specific to the Lyman alpha forest star formation criterion"""
