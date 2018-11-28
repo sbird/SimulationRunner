@@ -219,6 +219,7 @@ class StampedeClass(ClusterClass):
         qstring += prefix+" --ntasks-per-node=4\n"
         qstring += prefix+" --mail-type=end\n"
         qstring += prefix+" --mail-user="+self.email+"\n"
+        qstring += prefix+"-A TG-ASTJOBID\n"
         return qstring
 
     def _mpi_program(self, command):
