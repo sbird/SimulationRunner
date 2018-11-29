@@ -210,7 +210,7 @@ class BIOClass(ClusterClass):
             mpis.write("#!/bin/bash\n")
             mpis.write("""#SBATCH --partition=short\n#SBATCH --job-name="""+pdir+"\n")
             mpis.write("""#SBATCH --time=1:55:00\n#SBATCH --nodes=1\n#SBATCH --ntasks-per-node=1\n#SBATCH --cpus-per-task=32\n#SBATCH --mem-per-cpu=4G\n""")
-            mpis.write( """#SBATCH --mail-type=end\n#SBATCH --mail-user=sbird@ucr.edu\n""")
+            mpis.write( """#SBATCH --mail-type=end\n#SBATCH --mail-user=sbird@ucr.edu\nexport OMP_NUM_THREADS=32\n""")
             mpis.write("python flux_power.py "+pdir+"/output\n")
 
 class StampedeClass(ClusterClass):
@@ -220,7 +220,7 @@ class StampedeClass(ClusterClass):
     def __init__(self, *args, nproc=2,timelimit=3,**kwargs):
         super().__init__(*args, nproc=nproc,timelimit=timelimit, **kwargs)
 
-    def _queue_directive(self, name, timelimit, nproc=2, prefix="#SBATCH"):
+    def _queue_directive(self, name, timelimit, nproc=2, prefix="#SBATCH",ntasks=4):
         """Generate mpi_submit with stampede specific parts"""
         _ = timelimit
         qstring = prefix+" --partition=skx-normal\n"
@@ -229,7 +229,7 @@ class StampedeClass(ClusterClass):
         qstring += prefix+" --nodes="+str(int(nproc))+"\n"
         #Number of tasks (processes) per node:
         #currently optimal is 2 processes per socket.
-        qstring += prefix+" --ntasks-per-node=4\n"
+        qstring += prefix+" --ntasks-per-node="+int(ntasks)+"\n"
         qstring += prefix+" --mail-type=end\n"
         qstring += prefix+" --mail-user="+self.email+"\n"
         qstring += prefix+"-A TG-ASTJOBID\n"
@@ -251,8 +251,9 @@ class StampedeClass(ClusterClass):
         with open(os.path.join(outdir, "spectra_submit"),'w') as mpis:
             mpis.write("#!/bin/bash\n")
             #Nodes!
-            mpis.write(self._queue_directive(name, timelimit=1, nproc=1))
-            mpis.write("export OMP_NUM_THREADS=48")
+            mpis.write(self._queue_directive(name, timelimit=1, nproc=1, ntasks=1))
+            mpis.write("export OMP_NUM_THREADS=48\n")
+            mpis.write("export PYTHONPATH=$HOME/.local/lib/python3.6/site-packages/:$PYTHONPATH\n")
             mpis.write("python3 flux_power.py output")
 
     def cluster_runtime(self):
