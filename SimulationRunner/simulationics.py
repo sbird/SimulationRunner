@@ -300,29 +300,16 @@ class SimulationICs(object):
 
     def gadget3config(self, prefix="OPT += -D"):
         """Generate a config Options file for Yu Feng's MP-Gadget.
-        This code is intended tobe configured primarily via runtime options.
-        Many of the Gadget options are always on, and there is a new PM gravity solver."""
+        This code is configured via runtime options."""
         g_config_filename = os.path.join(self.outdir, self.gadgetconfig)
         with open(g_config_filename,'w') as config:
             config.write("MPICC = mpicc\nMPICXX = mpic++\n")
             optimize = self._cluster.cluster_optimize()
             config.write("OPTIMIZE = "+optimize+"\n")
             config.write("GSL_INCL = $(shell gsl-config --cflags)\nGSL_LIBS = $(shell gsl-config --libs)\n")
-            #We may want DENSITY_INDEPENDENT_SPH as well.
-            #config.write(prefix+"DENSITY_INDEPENDENT_SPH\n")
             self._cluster.cluster_config_options(config, prefix)
-            if self.separate_gas:
-                #This needs implementing
-                #config.write(prefix+"UVB_SELF_SHIELDING")
-                #Optional feedback model options
-                self._feedback_config_options(config, prefix)
             self._gadget3_child_options(config, prefix)
         return g_config_filename
-
-    def _feedback_config_options(self, config, prefix=""):
-        """Options in the Config.sh file for a potential star-formation/feedback model"""
-        config.write(prefix+"BLACK_HOLES\n")
-        return
 
     def _gadget3_child_options(self, _, __):
         """Gadget-3 compilation options for Config.sh which should be written by the child class
@@ -353,6 +340,7 @@ class SimulationICs(object):
         config['HubbleParam'] = self.hubble
         config['RadiationOn'] = 1
         config['HydroOn'] = 1
+        config['DensityIndependentSphOn'] = 0
         config['Nmesh'] = 2*self.npart
         #Neutrinos
         if self.m_nu > 0:
