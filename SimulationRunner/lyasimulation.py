@@ -33,6 +33,9 @@ class LymanAlphaSim(simulationics.SimulationICs):
         #Quick star formation threshold from 1605.03462
         config["CritOverDensity"] = 1000.
         config['WindModel'] = 'nowind'
+        #Forest uses old-style SPH for now.
+        config['DensityKernelType'] = 'cubic'
+        config['DensityIndependentSphOn'] = 0
         #These are parameters for the model to rescale the temperature-density relation
         if self.rescale_gamma:
             config["HeliumHeatOn"] = 1

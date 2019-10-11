@@ -208,7 +208,7 @@ class SimulationICs(object):
         config['FileBase'] = genicfile
         config['Ngrid'] = self.npart
         config['NgridNu'] = 0
-        config['MaxMemSizePerNode'] = 0.8
+        #config['MaxMemSizePerNode'] = 0.8
         config['ProduceGas'] = int(self.separate_gas)
         #Suppress Gaussian mode scattering
         config['UnitaryAmplitude'] = int(self.unitary)
@@ -236,8 +236,6 @@ class SimulationICs(object):
         assert config['DifferentTransferFunctions'] == '1'
         assert config['InputPowerRedshift'] == '-1'
         config['Seed'] = self.seed
-        #Turn this off since it doesn't seem to agree with linear theory very well.
-        config['ScaleDepVelocity'] = 0
         config = self._genicfile_child_options(config)
         config.update(self._cluster.cluster_runtime())
         config.write()
@@ -340,8 +338,6 @@ class SimulationICs(object):
         config['HubbleParam'] = self.hubble
         config['RadiationOn'] = 1
         config['HydroOn'] = 1
-        config['DensityIndependentSphOn'] = 0
-        config['Nmesh'] = 2*self.npart
         #Neutrinos
         if self.m_nu > 0:
             config['MassiveNuLinRespOn'] = 1
@@ -359,8 +355,7 @@ class SimulationICs(object):
         config['MinGasTemp'] = 100
         #In equilibrium with the CMB at early times.
         config['InitGasTemp'] = 2.7*(1+self.redshift)
-        #This needs to be here until I fix the flux extractor to allow quintic kernels.
-        config['DensityKernelType'] = 'cubic'
+        config['DensityIndependentSphOn'] = 1
         config['PartAllocFactor'] = 2
         config['WindOn'] = 0
         config['WindModel'] = 'nowind'

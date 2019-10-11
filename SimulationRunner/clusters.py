@@ -226,10 +226,10 @@ class StampedeClass(ClusterClass):
         qstring = prefix+" --partition=skx-normal\n"
         qstring += prefix+" --job-name="+name+"\n"
         qstring += prefix+" --time="+self.timestring(timelimit)+"\n"
-        qstring += prefix+" --nodes="+str(int(nproc))+"\n"
+        qstring += prefix+" --nodes=%d\n" % int(nproc)
         #Number of tasks (processes) per node:
         #currently optimal is 2 processes per socket.
-        qstring += prefix+" --ntasks-per-node="+int(ntasks)+"\n"
+        qstring += prefix+" --ntasks-per-node=%d\n" % int(ntasks)
         qstring += prefix+" --mail-type=end\n"
         qstring += prefix+" --mail-user="+self.email+"\n"
         qstring += prefix+"-A TG-ASTJOBID\n"
