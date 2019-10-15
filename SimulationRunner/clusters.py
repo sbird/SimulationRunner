@@ -257,8 +257,10 @@ class StampedeClass(ClusterClass):
             mpis.write("python3 flux_power.py output")
 
     def cluster_runtime(self):
-        """Runtime options for cluster. None."""
-        return {}
+        """Runtime options for cluster."""
+        #Trying to print a backtrace causes the job to hang on exit
+        return {'ShowBacktrace': 0}
+
 
     def cluster_optimize(self):
         """Compiler optimisation options for stampede.
