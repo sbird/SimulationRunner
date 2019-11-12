@@ -1,8 +1,10 @@
 """Specialization of the Simulation class to Lyman-alpha forest simulations."""
 
 import os
+import os.path
 import numpy as np
 import scipy.interpolate as interp
+from . import HeII_input_file_maker as heii
 from . import simulationics
 
 class LymanAlphaSim(simulationics.SimulationICs):
@@ -10,19 +12,22 @@ class LymanAlphaSim(simulationics.SimulationICs):
        This uses the QuickLya star formation module with sigma_8 and n_s.
     """
     __doc__ = __doc__+simulationics.SimulationICs.__doc__
-    def __init__(self, *, rescale_gamma = True, rescale_amp = 1., rescale_slope = -0.0, redend = 2.2, uvb="pu", **kwargs):
-        #Parameters of the heating rate rescaling to account for helium reionisation
-        #Default parameters do nothing
-        self.rescale_gamma = rescale_gamma
-        self.rescale_amp = rescale_amp
-        self.rescale_slope = rescale_slope
+    def __init__(self, *, here_f = 4.0, here_i = 2.8, alpha_q = 1.7, redend = 2.2, uvb="pu", **kwargs):
+        #This includes the helium reionization table!
         super().__init__(redend=redend, uvb=uvb, **kwargs)
         assert self.separate_gas
+        # Generate the helium reionization table
+        try:
+            heheat = heii.HeIIheating(hist="linear", hub=self.hubble, OmegaM=self.omega0, Omegab=self.omegab, z_f=here_f, z_i= here_i, alpha_q = alpha_q)
+            heheat.WriteInterpTable(os.path.join(self.outdir, "HeIIIReionTable"))
+            self.qsolightup = 1
+        except NameError:
+            self.qsolightup = 0
 
     def _feedback_config_options(self, config, prefix=""):
         """Config options specific to the Lyman alpha forest star formation criterion"""
         #No feedback!
-        return
+        _,_=config,prefix
 
     def _feedback_params(self, config):
         """Config options specific to the lyman alpha forest"""
@@ -36,12 +41,9 @@ class LymanAlphaSim(simulationics.SimulationICs):
         #Forest uses old-style SPH for now.
         config['DensityKernelType'] = 'cubic'
         config['DensityIndependentSphOn'] = 0
-        #These are parameters for the model to rescale the temperature-density relation
-        if self.rescale_gamma:
-            config["HeliumHeatOn"] = 1
-            config["HeliumHeatThresh"] = 10.0
-            config["HeliumHeatAmp"]  = self.rescale_amp
-            config["HeliumHeatExp"] = self.rescale_slope
+        #These are parameters for the helium reionization model
+        config['QSOLightupOn'] = self.qsolightup
+        config['ReionHistFile'] = "HeIIIReionTable"
         return config
 
     def generate_times(self):
@@ -67,7 +69,6 @@ class LymanAlphaKnotICs(LymanAlphaSim):
         #Save a copy of the old file
         os.rename(camb_file, camb_file+".orig")
         np.savetxt(camb_file, matpow2)
-        return
 
 def change_power_spectrum_knots(knotpos, knotval, matpow):
     """Multiply the power spectrum file by a function specified by our knots.
