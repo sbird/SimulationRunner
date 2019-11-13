@@ -17,6 +17,9 @@ class LymanAlphaSim(simulationics.SimulationICs):
         super().__init__(redend=redend, uvb=uvb, **kwargs)
         assert self.separate_gas
         # Generate the helium reionization table
+        self.here_f = here_f
+        self.here_i = here_i
+        self.alpha_q = alpha_q
         try:
             heheat = heii.HeIIheating(hist="linear", hub=self.hubble, OmegaM=self.omega0, Omegab=self.omegab, z_f=here_f, z_i= here_i, alpha_q = alpha_q)
             heheat.WriteInterpTable(os.path.join(self.outdir, "HeIIIReionTable"))
