@@ -5,6 +5,7 @@ import os.path
 import numpy as np
 import scipy.interpolate as interp
 from . import HeII_input_file_maker as heii
+from . import make_HI_reionization_table as hi
 from . import simulationics
 
 class LymanAlphaSim(simulationics.SimulationICs):
@@ -47,12 +48,20 @@ class LymanAlphaSim(simulationics.SimulationICs):
         #These are parameters for the helium reionization model
         config['QSOLightupOn'] = self.qsolightup
         config['ReionHistFile'] = "HeIIIReionTable"
+        config['UVFluctuationFile'] = "UVFluctuationFile"
         return config
 
     def generate_times(self):
         """Snapshot outputs for lyman alpha"""
         redshifts = np.arange(4.2, self.redend, -0.2)
         return 1./(1.+redshifts)
+
+    def genicfile(self, camb_output):
+        """Overload the genic file to also generate an HI table."""
+        (genic_output, genic_param) = super().genicfile(camb_output)
+        uvffile = os.path.join(self.outdir, "UVFluctuationFile")
+        hi.generate_zreion_file(os.path.join(self.outdir, genic_param), uvffile, 7.5, 1.0)
+        return (genic_output, genic_param)
 
 class LymanAlphaKnotICs(LymanAlphaSim):
     """Specialise the generation of initial conditions to change the power spectrum via knots.
