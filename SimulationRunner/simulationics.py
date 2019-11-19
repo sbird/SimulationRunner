@@ -363,9 +363,8 @@ class SimulationICs(object):
         config['OutputPotential'] = 0
         if self.separate_gas:
             config['CoolingOn'] = 1
-            config['TreeCoolFile'] = "TREECOOL"
             #Copy a TREECOOL file into the right place.
-            self._copy_uvb()
+            config['TreeCoolFile'] = self._copy_uvb()
             config = self._sfr_params(config)
             config = self._feedback_params(config)
         else:
@@ -403,7 +402,8 @@ class SimulationICs(object):
     def _copy_uvb(self):
         """The UVB amplitude for Gadget is specified in a file named TREECOOL in the same directory as the gadget binary."""
         fuvb = read_uvb_tab.get_uvb_filename(self.uvb)
-        shutil.copy(fuvb, os.path.join(self.outdir,"TREECOOL"))
+        shutil.copy(fuvb, os.path.join(self.outdir,fuvb))
+        return fuvb
 
     def do_gadget_build(self, gadget_config):
         """Make a gadget build and check it succeeded."""
