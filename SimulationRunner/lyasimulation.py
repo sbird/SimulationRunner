@@ -13,7 +13,7 @@ class LymanAlphaSim(simulationics.SimulationICs):
        This uses the QuickLya star formation module with sigma_8 and n_s.
     """
     __doc__ = __doc__+simulationics.SimulationICs.__doc__
-    def __init__(self, *, here_f = 4.0, here_i = 2.8, alpha_q = 1.7, redend = 2.2, uvb="pu", **kwargs):
+    def __init__(self, *, here_f = 4.0, here_i = 2.8, alpha_q = 1.7, redend = 2.2, uvb="fg19", **kwargs):
         #This includes the helium reionization table!
         super().__init__(redend=redend, uvb=uvb, **kwargs)
         assert self.separate_gas
