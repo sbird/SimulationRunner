@@ -47,6 +47,12 @@ class LymanAlphaSim(simulationics.SimulationICs):
         config['DensityIndependentSphOn'] = 0
         #These are parameters for the helium reionization model
         config['QSOLightupOn'] = self.qsolightup
+        config['QSOMeanBubble'] = 30000
+        if self.box < 60000:
+            #Use a smaller bubble in small boxes
+            config['QSOMeanBubble'] = 10000
+            #And smaller halos: Tinker HMF has 30 of these in a 40Mpc box at z=4.
+            config['QSOMinMass'] = 50
         config['ReionHistFile'] = "HeIIIReionTable"
         config['UVFluctuationFile'] = "UVFluctuationFile"
         return config
