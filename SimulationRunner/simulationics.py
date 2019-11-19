@@ -297,14 +297,12 @@ class SimulationICs(object):
         self._cluster = cc
 
     def gadget3config(self, prefix="OPT += -D"):
-        """Generate a config Options file for Yu Feng's MP-Gadget.
+        """Generate a config Options file for MP-Gadget.
         This code is configured via runtime options."""
         g_config_filename = os.path.join(self.outdir, self.gadgetconfig)
         with open(g_config_filename,'w') as config:
-            config.write("MPICC = mpicc\nMPICXX = mpic++\n")
             optimize = self._cluster.cluster_optimize()
             config.write("OPTIMIZE = "+optimize+"\n")
-            config.write("GSL_INCL = $(shell gsl-config --cflags)\nGSL_LIBS = $(shell gsl-config --libs)\n")
             self._cluster.cluster_config_options(config, prefix)
             self._gadget3_child_options(config, prefix)
         return g_config_filename

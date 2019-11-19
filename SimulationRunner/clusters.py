@@ -261,12 +261,11 @@ class StampedeClass(ClusterClass):
         #Trying to print a backtrace causes the job to hang on exit
         return {'ShowBacktrace': 0}
 
-
     def cluster_optimize(self):
         """Compiler optimisation options for stampede.
         Only MP-Gadget pays attention to this."""
         #TACC_VEC_FLAGS generates one binary for knl, one for skx.
-        return "-fopenmp -O3 -g -Wall ${TACC_VEC_FLAGS} -fp-model fast=1 -simd"
+        return "-fopenmp -O3 -g -Wall -xCORE-AVX2 -fp-model fast=1 -simd -ipo"
 
 class HypatiaClass(ClusterClass):
     """Subclass for Hypatia cluster in UCL"""
