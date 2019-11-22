@@ -12,17 +12,21 @@ import os
 import os.path as path
 import distutils.spawn
 
-def rebuild_MP(rundir, codedir, config_file="Options.mk", binary=["gadget/MP-Gadget", "genic/MP-GenIC"]):
+def rebuild_MP(rundir, codedir, config_file="Options.mk", binary=None):
     """rebuild, but with defaults appropriate for MP-Gadget."""
+    if binary is None:
+        binary=["gadget/MP-Gadget", "genic/MP-GenIC"]
     return rebuild(rundir, codedir,config_file=config_file, binary=binary)
 
-def rebuild(rundir, codedir, config_file="Config.sh", binary=["P-Gadget3",]):
+def rebuild(rundir, codedir, config_file="Config.sh", binary=None):
     """Rebuild all Gadget binaries in subdirectories of rundir.
     Arguments:
     rundir: Parent of simulation directories
     codedir: Location of the Makefile.
     binary: name of file to rebuild.
     config_file: Name of configuration file which specifies compile flags. Should be within the rundir."""
+    if binary is None:
+        binary = ["P-Gadget3",]
     #Find all subdirs with config files.
     rundir = path.expanduser(rundir)
     codedir = path.expanduser(codedir)
