@@ -253,7 +253,7 @@ class StampedeClass(ClusterClass):
             #Nodes!
             mpis.write(self._queue_directive(name, timelimit=1, nproc=1, ntasks=1))
             mpis.write("export OMP_NUM_THREADS=48\n")
-            mpis.write("export PYTHONPATH=$HOME/.local/lib/python3.6/site-packages/:$PYTHONPATH\n")
+            mpis.write("export PYTHONPATH=$HOME/.local/lib/python3.7/site-packages/:$PYTHONPATH\n")
             mpis.write("python3 flux_power.py output")
 
     def cluster_runtime(self):
