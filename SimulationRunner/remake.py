@@ -246,3 +246,33 @@ def resub_not_complete_genic(rundir, icdir="ICS", script_file="mpi_submit_genic"
             continue
         print("Re-submitting: ",path.join(odir, script_file))
         subprocess.call([resub_command, script_file], cwd=odir)
+
+def _check_spectra_single(odir, output="output", specdir="SPECTRA_", partdir="PART_"):
+    """Check that a single simulation has all its spectra"""
+    parts = glob.glob(path.join(odir, path.join(output, partdir+"*")))
+    specs = [re.sub(partdir, specdir, part) for part in parts]
+    finished = True
+    for spec in specs:
+        finished *= bool(glob.glob(os.path.join(spec, "lya_forest_spectra.hdf5")))
+    return finished
+
+def check_status_spectra(rundir, output="output", specdir="SPECTRA_", partdir="PART_"):
+    """Get spectral generation status for every directory in the suite."""
+    rundir = path.expanduser(rundir)
+    odirs = glob.glob(path.join(rundir, "*"+os.path.sep))
+    if not odirs:
+        raise IOError(rundir +" is empty.")
+    exists = [_check_spectra_single(odir, output=output, specdir=specdir, partdir=partdir) for odir in odirs]
+    return odirs, exists
+
+def resub_not_complete_spectra(rundir, output="output", specdir="SPECTRA_", partdir="PART_", script_file="spectra_submit", resub_command=None):
+    """Resubmit failed IC generations to the queue."""
+    if resub_command is None:
+        resub_command = detect_submit()
+    outputs, completes = check_status_spectra(rundir, output=output, specdir=specdir, partdir=partdir)
+    #Pathnames for incomplete simulations
+    for odir,cc in zip(outputs,completes):
+        if cc:
+            continue
+        print("Re-submitting: ",path.join(odir, script_file))
+        subprocess.call([resub_command, script_file], cwd=odir)
