@@ -72,7 +72,6 @@ class SimulationICs(object):
         self.nu_acc = nu_acc
         #UVB? Only matters if gas
         self.uvb = uvb
-        assert self.uvb == "hm" or self.uvb == "fg" or self.uvb == "sh" or self.uvb == "pu"
         self.rscatter = rscatter
         outdir = os.path.realpath(os.path.expanduser(outdir))
         #Make the output directory: will fail if parent does not exist
