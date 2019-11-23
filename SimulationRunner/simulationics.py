@@ -399,8 +399,9 @@ class SimulationICs(object):
     def _copy_uvb(self):
         """The UVB amplitude for Gadget is specified in a file named TREECOOL in the same directory as the gadget binary."""
         fuvb = read_uvb_tab.get_uvb_filename(self.uvb)
-        shutil.copy(fuvb, os.path.join(self.outdir,os.path.basename(fuvb)))
-        return fuvb
+        baseuvb = os.path.basename(fuvb)
+        shutil.copy(fuvb, os.path.join(self.outdir,baseuvb))
+        return baseuvb
 
     def do_gadget_build(self, gadget_config):
         """Make a gadget build and check it succeeded."""
