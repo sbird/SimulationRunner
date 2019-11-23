@@ -251,10 +251,16 @@ def _check_spectra_single(odir, output="output", specdir="SPECTRA_", partdir="PA
     """Check that a single simulation has all its spectra"""
     parts = glob.glob(path.join(odir, path.join(output, partdir+"*")))
     specs = [re.sub(partdir, specdir, part) for part in parts]
-    finished = True
-    for spec in specs:
-        finished *= bool(glob.glob(os.path.join(spec, "lya_forest_spectra.hdf5")))
-    return finished
+    for part,spec in enumerate(parts,specs):
+        #Check whether the spectra exist
+        exists = bool(glob.glob(os.path.join(spec, "lya_forest_spectra.hdf5")))
+        #If they don't, check whether this is because we have a strange redshift
+        if not exists:
+            red = _get_redshift_snapshot(part)
+            #Is it a forest redshift range?
+            if 2.2 < red < 4.2 and abs(red * 5 - int(red * 5)) < 0.1:
+                return False
+    return True
 
 def check_status_spectra(rundir, output="output", specdir="SPECTRA_", partdir="PART_"):
     """Get spectral generation status for every directory in the suite."""
