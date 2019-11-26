@@ -45,6 +45,7 @@ class LymanAlphaSim(simulationics.SimulationICs):
         #Forest uses old-style SPH for now.
         config['DensityKernelType'] = 'cubic'
         config['DensityIndependentSphOn'] = 0
+        config['SlotsIncreaseFactor'] = 0.1
         #These are parameters for the helium reionization model
         config['QSOLightupOn'] = self.qsolightup
         config['QSOMeanBubble'] = 30000
