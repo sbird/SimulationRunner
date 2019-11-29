@@ -16,7 +16,7 @@ from . import clusters
 from . import read_uvb_tab
 from . import cambpower
 
-class SimulationICs(object):
+class SimulationICs:
     """
     Class for creating the initial conditions for a simulation.
     There are a few things this class needs to do:
@@ -50,22 +50,22 @@ class SimulationICs(object):
         assert box < 20000
         self.box = box
         #Cube root
-        assert npart > 1 and npart < 16000
+        assert 16000 > npart > 1
         self.npart = int(npart)
         #Physically reasonable
-        assert omega0 <= 1 and omega0 > 0
+        assert 0 < omega0 <= 1
         self.omega0 = omega0
-        assert omegab > 0 and omegab < 1
+        assert 1 > omegab > 0
         self.omegab = omegab
-        assert redshift > 1 and redshift < 1100
+        assert 1100 > redshift > 1
         self.redshift = redshift
-        assert redend >= 0 and redend < 1100
+        assert 0 <= redend < 1100
         self.redend = redend
-        assert hubble < 1 and hubble > 0
+        assert 0 < hubble < 1
         self.hubble = hubble
-        assert scalar_amp < 1e-7 and scalar_amp > 0
+        assert 0 < scalar_amp < 1e-7
         self.scalar_amp = scalar_amp
-        assert ns > 0 and ns < 2
+        assert 2 > ns > 0
         self.ns = ns
         self.unitary = unitary
         #Neutrino accuracy for CLASS
@@ -246,7 +246,6 @@ class SimulationICs(object):
         zstr = self._camb_zstr(self.redshift)
         camb_file = os.path.join(camb_output,"ics_matterpow_"+zstr+".dat")
         os.stat(camb_file)
-        return
 
     def _genicfile_child_options(self, config):
         """Set extra parameters in child classes"""
@@ -309,7 +308,6 @@ class SimulationICs(object):
     def _gadget3_child_options(self, _, __):
         """Gadget-3 compilation options for Config.sh which should be written by the child class
         This is MP-Gadget, so it is likely there are none."""
-        return
 
     def gadget3params(self, genicfileout):
         """MP-Gadget parameter file. This *is* a configobj.
@@ -371,7 +369,7 @@ class SimulationICs(object):
         config = self._other_params(config)
         config.update(self._cluster.cluster_runtime())
         config.write()
-        return
+        return config
 
     def _sfr_params(self, config):
         """Config parameters for the default Springel & Hernquist star formation model"""
