@@ -91,7 +91,16 @@ class SimulationICs:
         self.nu_hierarchy = nu_hierarchy
         self.outdir = outdir
         self._set_default_paths()
-        self._cluster = cluster_class(gadget=self.gadgetexe, param=self.gadgetparam, genic=self.genicexe, genicparam=self.genicout)
+        if self.npart <= 256:
+            nproc = 2
+            timelimit = 1.5
+        elif 256 < self.npart <=512:
+            nproc = 16
+            timelimit = 6
+        else:
+            nproc = 48
+            timelimit = 8
+        self._cluster = cluster_class(gadget=self.gadgetexe, param=self.gadgetparam, genic=self.genicexe, genicparam=self.genicout, nproc=nproc, timelimit=timelimit)
         #For repeatability, we store git hashes of Gadget, GenIC, CAMB and ourselves
         #at time of running.
         self.simulation_git = utils.get_git_hash(os.path.dirname(__file__))
