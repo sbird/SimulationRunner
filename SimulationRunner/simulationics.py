@@ -239,6 +239,7 @@ class SimulationICs:
         config['MNue'] = numass[2]
         config['MNum'] = numass[1]
         config['MNut'] = numass[0]
+        config['SavePrePos'] = 0
         assert config['WhichSpectrum'] == '2'
         assert config['RadiationOn'] == '1'
         assert config['DifferentTransferFunctions'] == '1'
