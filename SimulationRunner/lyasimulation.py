@@ -21,12 +21,6 @@ class LymanAlphaSim(simulationics.SimulationICs):
         self.here_f = here_f
         self.here_i = here_i
         self.alpha_q = alpha_q
-        try:
-            heheat = heii.HeIIheating(hist="linear", hub=self.hubble, OmegaM=self.omega0, Omegab=self.omegab, z_f=here_f, z_i= here_i, alpha_q = alpha_q)
-            heheat.WriteInterpTable(os.path.join(self.outdir, "HeIIIReionTable"))
-            self.qsolightup = 1
-        except NameError:
-            self.qsolightup = 0
 
     def _feedback_config_options(self, config, prefix=""):
         """Config options specific to the Lyman alpha forest star formation criterion"""
@@ -47,6 +41,13 @@ class LymanAlphaSim(simulationics.SimulationICs):
         config['DensityIndependentSphOn'] = 0
         config['SlotsIncreaseFactor'] = 0.1
         #These are parameters for the helium reionization model
+        hefile = "HeIIIReion_a%.2gi%.2gf%.2g" % (self.alpha_q, self.here_i, self.here_f)
+        try:
+            heheat = heii.HeIIheating(hist="linear", hub=self.hubble, OmegaM=self.omega0, Omegab=self.omegab, z_f=self.here_f, z_i= self.here_i, alpha_q = self.alpha_q)
+            heheat.WriteInterpTable(os.path.join(self.outdir, hefile))
+            self.qsolightup = 1
+        except NameError:
+            self.qsolightup = 0
         config['QSOLightupOn'] = self.qsolightup
         config['QSOMeanBubble'] = 30000
         if self.box < 60000:
@@ -54,7 +55,7 @@ class LymanAlphaSim(simulationics.SimulationICs):
             config['QSOMeanBubble'] = 10000
             #And smaller halos: Tinker HMF has 30 of these in a 40Mpc box at z=4.
             config['QSOMinMass'] = 50
-        config['ReionHistFile'] = "HeIIIReionTable"
+        config['ReionHistFile'] = hefile
         config['UVFluctuationFile'] = "UVFluctuationFile"
         return config
 
