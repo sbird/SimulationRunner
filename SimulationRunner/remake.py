@@ -258,7 +258,7 @@ def _check_spectra_single(odir, output="output", specdir="SPECTRA_", partdir="PA
         if not exists:
             red = _get_redshift_snapshot(part)
             #Is it a forest redshift range?
-            if red <= 5.5 and abs(red * 5 - int(red * 5)) < 0.1:
+            if red <= 5.5 and abs(red * 5 - int(red * 5)) < 0.002:
                 return False
     return True
 
