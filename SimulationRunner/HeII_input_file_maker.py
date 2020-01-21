@@ -170,7 +170,7 @@ class HeIIheating:
         """Built the interpolation table file, the main output of this code, loadable by the MP-Gadget reionization module."""
         print("Setting up interpolation table!")
 
-        z_quasar = np.logspace(np.log10(self.hist.z_i),np.log10(self.hist.z_f),numz)
+        z_quasar = np.logspace(np.log10(self.hist.z_i),np.log10(self.hist.z_f),int(numz))
         dQ_LMFP_dat = [self.dGamma_hard_dt(zqso) for zqso in z_quasar]
         XHeIII = [self.hist.XHeIII(zqso) for zqso in z_quasar]
 
