@@ -207,7 +207,7 @@ def resub_not_complete(rundir, output_file="output", endz=2.01, script_file="mpi
                 line = ifile.readline()
                 while line != '':
                     #Find the actual submission line and add a '1' after the paramfile.
-                    if re.search("mpirun|mpiexec", line):
+                    if re.search("mpirun|mpiexec|ibrun", line):
                         nline = re.sub(paramfile, paramfile+rest,line)
                         assert nline != line
                         line = nline
