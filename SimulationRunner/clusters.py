@@ -232,7 +232,7 @@ class StampedeClass(ClusterClass):
         qstring += prefix+" --ntasks-per-node=%d\n" % int(ntasks)
         qstring += prefix+" --mail-type=end\n"
         qstring += prefix+" --mail-user="+self.email+"\n"
-        qstring += prefix+"-A TG-ASTJOBID\n"
+        qstring += prefix+" -A TG-AST180058\n"
         return qstring
 
     def _mpi_program(self, command):
@@ -243,7 +243,7 @@ class StampedeClass(ClusterClass):
         qstring += "ibrun "+command+"\n"
         return qstring
 
-    def generate_spectra_submit(self, outdir):
+    def generate_spectra_submit(self, outdir, threads=48):
         """Generate a sample spectra_submit file, which generates artificial spectra.
         The prefix argument is a string at the start of each line.
         It separates queueing system directives from normal comments"""
@@ -252,8 +252,8 @@ class StampedeClass(ClusterClass):
             mpis.write("#!/bin/bash\n")
             #Nodes!
             mpis.write(self._queue_directive(name, timelimit=1, nproc=1, ntasks=1))
-            mpis.write("export OMP_NUM_THREADS=48\n")
-            mpis.write("export PYTHONPATH=$HOME/.local/lib/python3.6/site-packages/:$PYTHONPATH\n")
+            mpis.write("export OMP_NUM_THREADS=%d\n" % threads)
+            mpis.write("export PYTHONPATH=$HOME/.local/lib/python3.7/site-packages/:$PYTHONPATH\n")
             mpis.write("python3 flux_power.py output")
 
     def cluster_runtime(self):
@@ -261,12 +261,49 @@ class StampedeClass(ClusterClass):
         #Trying to print a backtrace causes the job to hang on exit
         return {'ShowBacktrace': 0}
 
-
     def cluster_optimize(self):
         """Compiler optimisation options for stampede.
         Only MP-Gadget pays attention to this."""
         #TACC_VEC_FLAGS generates one binary for knl, one for skx.
-        return "-fopenmp -O3 -g -Wall ${TACC_VEC_FLAGS} -fp-model fast=1 -simd"
+        return "-fopenmp -O3 -g -Wall -xCORE-AVX2 -fp-model fast=1 -simd -ipo"
+
+class FronteraClass(StampedeClass):
+    """Subclassed for Stampede2's Skylake nodes.
+    This has 56 cores (56 threads) per node, each with two sockets, shared memory of 192GB per node, 96 GB per socket.
+    Charged in node-hours, uses SLURM and icc. Hyperthreading is OFF"""
+    def _mpi_program(self, command):
+        """String for MPI program to execute."""
+        #Should be 96/ntasks-per-node. This uses the hyperthreading,
+        #which is perhaps an extra 10% performance.
+        qstring = "export OMP_NUM_THREADS=14\n"
+        qstring += "ibrun "+command+"\n"
+        return qstring
+
+    def _queue_directive(self, name, timelimit, nproc=2, prefix="#SBATCH",ntasks=4):
+        """Generate mpi_submit with stampede specific parts"""
+        _ = timelimit
+        qstring = prefix+" --partition=normal\n"
+        qstring += prefix+" --job-name="+name+"\n"
+        qstring += prefix+" --time="+self.timestring(timelimit)+"\n"
+        qstring += prefix+" --nodes=%d\n" % int(nproc)
+        #Number of tasks (processes) per node:
+        #currently optimal is 2 processes per socket.
+        qstring += prefix+" --ntasks-per-node=%d\n" % int(ntasks)
+        qstring += prefix+" --mail-type=end\n"
+        qstring += prefix+" --mail-user="+self.email+"\n"
+        return qstring
+
+    def generate_spectra_submit(self, outdir, threads=56):
+        """Generate a sample spectra_submit file, which generates artificial spectra.
+        The prefix argument is a string at the start of each line.
+        It separates queueing system directives from normal comments"""
+        super().generate_spectra_submit(outdir, threads=threads)
+
+    def cluster_optimize(self):
+        """Compiler optimisation options for frontera.
+        Only MP-Gadget pays attention to this. I don't trust the compiler,
+        so these are not as aggressive as usual."""
+        return "-fopenmp -O2 -g -Wall -xCORE-AVX2 -Zp16 -fp-model fast=1"
 
 class HypatiaClass(ClusterClass):
     """Subclass for Hypatia cluster in UCL"""

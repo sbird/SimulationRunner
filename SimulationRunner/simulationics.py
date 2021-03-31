@@ -16,7 +16,7 @@ from . import clusters
 from . import read_uvb_tab
 from . import cambpower
 
-class SimulationICs(object):
+class SimulationICs:
     """
     Class for creating the initial conditions for a simulation.
     There are a few things this class needs to do:
@@ -50,29 +50,28 @@ class SimulationICs(object):
         assert box < 20000
         self.box = box
         #Cube root
-        assert npart > 1 and npart < 16000
+        assert 16000 > npart > 1
         self.npart = int(npart)
         #Physically reasonable
-        assert omega0 <= 1 and omega0 > 0
+        assert 0 < omega0 <= 1
         self.omega0 = omega0
-        assert omegab > 0 and omegab < 1
+        assert 1 > omegab > 0
         self.omegab = omegab
-        assert redshift > 1 and redshift < 1100
+        assert 1100 > redshift > 1
         self.redshift = redshift
-        assert redend >= 0 and redend < 1100
+        assert 0 <= redend < 1100
         self.redend = redend
-        assert hubble < 1 and hubble > 0
+        assert 0 < hubble < 1
         self.hubble = hubble
-        assert scalar_amp < 1e-7 and scalar_amp > 0
+        assert 0 < scalar_amp < 1e-7
         self.scalar_amp = scalar_amp
-        assert ns > 0 and ns < 2
+        assert 2 > ns > 0
         self.ns = ns
         self.unitary = unitary
         #Neutrino accuracy for CLASS
         self.nu_acc = nu_acc
         #UVB? Only matters if gas
         self.uvb = uvb
-        assert self.uvb == "hm" or self.uvb == "fg" or self.uvb == "sh" or self.uvb == "pu"
         self.rscatter = rscatter
         outdir = os.path.realpath(os.path.expanduser(outdir))
         #Make the output directory: will fail if parent does not exist
@@ -92,7 +91,16 @@ class SimulationICs(object):
         self.nu_hierarchy = nu_hierarchy
         self.outdir = outdir
         self._set_default_paths()
-        self._cluster = cluster_class(gadget=self.gadgetexe, param=self.gadgetparam, genic=self.genicexe, genicparam=self.genicout)
+        if self.npart <= 256:
+            nproc = 2
+            timelimit = 1.5
+        elif 256 < self.npart <=512:
+            nproc = 16
+            timelimit = 6
+        else:
+            nproc = 48
+            timelimit = 8
+        self._cluster = cluster_class(gadget=self.gadgetexe, param=self.gadgetparam, genic=self.genicexe, genicparam=self.genicout, nproc=nproc, timelimit=timelimit)
         #For repeatability, we store git hashes of Gadget, GenIC, CAMB and ourselves
         #at time of running.
         self.simulation_git = utils.get_git_hash(os.path.dirname(__file__))
@@ -231,6 +239,7 @@ class SimulationICs(object):
         config['MNue'] = numass[2]
         config['MNum'] = numass[1]
         config['MNut'] = numass[0]
+        config['SavePrePos'] = 0
         assert config['WhichSpectrum'] == '2'
         assert config['RadiationOn'] == '1'
         assert config['DifferentTransferFunctions'] == '1'
@@ -247,7 +256,6 @@ class SimulationICs(object):
         zstr = self._camb_zstr(self.redshift)
         camb_file = os.path.join(camb_output,"ics_matterpow_"+zstr+".dat")
         os.stat(camb_file)
-        return
 
     def _genicfile_child_options(self, config):
         """Set extra parameters in child classes"""
@@ -297,14 +305,12 @@ class SimulationICs(object):
         self._cluster = cc
 
     def gadget3config(self, prefix="OPT += -D"):
-        """Generate a config Options file for Yu Feng's MP-Gadget.
+        """Generate a config Options file for MP-Gadget.
         This code is configured via runtime options."""
         g_config_filename = os.path.join(self.outdir, self.gadgetconfig)
         with open(g_config_filename,'w') as config:
-            config.write("MPICC = mpicc\nMPICXX = mpic++\n")
             optimize = self._cluster.cluster_optimize()
             config.write("OPTIMIZE = "+optimize+"\n")
-            config.write("GSL_INCL = $(shell gsl-config --cflags)\nGSL_LIBS = $(shell gsl-config --libs)\n")
             self._cluster.cluster_config_options(config, prefix)
             self._gadget3_child_options(config, prefix)
         return g_config_filename
@@ -312,7 +318,6 @@ class SimulationICs(object):
     def _gadget3_child_options(self, _, __):
         """Gadget-3 compilation options for Config.sh which should be written by the child class
         This is MP-Gadget, so it is likely there are none."""
-        return
 
     def gadget3params(self, genicfileout):
         """MP-Gadget parameter file. This *is* a configobj.
@@ -363,9 +368,8 @@ class SimulationICs(object):
         config['OutputPotential'] = 0
         if self.separate_gas:
             config['CoolingOn'] = 1
-            config['TreeCoolFile'] = "TREECOOL"
             #Copy a TREECOOL file into the right place.
-            self._copy_uvb()
+            config['TreeCoolFile'] = self._copy_uvb()
             config = self._sfr_params(config)
             config = self._feedback_params(config)
         else:
@@ -375,7 +379,7 @@ class SimulationICs(object):
         config = self._other_params(config)
         config.update(self._cluster.cluster_runtime())
         config.write()
-        return
+        return config
 
     def _sfr_params(self, config):
         """Config parameters for the default Springel & Hernquist star formation model"""
@@ -403,7 +407,9 @@ class SimulationICs(object):
     def _copy_uvb(self):
         """The UVB amplitude for Gadget is specified in a file named TREECOOL in the same directory as the gadget binary."""
         fuvb = read_uvb_tab.get_uvb_filename(self.uvb)
-        shutil.copy(fuvb, os.path.join(self.outdir,"TREECOOL"))
+        baseuvb = os.path.basename(fuvb)
+        shutil.copy(fuvb, os.path.join(self.outdir,baseuvb))
+        return baseuvb
 
     def do_gadget_build(self, gadget_config):
         """Make a gadget build and check it succeeded."""
@@ -436,7 +442,7 @@ class SimulationICs(object):
         self._cluster.generate_mpi_submit(self.outdir)
         #Generate an mpi_submit for genic
         zstr = self._camb_zstr(self.redshift)
-        check_ics = "python cambpower.py "+genicout+" --czstr "+zstr+" --mnu "+str(self.m_nu)
+        check_ics = "#python3 cambpower.py "+genicout+" --czstr "+zstr+" --mnu "+str(self.m_nu)
         self._cluster.generate_mpi_submit_genic(self.outdir, extracommand=check_ics)
         #Copy the power spectrum routine
         shutil.copy(os.path.join(os.path.dirname(__file__),"cambpower.py"), os.path.join(self.outdir,"cambpower.py"))

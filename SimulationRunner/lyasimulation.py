@@ -1,8 +1,11 @@
 """Specialization of the Simulation class to Lyman-alpha forest simulations."""
 
 import os
+import os.path
 import numpy as np
 import scipy.interpolate as interp
+from . import HeII_input_file_maker as heii
+from . import make_HI_reionization_table as hi
 from . import simulationics
 
 class LymanAlphaSim(simulationics.SimulationICs):
@@ -10,19 +13,19 @@ class LymanAlphaSim(simulationics.SimulationICs):
        This uses the QuickLya star formation module with sigma_8 and n_s.
     """
     __doc__ = __doc__+simulationics.SimulationICs.__doc__
-    def __init__(self, *, rescale_gamma = True, rescale_amp = 1., rescale_slope = -0.0, redend = 2.2, uvb="pu", **kwargs):
-        #Parameters of the heating rate rescaling to account for helium reionisation
-        #Default parameters do nothing
-        self.rescale_gamma = rescale_gamma
-        self.rescale_amp = rescale_amp
-        self.rescale_slope = rescale_slope
+    def __init__(self, *, here_i = 4.0, here_f = 2.8, alpha_q = 1.7, redend = 2.2, uvb="fg19", **kwargs):
+        #This includes the helium reionization table!
         super().__init__(redend=redend, uvb=uvb, **kwargs)
         assert self.separate_gas
+        # Generate the helium reionization table
+        self.here_f = here_f
+        self.here_i = here_i
+        self.alpha_q = alpha_q
 
     def _feedback_config_options(self, config, prefix=""):
         """Config options specific to the Lyman alpha forest star formation criterion"""
         #No feedback!
-        return
+        _,_=config,prefix
 
     def _feedback_params(self, config):
         """Config options specific to the lyman alpha forest"""
@@ -36,18 +39,37 @@ class LymanAlphaSim(simulationics.SimulationICs):
         #Forest uses old-style SPH for now.
         config['DensityKernelType'] = 'cubic'
         config['DensityIndependentSphOn'] = 0
-        #These are parameters for the model to rescale the temperature-density relation
-        if self.rescale_gamma:
-            config["HeliumHeatOn"] = 1
-            config["HeliumHeatThresh"] = 10.0
-            config["HeliumHeatAmp"]  = self.rescale_amp
-            config["HeliumHeatExp"] = self.rescale_slope
+        config['SlotsIncreaseFactor'] = 0.1
+        #These are parameters for the helium reionization model
+        hefile = "HeIIIReion_a%.2gi%.2gf%.2g" % (self.alpha_q, self.here_i, self.here_f)
+        try:
+            heheat = heii.HeIIheating(hist="linear", hub=self.hubble, OmegaM=self.omega0, Omegab=self.omegab, z_f=self.here_f, z_i= self.here_i, alpha_q = self.alpha_q)
+            heheat.WriteInterpTable(os.path.join(self.outdir, hefile))
+            self.qsolightup = 1
+        except NameError:
+            self.qsolightup = 0
+        config['QSOLightupOn'] = self.qsolightup
+        config['QSOMeanBubble'] = 30000
+        if self.box < 60000:
+            #Use a smaller bubble in small boxes
+            config['QSOMeanBubble'] = 10000
+            #And smaller halos: Tinker HMF has 30 of these in a 40Mpc box at z=4.
+            config['QSOMinMass'] = 50
+        config['ReionHistFile'] = hefile
+        config['UVFluctuationFile'] = "UVFluctuationFile"
         return config
 
     def generate_times(self):
         """Snapshot outputs for lyman alpha"""
         redshifts = np.arange(4.2, self.redend, -0.2)
         return 1./(1.+redshifts)
+
+    def genicfile(self, camb_output):
+        """Overload the genic file to also generate an HI table."""
+        (genic_output, genic_param) = super().genicfile(camb_output)
+        uvffile = os.path.join(self.outdir, "UVFluctuationFile")
+        hi.generate_zreion_file(os.path.join(self.outdir, genic_param), uvffile, 7.5, 1.0)
+        return (genic_output, genic_param)
 
 class LymanAlphaKnotICs(LymanAlphaSim):
     """Specialise the generation of initial conditions to change the power spectrum via knots.
@@ -67,7 +89,6 @@ class LymanAlphaKnotICs(LymanAlphaSim):
         #Save a copy of the old file
         os.rename(camb_file, camb_file+".orig")
         np.savetxt(camb_file, matpow2)
-        return
 
 def change_power_spectrum_knots(knotpos, knotval, matpow):
     """Multiply the power spectrum file by a function specified by our knots.

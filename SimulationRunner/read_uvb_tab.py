@@ -64,6 +64,12 @@ def get_hm12_filename():
     """File where the HM2012 table is stored (in gadget format)"""
     return os.path.join(os.path.dirname(__file__),"TREECOOL_hm_2012")
 
+def get_fg19_filename():
+    """File where the table from Faucher-Giguere 2019 is stored.
+    We use the "thin" variant by default because we have an
+    explicit patchy reionization model."""
+    return os.path.join(os.path.dirname(__file__),"TREECOOL_fg19_thin.dat")
+
 def get_sherwood_filename():
     """File where the Sherwood-like (modified HM2012) table
     is stored (in gadget format).
@@ -90,6 +96,8 @@ def get_uvb_filename(uvb):
         fuvb = get_sherwood_filename()
     elif uvb == "pu":
         fuvb = get_puchwein_filename()
+    elif uvb == "fg19":
+        fuvb = get_fg19_filename()
     else:
         raise ValueError("Unsupported UVB table")
     return fuvb

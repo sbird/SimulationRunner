@@ -12,17 +12,21 @@ import os
 import os.path as path
 import distutils.spawn
 
-def rebuild_MP(rundir, codedir, config_file="Options.mk", binary=["gadget/MP-Gadget", "genic/MP-GenIC"]):
+def rebuild_MP(rundir, codedir, config_file="Options.mk", binary=None):
     """rebuild, but with defaults appropriate for MP-Gadget."""
+    if binary is None:
+        binary=["gadget/MP-Gadget", "genic/MP-GenIC"]
     return rebuild(rundir, codedir,config_file=config_file, binary=binary)
 
-def rebuild(rundir, codedir, config_file="Config.sh", binary=["P-Gadget3",]):
+def rebuild(rundir, codedir, config_file="Config.sh", binary=None):
     """Rebuild all Gadget binaries in subdirectories of rundir.
     Arguments:
     rundir: Parent of simulation directories
     codedir: Location of the Makefile.
     binary: name of file to rebuild.
     config_file: Name of configuration file which specifies compile flags. Should be within the rundir."""
+    if binary is None:
+        binary = ["P-Gadget3",]
     #Find all subdirs with config files.
     rundir = path.expanduser(rundir)
     codedir = path.expanduser(codedir)
@@ -236,6 +240,42 @@ def resub_not_complete_genic(rundir, icdir="ICS", script_file="mpi_submit_genic"
     if resub_command is None:
         resub_command = detect_submit()
     outputs, completes = check_status_ics(rundir, icdir)
+    #Pathnames for incomplete simulations
+    for odir,cc in zip(outputs,completes):
+        if cc:
+            continue
+        print("Re-submitting: ",path.join(odir, script_file))
+        subprocess.call([resub_command, script_file], cwd=odir)
+
+def _check_spectra_single(odir, output="output", specdir="SPECTRA_", partdir="PART_"):
+    """Check that a single simulation has all its spectra"""
+    parts = glob.glob(path.join(odir, path.join(output, partdir+"*")))
+    specs = [re.sub(partdir, specdir, part) for part in parts]
+    for part,spec in zip(parts,specs):
+        #Check whether the spectra exist
+        exists = bool(glob.glob(os.path.join(spec, "lya_forest_spectra.hdf5")))
+        #If they don't, check whether this is because we have a strange redshift
+        if not exists:
+            red = _get_redshift_snapshot(part)
+            #Is it a forest redshift range?
+            if red <= 5.5 and abs(red * 5 - int(red * 5)) < 0.002:
+                return False
+    return True
+
+def check_status_spectra(rundir, output="output", specdir="SPECTRA_", partdir="PART_"):
+    """Get spectral generation status for every directory in the suite."""
+    rundir = path.expanduser(rundir)
+    odirs = glob.glob(path.join(rundir, "*"+os.path.sep))
+    if not odirs:
+        raise IOError(rundir +" is empty.")
+    exists = [_check_spectra_single(odir, output=output, specdir=specdir, partdir=partdir) for odir in odirs]
+    return odirs, exists
+
+def resub_not_complete_spectra(rundir, output="output", specdir="SPECTRA_", partdir="PART_", script_file="spectra_submit", resub_command=None):
+    """Resubmit failed IC generations to the queue."""
+    if resub_command is None:
+        resub_command = detect_submit()
+    outputs, completes = check_status_spectra(rundir, output=output, specdir=specdir, partdir=partdir)
     #Pathnames for incomplete simulations
     for odir,cc in zip(outputs,completes):
         if cc:
