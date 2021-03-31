@@ -40,7 +40,10 @@ class LymanAlphaSim(simulationics.SimulationICs):
         config['DensityKernelType'] = 'cubic'
         config['DensityIndependentSphOn'] = 0
         config['SlotsIncreaseFactor'] = 0.1
-        #These are parameters for the helium reionization model
+        return self._heii_model_params(config)
+
+    def _heii_model_params(self, config):
+        """These are parameters for the helium reionization model"""
         hefile = "HeIIIReion_a%.2gi%.2gf%.2g" % (self.alpha_q, self.here_i, self.here_f)
         try:
             heheat = heii.HeIIheating(hist="linear", hub=self.hubble, OmegaM=self.omega0, Omegab=self.omegab, z_f=self.here_f, z_i= self.here_i, alpha_q = self.alpha_q)
