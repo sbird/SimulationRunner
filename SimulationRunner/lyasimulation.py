@@ -63,8 +63,8 @@ class LymanAlphaSim(simulationics.SimulationICs):
         return config
 
     def generate_times(self):
-        """Snapshot outputs for lyman alpha"""
-        redshifts = np.arange(4.2, self.redend, -0.2)
+        """Snapshot outputs for lyman alpha: go to the highest redshift yet measured."""
+        redshifts = np.arange(5.6, self.redend, -0.2)
         return 1./(1.+redshifts)
 
     def genicfile(self, camb_output):
