@@ -29,6 +29,7 @@ class GalaxySim(lyasimulation.LymanAlphaSim):
     def _feedback_params(self, config):
         """Galaxy formation config options from ASTERIX."""
         #Stellar feedback parameters
+        config['StarformationCriterion'] = 'density' #Note no h2 star formation! Different from ASTERIX.
         config['WindModel'] = 'ojft10,decouple'
         config['WindEfficiency'] = 2.0
         config['WindOn'] = 1
