@@ -13,11 +13,13 @@ from . import lyasimulation
 
 class GalaxySim(lyasimulation.LymanAlphaSim):
     """Specialise the Simulation class to do full physics runs with galaxy formation (stars, AGN, winds) enabled.
-    Mirrors the model used in ASTERIX. No massive neutrinos."""
+    Mirrors the model used in ASTERIX. No massive neutrinos.
+    Extra parameters:
+        bhfeedback - Amount of BH feedback."""
     __doc__ = __doc__+simulationics.SimulationICs.__doc__
-    def __init__(self, *, bhfeedback = 0.05, redend = 2.2, uvb="fg19", **kwargs):
-        #This includes the helium reionization table!
-        super().__init__(redend=redend, uvb=uvb, **kwargs)
+    def __init__(self, *, bhfeedback = 0.05, **kwargs):
+        #super generates the helium reionization table
+        super().__init__(**kwargs)
         self.metalcool = "cooling_metal_UVB"
         self.bhfeedback = bhfeedback
 
