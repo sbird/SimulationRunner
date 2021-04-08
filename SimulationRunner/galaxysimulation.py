@@ -1,6 +1,5 @@
 """Specialization of the Simulation class to galaxy formation simulations."""
 
-#TODO: Seed BH masses increased to match density.
 #TODO: Should I vary the supernova feedback also?
 
 import math
@@ -61,10 +60,15 @@ class GalaxySim(lyasimulation.LymanAlphaSim):
         #Total mass of DM in the box in internal mass units/h.
         omegatomass = self.box**3 / (8 * math.pi * GravpH)
         DMmass = (self.omega0 - self.omegab) * omegatomass / self.npart**3
+        barmass = self.omegab * omegatomass / self.npart**3
+        starmass = barmass/ config['Generations']
         config['SeedBHDynMass'] = DMmass * 1.5
+        #This is set by the smallest observed SMBH so leave it alone.
         config['MinFoFMassForNewSeed'] = 0.5
+        #This is basically "any stars" so leave it alone
         config['MinMStarForNewSeed'] = 2e-4
         #Real seed mass: no dynamical effect. Power law distributed.
+        #In practice this only affects subgrid accretion so leave it alone.
         config['SeedBlackHoleMass'] = 3.0e-6
         config['MaxSeedBlackHoleMass'] = 3.0e-5
         config['SeedBlackHoleMassIndex'] = -2
