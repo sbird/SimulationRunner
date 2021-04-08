@@ -1,13 +1,13 @@
 """Specialization of the Simulation class to galaxy formation simulations."""
 
-#TODO: - Seed BH masses increased to match density.
-#TODO: Which parameters to vary?
+#TODO: Seed BH masses increased to match density.
+#TODO: Should I vary the supernova feedback also?
 
+import math
 import os
 import os.path
 import shutil
 import numpy as np
-from . import make_HI_reionization_table as hi
 from . import simulationics
 from . import lyasimulation
 
@@ -53,8 +53,15 @@ class GalaxySim(lyasimulation.LymanAlphaSim):
         config['BlackHoleFeedbackMethod'] = "spline | mass"
         #2 generations only for numerical sanity.
         config['Generations'] = 2
-        #FIXME: Make this scale with mass of a DM particle.
-        config['SeedBHDynMass'] = 1e-3
+        #This scales with the mass of a DM particle because
+        #it stops the DM scattering the BH out of the halo.
+        #Newton's constant in Mpc^3 / (internal mass units)
+        #cm^3 g^-1 s^-2/(H0/h) -> Mpc^3  (10^10 Msun)^-1
+        GravpH = 6.672e-8/ 3.086e+24**3 * 1.989e+43 / (3.2407789e-18)**2
+        #Total mass of DM in the box in internal mass units/h.
+        omegatomass = self.box**3 / (8 * math.pi * GravpH)
+        DMmass = (self.omega0 - self.omegab) * omegatomass / self.npart**3
+        config['SeedBHDynMass'] = DMmass * 1.5
         config['MinFoFMassForNewSeed'] = 0.5
         config['MinMStarForNewSeed'] = 2e-4
         #Real seed mass: no dynamical effect. Power law distributed.
