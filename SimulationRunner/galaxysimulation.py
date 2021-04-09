@@ -1,7 +1,5 @@
 """Specialization of the Simulation class to galaxy formation simulations."""
 
-#TODO: Should I vary the supernova feedback also?
-
 import math
 import os
 import os.path
@@ -16,11 +14,12 @@ class GalaxySim(lyasimulation.LymanAlphaSim):
     Extra parameters:
         bhfeedback - Amount of BH feedback."""
     __doc__ = __doc__+simulationics.SimulationICs.__doc__
-    def __init__(self, *, bhfeedback = 0.05, **kwargs):
+    def __init__(self, *, bhfeedback = 0.05, windsigma=3.7, **kwargs):
         #super generates the helium reionization table
         super().__init__(**kwargs)
         self.metalcool = "cooling_metal_UVB"
         self.bhfeedback = bhfeedback
+        self.windsigma = windsigma
 
     def _feedback_config_options(self, config, prefix=""):
         """Config options specific to the Lyman alpha forest star formation criterion"""
@@ -32,12 +31,12 @@ class GalaxySim(lyasimulation.LymanAlphaSim):
         #Stellar feedback parameters
         config['StarformationCriterion'] = 'density' #Note no h2 star formation! Different from ASTERIX.
         config['WindModel'] = 'ojft10,decouple'
-        config['WindEfficiency'] = 2.0
         config['WindOn'] = 1
         config['MetalCoolFile'] = self.metalcool
-        config['WindEnergyFraction'] = 1.0
+        #Wind speed normalisation
         config['WindSigma0'] = 353.0 #km/s
-        config['WindSpeedFactor'] = 3.7
+        #Wind speed: controls the strength of the supernova feedback. Default is 3.7
+        config['WindSpeedFactor'] = self.windsigma
         config['MetalReturnOn'] = 1
         #SPH parameters
         config['DensityKernelType'] = 'quintic'
