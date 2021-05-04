@@ -44,6 +44,7 @@ class GalaxySim(lyasimulation.LymanAlphaSim):
         config['DensityIndependentSphOn'] = 1
         config['OutputPotential'] = 0
         #Dynamic friction models for BH
+        config['BlackHoleOn'] = 1
         config['BlackHoleRepositionEnabled'] = 0
         config['BH_DRAG'] = 1
         config['BH_DynFrictionMethod'] = 2
