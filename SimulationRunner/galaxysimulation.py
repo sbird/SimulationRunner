@@ -80,7 +80,7 @@ class GalaxySim(lyasimulation.LymanAlphaSim):
 
     def generate_times(self):
         """Snapshot outputs for lyman alpha"""
-        redshifts = np.arange(4.2, self.redend, -0.2)
+        redshifts = np.arange(5.4, self.redend, -0.2)
         return 1./(1.+redshifts)
 
     def genicfile(self, camb_output):
