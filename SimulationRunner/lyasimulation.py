@@ -67,7 +67,7 @@ class LymanAlphaSim(simulationics.SimulationICs):
         #ionizing everything too early, so we turn it off.
         config['QSOMeanBubble'] = 20000
         config['QSOVarBubble'] = 0
-        if self.box < 60:
+        if self.box <= 60:
             #Use a smaller bubble in small boxes
             config['QSOMeanBubble'] = 10000
             #And smaller halos: Tinker HMF has 30 of these in a 40Mpc box at z=4.
