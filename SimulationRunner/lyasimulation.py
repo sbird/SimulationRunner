@@ -79,9 +79,10 @@ class LymanAlphaSim(simulationics.SimulationICs):
         #Boost the temperature after each particle undergoes HI reionization
         config['HIReionTemp'] = 20000
         #Scale the overall heating by a constant factor
-        config['HeliumHeatOn'] = 1
-        config['HeliumHeatAmp'] = self.heatamp
-        config['HeliumHeatExp'] = 0
+        if np.abs(self.heatamp -1) > 0.01:
+            config['HeliumHeatOn'] = 1
+            config['HeliumHeatAmp'] = self.heatamp
+            config['HeliumHeatExp'] = 0
         return config
 
     def generate_times(self):
