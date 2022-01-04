@@ -45,9 +45,9 @@ class GalaxySim(lyasimulation.LymanAlphaSim):
         config['OutputPotential'] = 0
         #Dynamic friction models for BH
         config['BlackHoleOn'] = 1
-        config['BlackHoleRepositionEnabled'] = 1
+        config['BlackHoleRepositionEnabled'] = 0
         config['BH_DRAG'] = 0
-        config['BH_DynFrictionMethod'] = 0
+        config['BH_DynFrictionMethod'] = 2
         #Black hole feedback model
         config['BlackHoleFeedbackFactor'] = self.bhfeedback
         config['BlackHoleFeedbackMethod'] = "spline | mass"
