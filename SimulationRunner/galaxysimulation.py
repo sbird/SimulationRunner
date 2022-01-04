@@ -17,7 +17,8 @@ class GalaxySim(lyasimulation.LymanAlphaSim):
     def __init__(self, *, bhfeedback = 0.05, windsigma=3.7, **kwargs):
         #super generates the helium reionization table
         super().__init__(**kwargs)
-        self.metalcool = "cooling_metal_UVB"
+        #self.metalcool = "cooling_metal_UVB"
+        self.metalcool = ""
         self.bhfeedback = bhfeedback
         self.windsigma = windsigma
 
