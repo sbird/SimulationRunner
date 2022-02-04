@@ -159,7 +159,7 @@ def find_single_extra_snap(outdir, output_file="output", snap="PART_", paramfile
     odir = path.join(outdir,output_file)
     written_times = [_get_redshift_snapshot(path.join(odir,snap+str(sn).rjust(3,'0')), red=False) for sn in snapnums]
     extra = [not _find_close_snap(wt, times) for wt in written_times]
-    return [sn for sn in snapnums if extra], [wt for wt in written_times if extra]
+    return [sn for ex,sn in zip(extra,snapnums) if ex], [wt for ex,wt in zip(extra,written_times) if ex]
 
 def find_extra_snap(rundir, output_file="output", snap="PART_", paramfile="mpgadget.param"):
     """Get extra snapshots for every directory in the suite."""
