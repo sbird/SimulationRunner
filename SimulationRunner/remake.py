@@ -146,7 +146,7 @@ def _find_snaps(outputs,output_file, snap="PART_"):
 
 def _find_close_snap(written, times):
     """Is the current snapshot close to one in the desired list?"""
-    if min([abs(written - tt) for tt in times]) < 0.01:
+    if min([abs(written - tt) for tt in times]) < 1e-4:
         return True
     return False
 
@@ -158,7 +158,8 @@ def find_single_extra_snap(outdir, output_file="output", snap="PART_", paramfile
     snapnums = _find_snaps(outdir, output_file, snap=snap)
     odir = path.join(outdir,output_file)
     written_times = [_get_redshift_snapshot(path.join(odir,snap+str(sn).rjust(3,'0')), red=False) for sn in snapnums]
-    return [wt for wt in written_times if not _find_close_snap(wt, times)]
+    extra = [not _find_close_snap(wt, times) for wt in written_times]
+    return [sn for sn in snapnums if extra], [wt for wt in written_times if extra]
 
 def find_extra_snap(rundir, output_file="output", snap="PART_", paramfile="mpgadget.param"):
     """Get extra snapshots for every directory in the suite."""
@@ -166,8 +167,8 @@ def find_extra_snap(rundir, output_file="output", snap="PART_", paramfile="mpgad
     odirs = glob.glob(path.join(rundir, "*"+os.path.sep))
     if not odirs:
         raise IOError(rundir +" is empty.")
-    extra_times = [find_single_extra_snap(cc,output_file=output_file,snap=snap, paramfile=paramfile) for cc in odirs]
-    return extra_times, odirs
+    extra_times = {cc : find_single_extra_snap(cc,output_file=output_file,snap=snap, paramfile=paramfile) for cc in odirs}
+    return extra_times
 
 def _get_regex(odir, output_file):
     """Determine which file type we are parsing: Gadget-3 or MP-Gadget."""
