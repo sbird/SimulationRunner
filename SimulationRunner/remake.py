@@ -9,8 +9,9 @@ import subprocess
 import shutil
 import re
 import os
-import os.path as path
+from os import path
 import distutils.spawn
+import configobj
 
 def rebuild_MP(rundir, codedir, config_file="Options.mk", binary=None):
     """rebuild, but with defaults appropriate for MP-Gadget."""
@@ -116,30 +117,57 @@ def _check_single_status(fname, regex):
 def _check_single_status_snap(outdir, output_file, snap="PART_"):
     """Get the final redshift of a simulation from the last written snapshot"""
     try:
-        snapnum = _find_snap(outdir, output_file,snap=snap)
+        snapnum = _find_snaps(outdir, output_file,snap=snap)[-1]
     except IOError:
         return 1100
     snapdir = path.join(path.join(outdir,output_file),snap+str(snapnum).rjust(3,'0'))
     return _get_redshift_snapshot(snapdir)
 
-def _get_redshift_snapshot(snapshot):
-    """Get the redshift of a BigFile snapshot"""
+def _get_redshift_snapshot(snapshot, red=True):
+    """Get the redshift of a BigFile snapshot. If red=False, returns scale factor."""
     fname = os.path.join(snapshot,"Header/attr-v2")
     with open(fname,'r') as fh:
         for line in fh:
             if re.search("Time",line) is not None:
                 m = re.search(r"#HUMANE \[ ([\d\.]*) \]",line)
-                return 1./float(m.groups()[0])-1
+                if red:
+                    return 1./float(m.groups()[0])-1
+                return float(m.groups()[0])
     raise IOError("No redshift in file")
 
-def _find_snap(outputs,output_file, snap="PART_"):
+def _find_snaps(outputs,output_file, snap="PART_"):
     """Find the last written snapshot"""
     written = glob.glob(path.join(path.join(outputs, output_file),snap+"[0-9][0-9][0-9]"))
     if not written:
         raise IOError("No snapshots for",outputs)
     matches = [re.search(snap+"([0-9][0-9][0-9])",wr) for wr in written]
     snapnums = [int(mm.group(1)) for mm in matches]
-    return sorted(snapnums)[-1]
+    return sorted(snapnums)
+
+def _find_close_snap(written, times):
+    """Is the current snapshot close to one in the desired list?"""
+    if min([abs(written - tt) for tt in times]) < 0.01:
+        return True
+    return False
+
+def find_single_extra_snap(outdir, output_file="output", snap="PART_", paramfile="mpgadget.param"):
+    """Find a list of extra snapshots not in the pre-decided snapshot list."""
+    config = configobj.ConfigObj(path.join(outdir, paramfile))
+    times = sorted([float(cc) for cc in config['OutputList'].split(",")])
+    times += [float(config['TimeMax']),]
+    snapnums = _find_snaps(outdir, output_file, snap=snap)
+    odir = path.join(outdir,output_file)
+    written_times = [_get_redshift_snapshot(path.join(odir,snap+str(sn).rjust(3,'0')), red=False) for sn in snapnums]
+    return [wt for wt in written_times if not _find_close_snap(wt, times)]
+
+def find_extra_snap(rundir, output_file="output", snap="PART_", paramfile="mpgadget.param"):
+    """Get extra snapshots for every directory in the suite."""
+    rundir = path.expanduser(rundir)
+    odirs = glob.glob(path.join(rundir, "*"+os.path.sep))
+    if not odirs:
+        raise IOError(rundir +" is empty.")
+    extra_times = [find_single_extra_snap(cc,output_file=output_file,snap=snap, paramfile=paramfile) for cc in odirs]
+    return extra_times, odirs
 
 def _get_regex(odir, output_file):
     """Determine which file type we are parsing: Gadget-3 or MP-Gadget."""
@@ -202,7 +230,7 @@ def resub_not_complete(rundir, output_file="output", endz=2.01, script_file="mpi
             continue
         rest = " "+str(restart)
         if restart == 2:
-            snapnum = _find_snap(odir, output_file,snap=snap)
+            snapnum = _find_snaps(odir, output_file,snap=snap)[-1]
             rest += " "+str(snapnum)
         script_file_resub = script_file+"_resub"
         found = False
