@@ -311,3 +311,68 @@ def resub_not_complete_spectra(rundir, output="output", specdir="SPECTRA_", part
             continue
         print("Re-submitting: ",path.join(odir, script_file))
         subprocess.call([resub_command, script_file], cwd=odir)
+
+def parse_step_header(line):
+    """Parse a string describing a step into total simulation time and scalefactor of the step.
+    Returns None if the line is not a step header, otherwise a tuple of Stepnum, scale factor, total elapsed time."""
+    regex = r"Step ([0-9]*), Time: ([\.0-9]*), MPIs: ([0-9]*) Threads: ([0-9]*) Elapsed: ([\.0-9]*)"
+    reg = re.match(regex, line)
+    if reg is None:
+        return None
+    grps = reg.groups()
+    summary = {"Step" : int(grps[0]), "Scale": float(grps[1]), "MPI": int(grps[2]), "Thread": int(grps[3]), "Time": float(grps[-1])}
+    return summary
+
+def parse_file(fname, step = None, sf=None):
+    """Parse a file from the end, looking for the last step before or equal to scalefactor.
+    Returns a dictionary of total times."""
+    with open(fname) as fn:
+        line = fn.readline()
+        #Read lines, stopping when done.
+        laststep = []
+        while line != "":
+            lhead = parse_step_header(line)
+            if lhead is not None:
+                #Stop reading if we finished the last step we wanted.
+                if sf is not None and lhead["Scale"] > sf:
+                    break
+                if step is not None and lhead["Step"] > step:
+                    break
+                #New step
+                laststep = []
+                head = lhead
+            else:
+                #Accumulate non-header lines
+                laststep += [line,]
+            line = fn.readline()
+    return head
+
+def get_single_total_time(directory, endsf = None):
+    """Get the total (cpu) time required for a simulation,
+        in cpu-hours adding together all cpu.txt files."""
+    cpus = sorted(glob.glob(os.path.join(directory, "cpu.tx*")))
+    sf = endsf
+    totals = {"MPI": 0, "Thread": 0, "Time": 0}
+    for cpu in cpus[::-1]:
+        head = parse_file(cpu, sf=sf)
+        #Add to totals
+        totals["Time"] += head["Time"]
+        # Check that the core counts are the same
+        if totals["MPI"] == 0:
+            totals["MPI"] = head["MPI"]
+            totals["Thread"] = head["Thread"]
+        assert totals["MPI"] == head["MPI"]
+        assert totals["Thread"] == head["Thread"]
+        #Get starting position of this file for the end of the next one
+        headstart = parse_file(cpu, step = 0)
+        sf = headstart["Scale"]
+    return totals["Time"] * totals["MPI"] * totals["Thread"] / 60**2
+
+def get_total_times(rundir, output_file="output"):
+    """Get extra snapshots for every directory in the suite."""
+    rundir = path.expanduser(rundir)
+    odirs = glob.glob(path.join(rundir, "*"+os.path.sep))
+    if not odirs:
+        raise IOError(rundir +" is empty.")
+    times = [get_single_total_time(path.join(cc, output_file)) for cc in odirs]
+    return odirs, times
