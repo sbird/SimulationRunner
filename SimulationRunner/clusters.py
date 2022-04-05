@@ -1,5 +1,6 @@
 """Specialised module to contain functions to specialise the simulation run to different clusters"""
 import os.path
+import math
 
 class ClusterClass:
     """Generic class implementing some general defaults for cluster submissions."""
@@ -169,13 +170,14 @@ class BIOClass(ClusterClass):
         qstring = prefix+" --partition=short\n"
         qstring += prefix+" --job-name="+name+"\n"
         qstring += prefix+" --time="+self.timestring(timelimit)+"\n"
-        qstring += prefix+" --nodes="+str(int(nproc/32))+"\n"
+        nnodes = nproc/64
+        qstring += prefix+" --nodes="+str(int(nnodes))+"\n"
         #Number of tasks (processes) per node
-        qstring += prefix+" --ntasks-per-node=32\n"
+        qstring += prefix+" --ntasks-per-node=64\n"
         #Number of cpus (threads) per task (process)
         qstring += prefix+" --cpus-per-task=1\n"
         #Max 128 GB per node (24 cores)
-        qstring += prefix+" --mem-per-cpu=4G\n"
+        qstring += prefix+" --mem="+str(math.floor(950/nnodes))+"G\n"
         qstring += prefix+" --mail-type=end\n"
         qstring += prefix+" --mail-user="+self.email+"\n"
         return qstring
@@ -208,10 +210,10 @@ class BIOClass(ClusterClass):
         name = os.path.basename(os.path.normpath(outdir))
         with open(os.path.join(outdir, "spectra_submit"),'w') as mpis:
             mpis.write("#!/bin/bash\n")
-            mpis.write("""#SBATCH --partition=short\n#SBATCH --job-name="""+pdir+"\n")
+            mpis.write("""#SBATCH --partition=short\n#SBATCH --job-name="""+name+"\n")
             mpis.write("""#SBATCH --time=1:55:00\n#SBATCH --nodes=1\n#SBATCH --ntasks-per-node=1\n#SBATCH --cpus-per-task=32\n#SBATCH --mem-per-cpu=4G\n""")
             mpis.write( """#SBATCH --mail-type=end\n#SBATCH --mail-user=sbird@ucr.edu\nexport OMP_NUM_THREADS=32\n""")
-            mpis.write("python flux_power.py "+pdir+"/output\n")
+            mpis.write("python flux_power.py "+outdir+"/output\n")
 
 class StampedeClass(ClusterClass):
     """Subclassed for Stampede2's Skylake nodes.
