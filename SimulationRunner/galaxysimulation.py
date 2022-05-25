@@ -64,7 +64,6 @@ class GalaxySim(lyasimulation.LymanAlphaSim):
         DMmass = (self.omega0 - self.omegab) * omegatomass / self.npart**3
         barmass = self.omegab * omegatomass / self.npart**3
         starmass = barmass/ config['Generations']
-        config['SeedBHDynMass'] = 0.0114678
         #This is set by the smallest observed SMBH so leave it alone.
         config['MinFoFMassForNewSeed'] = 5
         #This is basically "any stars" so leave it alone
