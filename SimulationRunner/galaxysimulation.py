@@ -76,8 +76,6 @@ class GalaxySim(lyasimulation.LymanAlphaSim):
         #Accretion scaling. Also affects feedback strength.
         config['BlackHoleAccretionFactor'] = 100.0
         config['BlackHoleEddingtonFactor'] = 2.1
-        #This may help convergence a little.
-        config['BlackHoleFeedbackRadius'] = 3.
         return self._heii_model_params(config)
 
     def generate_times(self):
