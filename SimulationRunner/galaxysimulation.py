@@ -48,6 +48,8 @@ class GalaxySim(lyasimulation.LymanAlphaSim):
         config['SplitGravityTimestepsOn'] = 1
         #Dynamic friction models for BH
         config['BlackHoleOn'] = 1
+        #Disable BH kinetic feedback for now.
+        config['BlackHoleKineticOn'] = 0
         config['BlackHoleRepositionEnabled'] = 0
         config['BH_DRAG'] = 0
         config['BH_DynFrictionMethod'] = 2
