@@ -44,6 +44,8 @@ class GalaxySim(lyasimulation.LymanAlphaSim):
         config['DensityKernelType'] = 'cubic'
         config['DensityIndependentSphOn'] = 1
         config['OutputPotential'] = 0
+        #Use Gadget-4 gravity. Default now.
+        config['SplitGravityTimestepsOn'] = 1
         #Dynamic friction models for BH
         config['BlackHoleOn'] = 1
         config['BlackHoleRepositionEnabled'] = 0
