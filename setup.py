@@ -10,7 +10,7 @@ setup(
     url="http://github.com/sbird/SimulationRunner",
     description="Python script for generating Gadget simulation parameter files",
     packages = ['SimulationRunner'],
-    requires=['numpy', 'h5py','scipy', 'nbodykit', 'camb'],
+    requires=['numpy', 'h5py','scipy'],
     package_data = {'SimulationRunner': ['*.ini','*.param'],},
     classifiers = ["Development Status :: 4 - Beta",
                    "Intended Audience :: Developers",
