@@ -44,7 +44,7 @@ class SimulationICs:
     m_nu - neutrino mass
     unitary - if true, do not scatter modes, but use a unitary gaussian amplitude.
     """
-    def __init__(self, *, outdir, box, npart, seed = 9281110, redshift=99, redend=0, separate_gas=True, omega0=0.288, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, rscatter=False, m_nu=0, nu_hierarchy='degenerate', uvb="fg20", cluster_class=clusters.FronteraClass, nu_acc=1e-5, unitary=True, timelimit=2, nnode=2):
+    def __init__(self, *, outdir, box, npart, seed = 9281110, redshift=99, redend=0, separate_gas=True, omega0=0.288, omegab=0.0472, hubble=0.7, scalar_amp=2.427e-9, ns=0.97, alpha_s: float = 0, rscatter=False, m_nu=0, nu_hierarchy='degenerate', uvb="fg20", cluster_class=clusters.FronteraClass, nu_acc=1e-5, unitary=True, timelimit=2, nnode=2):
         #Check that input is reasonable and set parameters
         #In Mpc/h
         assert box < 20000
@@ -67,6 +67,8 @@ class SimulationICs:
         self.scalar_amp = scalar_amp
         assert 2 > ns > 0
         self.ns = ns
+        assert alpha_s > -1 and alpha_s < 1
+        self.alpha_s = alpha_s
         self.unitary = unitary
         #Neutrino accuracy for CLASS
         self.nu_acc = nu_acc
@@ -117,7 +119,7 @@ class SimulationICs:
         #Set the neutrino density and subtract it from omega0
         omeganu = self.m_nu/93.14/self.hubble**2
         omcdm = (self.omega0 - self.omegab) - omeganu
-        gparams = {'h':self.hubble, 'Omega_cdm':omcdm,'Omega_b': self.omegab, 'Omega_k':0, 'n_s': self.ns, 'A_s': self.scalar_amp}
+        gparams = {'h':self.hubble, 'Omega_cdm':omcdm,'Omega_b': self.omegab, 'Omega_k':0, 'n_s': self.ns, 'A_s': self.scalar_amp, 'alpha_s': self.alpha_s}
         #Lambda is computed self-consistently
         gparams['Omega_fld'] = 0
         numass = get_neutrino_masses(self.m_nu, self.nu_hierarchy)
