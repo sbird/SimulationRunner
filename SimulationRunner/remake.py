@@ -276,23 +276,25 @@ def resub_not_complete_genic(rundir, icdir="ICS", script_file="mpi_submit_genic"
         print("Re-submitting: ",path.join(odir, script_file))
         subprocess.call([resub_command, script_file], cwd=odir)
 
-def _check_spectra_single(odir, output="output", specdir="SPECTRA_", partdir="PART_"):
+def _check_spectra_single(odir, output="output", specdir="SPECTRA_", partdir="PART_", specfile="lya_forest_spectra_grid_480.hdf5", maxz=5.5):
     """Check that a single simulation has all its spectra"""
     parts = glob.glob(path.join(odir, path.join(output, partdir+"*")))
     specs = [re.sub(partdir, specdir, part) for part in parts]
     for part,spec in zip(parts,specs):
         #Check whether the spectra exist
-        exists = bool(glob.glob(os.path.join(spec, "lya_forest_spectra.hdf5")))
+        exists = bool(glob.glob(os.path.join(spec, specfile)))
         #If they don't, check whether this is because we have a strange redshift
         if not exists:
             red = _get_redshift_snapshot(part)
             #Is it a forest redshift range?
-            if red <= 5.5 and abs(red * 5 - int(red * 5)) < 0.002:
+            if red <= maxz and abs(red * 5 - int(red * 5)) < 0.002:
                 return False
     return True
 
-def check_status_spectra(rundir, output="output", specdir="SPECTRA_", partdir="PART_"):
-    """Get spectral generation status for every directory in the suite."""
+def check_status_spectra(rundir, output="output", specdir="SPECTRA_", partdir="PART_", specfile="lya_forest_spectra_grid_480.hdf5", maxz=5.5):
+    """Get spectral generation status for every directory in the suite.
+    Looks for spectra files at
+    $output/$specdir/$specfile corresponding to particle tables at $output/$partdir"""
     rundir = path.expanduser(rundir)
     odirs = glob.glob(path.join(rundir, "*"+os.path.sep))
     if not odirs:
