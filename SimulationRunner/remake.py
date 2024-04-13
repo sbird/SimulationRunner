@@ -276,6 +276,22 @@ def resub_not_complete_genic(rundir, icdir="ICS", script_file="mpi_submit_genic"
         print("Re-submitting: ",path.join(odir, script_file))
         subprocess.call([resub_command, script_file], cwd=odir)
 
+def _check_redshift_single(part, maxz=5.5):
+    """Finds snapshots that are at intermediate not-needed redshifts (usually because of a restart). For lyman alpha we output every dz = 0.2, which is hard-coded."""
+    red = _get_redshift_snapshot(part)
+    #Is it a forest redshift range?
+    if red <= maxz and abs(red * 5 - int(round(red * 5))) > 0.002:
+        return part
+    return None
+
+def check_redshift(rundir, output="output", specdir="SPECTRA_", partdir="PART_", specfile="lya_forest_spectra_grid_480.hdf5", maxz=5.5):
+    """Look for snapshots at odd redshifts so they can be removed"""
+    rundir = path.expanduser(rundir)
+    opath = path.join(rundir, "*"+os.path.sep)
+    parts = glob.glob(path.join(opath, path.join(output, partdir+"*")))
+    paths = filter(_check_redshift_single, parts)
+    return list(paths)
+
 def _check_spectra_single(odir, output="output", specdir="SPECTRA_", partdir="PART_", specfile="lya_forest_spectra_grid_480.hdf5", maxz=5.5):
     """Check that a single simulation has all its spectra"""
     parts = glob.glob(path.join(odir, path.join(output, partdir+"*")))
