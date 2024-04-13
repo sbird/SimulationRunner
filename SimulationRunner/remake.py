@@ -287,7 +287,7 @@ def _check_spectra_single(odir, output="output", specdir="SPECTRA_", partdir="PA
         if not exists:
             red = _get_redshift_snapshot(part)
             #Is it a forest redshift range?
-            if red <= maxz and abs(red * 5 - int(red * 5)) < 0.002:
+            if red <= maxz and abs(red * 5 - int(round(red * 5))) < 0.002:
                 return False
     return True
 
@@ -299,7 +299,7 @@ def check_status_spectra(rundir, output="output", specdir="SPECTRA_", partdir="P
     odirs = glob.glob(path.join(rundir, "*"+os.path.sep))
     if not odirs:
         raise IOError(rundir +" is empty.")
-    exists = [_check_spectra_single(odir, output=output, specdir=specdir, partdir=partdir) for odir in odirs]
+    exists = [_check_spectra_single(odir, output=output, specdir=specdir, partdir=partdir, specfile=specfile, maxz=maxz) for odir in odirs]
     return odirs, exists
 
 def resub_not_complete_spectra(rundir, output="output", specdir="SPECTRA_", partdir="PART_", script_file="spectra_submit", resub_command=None):
