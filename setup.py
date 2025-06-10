@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
     name="SimulationRunner",
-    version='1.0',
+    version='1.0.1',
     author="Simeon Bird",
     author_email="spb@ias.edu",
     #Use the subclass which adds openmp flags as appropriate
