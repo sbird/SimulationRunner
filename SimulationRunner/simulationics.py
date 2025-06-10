@@ -468,7 +468,11 @@ class SimulationICs:
         if do_build:
             subprocess.check_call([os.path.join(os.path.join(self.gadget_dir, "genic"),self.genicexe), genic_param],cwd=self.outdir)
             zstr = self._camb_zstr(self.redshift)
-            cambpower.check_ic_power_spectra(genic_output, camb_zstr=zstr, m_nu=self.m_nu, outdir=self.outdir, accuracy=pkaccuracy)
+            try:
+                cambpower.check_ic_power_spectra(genic_output, camb_zstr=zstr, m_nu=self.m_nu, outdir=self.outdir, accuracy=pkaccuracy)
+            except ModuleNotFoundError:
+                print("Not checking IC power spectra, Nbodykit not installed")
+                pass
             self.do_gadget_build(gadget_config)
         return gadget_config
 
