@@ -9,6 +9,7 @@ import shutil
 import importlib
 import numpy as np
 import configobj
+import classy
 from classy import Class
 from . import utils
 from . import clusters
