@@ -503,8 +503,8 @@ def get_neutrino_masses(total_mass, hierarchy):
         Hierarchy is 'inverted' (two heavy), 'normal' (two light) or degenerate."""
     #Neutrino mass splittings
     nu_M21 = 7.53e-5 #Particle data group 2016: +- 0.18e-5 eV2
-    nu_M32n = 2.44e-3 #Particle data group: +- 0.06e-3 eV2
-    nu_M32i = 2.51e-3 #Particle data group: +- 0.06e-3 eV2
+    nu_M32n = 2.437e-3 #Particle data group: +- 0.06e-3 eV2
+    nu_M32i = 2.519e-3 #Particle data group: +- 0.06e-3 eV2
 
     if hierarchy == 'normal':
         nu_M32 = nu_M32n
@@ -526,6 +526,6 @@ def get_neutrino_masses(total_mass, hierarchy):
     DD = 4 * total_mass/3. - 2/3.*np.sqrt(total_mass**2 + 3*nu_M32 + 1.5*nu_M21+0.75*nu_M21**2/DD1**2)
     nu_masses = np.array([ total_mass - DD, 0.5*(DD + nu_M21/DD), 0.5*(DD - nu_M21/DD)])
     assert np.isfinite(DD)
+    assert np.all(nu_masses >= 0), nu_masses
     assert np.abs(DD1/DD -1) < 2e-2
-    assert np.all(nu_masses >= 0)
     return nu_masses
