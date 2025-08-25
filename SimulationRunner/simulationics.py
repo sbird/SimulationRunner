@@ -185,7 +185,7 @@ class SimulationICs:
             #Get and save the matter power spectrum. We want (Mpc/h)^3 units but the default is Mpc^3.
             pk_lin = np.array([powspec.pk_lin(k=kk, z=zz) for kk in kmpc])*pre_params['h']**3
             pkfile = os.path.join(camb_outdir, "ics_matterpow_"+self._camb_zstr(zz)+".dat")
-            np.savetxt(pkfile, np.vstack([trans['k'], pk_lin]).T)
+            np.savetxt(pkfile, np.vstack([khmpc, pk_lin]).T)
 
         return camb_output
 
