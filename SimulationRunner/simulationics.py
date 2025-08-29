@@ -97,6 +97,10 @@ class SimulationICs:
         #For repeatability, we store git hashes of Gadget, GenIC, CAMB and ourselves
         #at time of running.
         self.simulation_git = utils.get_git_hash(os.path.dirname(__file__))
+        try:
+            self.simulation_git = utils.get_git_hash(os.path.dirname(__file__))
+        except Exception:
+            self.simulation_git = '00000000'
 
     def _set_default_paths(self):
         """Default paths and parameter names."""
