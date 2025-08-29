@@ -12,7 +12,7 @@ setup(
     packages = ['SimulationRunner'],
     requires=['numpy', 'h5py','scipy'],
     license='MIT',
-    package_data = {'SimulationRunner': ['*.ini','*.param'],},
+    package_data = {'SimulationRunner': ['*.ini','*.param', '*.dat'],},
     classifiers = ["Development Status :: 4 - Beta",
                    "Intended Audience :: Developers",
                    "Intended Audience :: Science/Research",
