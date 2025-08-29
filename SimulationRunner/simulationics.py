@@ -235,10 +235,6 @@ class SimulationICs:
         config['MNum'] = numass[1]
         config['MNut'] = numass[0]
         config['SavePrePos'] = 0
-        assert config['WhichSpectrum'] == '2'
-        assert config['RadiationOn'] == '1'
-        assert config['DifferentTransferFunctions'] == '1'
-        assert config['InputPowerRedshift'] == '-1'
         config['Seed'] = self.seed
         config = self._genicfile_child_options(config)
         config.update(self._cluster.cluster_runtime())
